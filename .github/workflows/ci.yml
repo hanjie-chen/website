@@ -6,7 +6,7 @@ on:
       - "**" # 任何分支有 push 都会触发
   pull_request:
     branches:
-      - main # 只有针对 main 分支的合并请求才触发
+      - main # 或者针对 main 分支的pull request 也会触发
 
 # GHCR push 需要 packages: write。
 # 说明：这里使用 GitHub 自动注入的 GITHUB_TOKEN，不需要手动创建 token。

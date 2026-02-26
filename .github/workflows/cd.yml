@@ -6,13 +6,18 @@ on:
     types: [completed] # 当它运行结束时
     branches: [main] # 且必须是在 main 分支上结束
 
+# 防止多次 push 导致的 ci/cd 冲突
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     # ci 成功之后才部署
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Pull latest images over SSH (no restart)
+      - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -25,7 +30,10 @@ jobs:
             git fetch --all --prune
             git checkout main
             git pull --ff-only origin main
-            # GHCR images are expected to be public.
-            # Only pull latest images; do not recreate/restart containers in this workflow.
+            # Pull only app images from GHCR (do not force-refresh 3rd-party images).
             docker compose pull web-app articles-sync
-            docker images | head -n 20
+            # Apply compose changes for all services.
+            docker compose up -d --remove-orphans
+            # Basic post-deploy checks.
+            docker compose ps
+            curl -fsS http://127.0.0.1/ >/dev/null

@@ -2,13 +2,18 @@
 
 ## contianer introduce
 
-## dozzle
+### dozzle
 用于监控和检查所有 container 的 log（包括自己的）本质上是 docker logs 命令的 ui 化
 
 ### articles-sync container
 articles-sync container 用于管理我的 markdown 笔记文章, 使用 alpine:3.19 作为image
 因为我的笔记文章存放在一个 github repository 中，并且常常更新，所以它的主要作用是每天定期的 git pull 这个 github repository 到某一个目录中，而这个目录实际上是一个 docker volumes 挂载上去的，它对这个目录有读写的权限
 我使用 crond 定期执行一个 shell 脚本来实现定期 git pull, 日志输出到 stdout（容器日志）
+
+日常更新由 `articles-sync` 触发：
+  - `articles-sync` 完成 `git pull` 后会调用 web-app 内部接口触发 reindex
+  - reindex 会增量更新文章与 HTML（不会清空数据库）
+  - 需要在 `.env` 中配置 `REIMPORT_ARTICLES_TOKEN`
 
 ### nginx-modsecurity container
 使用 owasp/modsecurity-crs:nginx-alpine container 作为反向代理，暴露80端口在外
@@ -47,23 +52,22 @@ docker compose -f compose.yml up -d
 docker compose -f compose.yml -f compose.dev.yml up
 ```
 
-prod env
-
-需要先执行一次初始化，用于建表并导入所有文章：
-```
-docker compose exec -T web-app python scripts/init_db.py
-```
-否则使用，gunicorn 开多个实例就会因为同时建表报错了
-
-- 日常更新由 `articles-sync` 触发：
-  - `articles-sync` 完成 `git pull` 后会调用 web-app 内部接口触发 reindex
-  - reindex 会增量更新文章与 HTML（不会清空数据库）
-  - 需要在 `.env` 中配置 `REIMPORT_ARTICLES_TOKEN`
-
-`.env` 示例（用于出发文章同步）：
+# prod env settings
+生产环境设置步骤
+1. `.env` file settings
 ```
 REIMPORT_ARTICLES_TOKEN=change-me
 ```
+2. nginx-modsecurity/ssl settings
+3. nginx-modsecurity/.htpasswd settings
+4. init database
+先执行一次初始化，用于建表并导入所有文章
+```
+docker compose run --rm -T web-app python scripts/init_db.py
+```
+- 使用 `run --rm` 不依赖 `web-app` 已经启动；初始化完成后容器会自动删除。
+- `compose.yml` 已将 `/app/instance` 持久化到 `webapp_instance` volume，所以 sqlite 数据不会因临时容器删除而丢失。
+- 否则使用，gunicorn 开多个实例就会因为同时建表报错了。
 
 ## articles introduce
 我原本的 markdown 笔记结构如下所示
@@ -115,55 +119,17 @@ category: Mapped[str] = mapped_column(String(1024))
 
 # Web architecture
 
-目前的架构是 cloudflare (free plan) --> azure front door --> linux vm(3 containers)
+目前的架构是 cloudflare (free plan) --> gcp linux vm(3 containers)
 因为 cloudflare free plan 提供一些最基础的 waf + 在 nginx 上面安装 waf (如果之后遇到了需要 autoscale 的情况，在将 waf container 分离出来,方便 autoscale)
 
 # future consider
 2/ try to use bootstrap5 to opt the css effect
-3/ connect to sqlite database to show the data in the sqlite
+1/ connect to sqlite database to show the data in the sqlite
+3/ 在 gcp vm firewall rule 上仅允许 cf ip
 
 # ci/cd process
 
 本项目使用 GitHub Actions 实现 CI/CD。
-
-## CI (Continuous Integration)
-
-触发条件：
-- push 到任意分支
-- pull request 到 `main`
-
-执行位置：
-- GitHub Actions 云端 runner（不是本地）
-
-检查内容（最小可用）：
-- `docker compose config`（校验 compose 配置语法）
-- `docker compose build`（校验镜像可构建）
-
-本地可选预检查（提交前）：
-```
-docker compose -f compose.yml config
-docker compose -f compose.yml -f compose.dev.yml config
-docker compose -f compose.yml build
-```
-
-## CD (Continuous Deployment)
-
-触发条件：
-- push 到 `main`（且 CI 通过）
-
-执行方式：
-- GitHub Actions 通过 SSH 登录部署机（Linux VM）
-- 在部署目录执行：
-```
-docker compose pull
-docker compose up -d --remove-orphans
-```
-
-部署后检查：
-```
-docker ps
-curl -I http://127.0.0.1/
-```
 
 ## GitHub Secrets
 
@@ -175,19 +141,6 @@ CD 需要在仓库 Settings -> Secrets and variables -> Actions 中配置：
 
 可选：
 - `SSH_KNOWN_HOSTS`（固定 host key，避免 MITM）
-
-## 目录约定
-
-建议 workflow 文件：
-- `.github/workflows/ci.yml`
-- `.github/workflows/cd.yml`
-
-## 注意事项
-
-- 当前 HTTPS 为自签证书，仅用于内网开发验证。
-- 公网正式环境建议切换到 Let's Encrypt，再启用严格 HTTPS 策略。
-
-
 
 
 

@@ -30,6 +30,8 @@ services:
     volumes:
       - rendered_html_articles:/articles/rendered
       - source_md_articles:/articles/src:ro
+      # Persist Flask instance folder so sqlite DB survives container recreation.
+      - webapp_instance:/app/instance
     environment:
       - SOURCE_ARTICLES_DIRECTORY=/articles/src
       - RENDERED_ARTICLES_DIRECTORY=/articles/rendered
@@ -78,3 +80,4 @@ services:
 volumes:
   source_md_articles: # source markdown files volume
   rendered_html_articles: # the html files volme which rendered form source markdown file
+  webapp_instance: # sqlite DB (Flask instance folder) volume
