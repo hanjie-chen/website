@@ -1,11 +1,12 @@
-Flask
-Flask-SQLAlchemy
-Markdown
+flask>=3.1.3
+flask-sqlalchemy
+markdown
 python-frontmatter
-SQLAlchemy
-# as jinja2 <= 3.1.5 have security bug
+sqlalchemy
 jinja2 >= 3.1.6
+werkzeug>=3.1.6
 pygments
 # used to html paser
 beautifulsoup4
 gunicorn
+pytest>=8,<9

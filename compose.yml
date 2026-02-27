@@ -19,6 +19,16 @@ services:
       - REPO_BRANCH=main
       - WEB_APP_REINDEX_URL=http://web-app:5000/internal/reindex
       - REIMPORT_ARTICLES_TOKEN=${REIMPORT_ARTICLES_TOKEN}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "[ -d /articles/src/.git ] && pidof crond >/dev/null",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
     restart: unless-stopped
     logging: *default-logging
   # flask web app container
@@ -38,6 +48,18 @@ services:
       - FLASK_APP=app.py
       - APP_ENV=production
       - REIMPORT_ARTICLES_TOKEN=${REIMPORT_ARTICLES_TOKEN}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/', timeout=3)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
     logging: *default-logging
   # reserve proxy
@@ -72,6 +94,13 @@ services:
     environment:
       - DOZZLE_BASE=/web-log # set url path
       - DOZZLE_NO_ANALYTICS=true # don't send data outside
+    # offical inline health check command
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped

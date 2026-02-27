@@ -28,6 +28,13 @@ jobs:
       - name: Validate compose (dev overlay)
         run: docker compose -f compose.yml -f compose.dev.yml config
 
+      # 跑 web-app tests.
+      - name: Build web-app (test)
+        run: docker compose -f compose.yml -f compose.dev.yml build web-app
+
+      - name: Run pytest
+        run: docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app pytest -q
+
       # GHCR（ghcr.io）集成：
       # - 仅在 push 事件执行（PR 只做检查，不推镜像）
       # - 镜像命名：ghcr.io/<owner>/<repo>-<service>:<tag>
