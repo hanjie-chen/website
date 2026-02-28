@@ -36,4 +36,5 @@ jobs:
             docker compose up -d --remove-orphans
             # Basic post-deploy checks.
             docker compose ps
-            curl -fsS http://127.0.0.1/ >/dev/null
+            # Validate full web path (not only / redirect), through HTTPS endpoint.
+            curl -kfsS https://127.0.0.1/articles -H 'Host: hanjie-chen.com' >/dev/null

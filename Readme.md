@@ -65,16 +65,22 @@ REIMPORT_ARTICLES_TOKEN=xxxx
   docker run --rm httpd:2.4-alpine htpasswd -nbB <username> <password>
   ```
 
-3. 启动服务
+3. 先启动 `articles-sync`（拉取文章仓库到 volume）
 
 ```bash
-docker compose -f compose.yml up -d
+docker compose -f compose.yml up -d articles-sync
 ```
 
 4. 初始化数据库并导入文章
 
 ```bash
 docker compose run --rm -T web-app python scripts/init_db.py
+```
+
+5. 启动全部服务
+
+```bash
+docker compose -f compose.yml up -d
 ```
 
 说明：
