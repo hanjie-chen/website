@@ -10,7 +10,7 @@ services:
     container_name: articles-sync
     # Production image is built/pushed by CI to GHCR.
     # Local development build can be re-enabled in compose.dev.yml.
-    image: ghcr.io/hanjie-chen/website-articles-sync:latest
+    image: ghcr.io/hanjie-chen/website-articles-sync:${ARTICLES_SYNC_IMAGE_TAG:-latest}
     volumes:
       - source_md_articles:/articles/src:rw
     environment:
@@ -36,7 +36,7 @@ services:
     container_name: web-app
     # Production image is built/pushed by CI to GHCR.
     # Local development build can be re-enabled in compose.dev.yml.
-    image: ghcr.io/hanjie-chen/website-web-app:latest
+    image: ghcr.io/hanjie-chen/website-web-app:${WEB_APP_IMAGE_TAG:-latest}
     volumes:
       - rendered_html_articles:/articles/rendered
       - source_md_articles:/articles/src:ro

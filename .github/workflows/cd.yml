@@ -30,11 +30,7 @@ jobs:
             git fetch --all --prune
             git checkout main
             git pull --ff-only origin main
-            # Pull only app images from GHCR (do not force-refresh 3rd-party images).
-            docker compose pull web-app articles-sync
-            # Apply compose changes for all services.
-            docker compose up -d --remove-orphans
-            # Basic post-deploy checks.
-            docker compose ps
-            # Validate full web path (not only / redirect), through HTTPS endpoint.
-            curl -kfsS https://127.0.0.1/articles -H 'Host: hanjie-chen.com' >/dev/null
+            DEPLOY_SHA="${{ github.event.workflow_run.head_sha }}"
+            ./scripts/deploy/prod_deploy.sh "${DEPLOY_SHA}"
+            ./scripts/deploy/ensure_db_ready.sh "${DEPLOY_SHA}"
+            ./scripts/deploy/smoke_check.sh

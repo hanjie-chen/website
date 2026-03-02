@@ -65,21 +65,17 @@ REIMPORT_ARTICLES_TOKEN=xxxx
   docker run --rm httpd:2.4-alpine htpasswd -nbB <username> <password>
   ```
 
-3. 先启动 `articles-sync`（拉取文章仓库到 volume）
+3. 运行初始化脚本（封装步骤 3/4/5）
+
+```bash
+./scripts/deploy/prod_init.sh
+```
+
+手动步骤（等价）：
 
 ```bash
 docker compose -f compose.yml up -d articles-sync
-```
-
-4. 初始化数据库并导入文章
-
-```bash
-docker compose run --rm -T web-app python scripts/init_db.py
-```
-
-5. 启动全部服务
-
-```bash
+docker compose -f compose.yml run --rm -T web-app python scripts/init_db.py
 docker compose -f compose.yml up -d
 ```
 
@@ -133,9 +129,44 @@ location: `.github/workflows/cd.yml`
 - 执行内容：
   - SSH 到目标主机
   - `git pull` 更新代码
-  - `docker compose pull web-app articles-sync`
-  - `docker compose up -d --remove-orphans`
-  - 基础健康检查
+  - 使用 `workflow_run.head_sha` 作为部署镜像 tag（不可变版本）
+  - `./scripts/deploy/prod_deploy.sh <sha>`
+  - `./scripts/deploy/ensure_db_ready.sh <sha>`
+  - `./scripts/deploy/smoke_check.sh`
+
+### Deploy scripts
+
+- `scripts/deploy/prod_init.sh`
+  - 首次部署初始化：等待 `articles-sync` healthy 后再初始化 DB，最后启动全部服务（可选 smoke）
+- `scripts/deploy/prod_deploy.sh <sha>`
+  - 按指定镜像 tag（通常是 commit SHA）部署生产服务
+- `scripts/deploy/ensure_db_ready.sh <sha>`
+  - 检查 `article_meta_data` 表是否存在；缺失时自动执行 `init_db.py` 修复
+- `scripts/deploy/smoke_check.sh`
+  - 线上链路检查：`/` 与 `/articles`
+
+### Rollback
+
+在 GCP VM 上执行（回滚到 `main` 的上一个提交）：
+
+```bash
+ROLLBACK_SHA=$(git rev-parse HEAD~1)
+
+WEB_APP_IMAGE_TAG="$ROLLBACK_SHA" ARTICLES_SYNC_IMAGE_TAG="$ROLLBACK_SHA" docker compose pull web-app articles-sync
+WEB_APP_IMAGE_TAG="$ROLLBACK_SHA" ARTICLES_SYNC_IMAGE_TAG="$ROLLBACK_SHA" docker compose up -d web-app articles-sync
+```
+
+查看当前容器实际运行的镜像 tag：
+
+```bash
+docker inspect web-app --format '{{.Config.Image}}'
+docker inspect articles-sync --format '{{.Config.Image}}'
+```
+
+说明：
+- `SHA` 是 Git 提交 ID。
+- CI 在 GitHub runner 上构建镜像并推送到 GHCR，tag 包含该提交 SHA。
+- CD 在 VM 上只是按这个 SHA 去 GHCR 拉镜像并运行。
 
 ### Required GitHub Secrets
 
@@ -170,4 +201,26 @@ location: `.github/workflows/cd.yml`
    curl -s https://www.cloudflare.com/ips-v4 | tr '\n' ','
    ```
 
-4. 其他的 full-stack, devops 推荐
+4. devops 推荐
+好，我们回到主线。  
+从 DevOps 角度看，你的项目已经“可上线运行”，但还缺下面这些关键项（按优先级）：
+
+**P1（第二阶段）**
+1. `CI 质量门禁`  
+- 增加 `lint + format check + test coverage threshold`。
+2. `安全扫描`  
+- `pip-audit`（Python依赖）+ `trivy`（镜像漏洞）进 CI。
+3. `依赖更新自动化`  
+- 用 Dependabot/Renovate 自动提升级别和安全补丁。
+4. `运行手册`  
+- 故障排查文档（502、DB 空表、nginx 起不来、证书权限问题）。
+
+**P2（可选增强）**
+1. `基础设施即代码`（Terraform）  
+- 把 GCP firewall / monitoring / DNS 规则代码化。
+2. `集中日志与指标`  
+- 如果以后规模变大，再上 Loki/Grafana；当前 Dozzle + Uptime 已够用。
+3. `预发环境`  
+- 有条件再加 staging，当前单 VM 成本优先可先不做。
+
+5. full-stack 推荐步骤
