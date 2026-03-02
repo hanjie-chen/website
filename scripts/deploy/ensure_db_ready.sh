@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/service_wait.sh"
+
 DEPLOY_SHA="${1:-}"
 AUTO_INIT_ON_MISSING="${AUTO_INIT_ON_MISSING:-1}"
+DB_CHECK_WAIT_RUNNING_TIMEOUT_SECONDS="${DB_CHECK_WAIT_RUNNING_TIMEOUT_SECONDS:-90}"
+DB_CHECK_WAIT_HEALTH_TIMEOUT_SECONDS="${DB_CHECK_WAIT_HEALTH_TIMEOUT_SECONDS:-180}"
+DB_CHECK_WAIT_INTERVAL_SECONDS="${DB_CHECK_WAIT_INTERVAL_SECONDS:-3}"
 
 if [[ -n "${DEPLOY_SHA}" ]]; then
   export WEB_APP_IMAGE_TAG="${DEPLOY_SHA}"
@@ -29,6 +35,7 @@ PY
 }
 
 echo "[db-check] Checking article_meta_data table..."
+wait_for_service_state web-app running "${DB_CHECK_WAIT_RUNNING_TIMEOUT_SECONDS}" "${DB_CHECK_WAIT_INTERVAL_SECONDS}" "db-check"
 if has_article_table; then
   echo "[db-check] DB is ready."
   exit 0
@@ -40,8 +47,10 @@ if [[ "${AUTO_INIT_ON_MISSING}" != "1" ]]; then
 fi
 
 echo "[db-check] DB table missing, running init_db.py..."
+wait_for_service_state articles-sync healthy "${DB_CHECK_WAIT_HEALTH_TIMEOUT_SECONDS}" "${DB_CHECK_WAIT_INTERVAL_SECONDS}" "db-check"
 docker compose run --rm -T web-app python scripts/init_db.py
 
 echo "[db-check] Re-checking DB..."
+wait_for_service_state web-app running "${DB_CHECK_WAIT_RUNNING_TIMEOUT_SECONDS}" "${DB_CHECK_WAIT_INTERVAL_SECONDS}" "db-check"
 has_article_table
 echo "[db-check] DB recovery completed."

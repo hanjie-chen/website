@@ -132,6 +132,7 @@ location: `.github/workflows/cd.yml`
   - 使用 `workflow_run.head_sha` 作为部署镜像 tag（不可变版本）
   - `./scripts/deploy/prod_deploy.sh <sha>`
   - `./scripts/deploy/ensure_db_ready.sh <sha>`
+  - `./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity`
   - `./scripts/deploy/smoke_check.sh`
 
 ### Deploy scripts
@@ -142,6 +143,8 @@ location: `.github/workflows/cd.yml`
   - 按指定镜像 tag（通常是 commit SHA）部署生产服务
 - `scripts/deploy/ensure_db_ready.sh <sha>`
   - 检查 `article_meta_data` 表是否存在；缺失时自动执行 `init_db.py` 修复
+- `scripts/deploy/wait_services_healthy.sh [services...]`
+  - 等待指定服务进入 `healthy`（默认 `web-app` 与 `nginx-modsecurity`）
 - `scripts/deploy/smoke_check.sh`
   - 线上链路检查：`/` 与 `/articles`
 
