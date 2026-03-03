@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from markdown.extensions import Extension
 from markdown.postprocessors import Postprocessor
 
+
 class Image_Processor(Postprocessor):
     def __init__(self, md, base_url):
         super().__init__(md)
@@ -35,12 +36,12 @@ class Image_Processor(Postprocessor):
                 img["class"] = ["img-fluid"]
 
         return str(soup)
-    
+
 
 class Image_Processor_Extension(Extension):
     @staticmethod
     def normalize_base_url(url: str) -> str:
-        return '/' + url.strip('/') + '/'
+        return "/" + url.strip("/") + "/"
 
     def __init__(self, base_url: str, **kwargs):
         """
@@ -48,18 +49,15 @@ class Image_Processor_Extension(Extension):
         """
         # make sure the base url end with / and start with /
         base_url = Image_Processor_Extension.normalize_base_url(base_url)
-        self.config = {
-            'base_url': [base_url, 'Base URL for images']
-        }
+        self.config = {"base_url": [base_url, "Base URL for images"]}
         super().__init__(**kwargs)
 
     def extendMarkdown(self, md):
-        base_url = self.getConfig('base_url')
+        base_url = self.getConfig("base_url")
         md.postprocessors.register(
-            Image_Processor(md, base_url),
-            "image_path_postprocessor",
-            25
+            Image_Processor(md, base_url), "image_path_postprocessor", 25
         )
+
 
 def makeExtension(**kwargs):
     return Image_Processor_Extension(**kwargs)

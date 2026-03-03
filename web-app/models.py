@@ -4,15 +4,18 @@ from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy import String, Date, Text, Integer
 from flask_sqlalchemy import SQLAlchemy
 
+
 class Base(DeclarativeBase):
     pass
 
+
 db = SQLAlchemy(model_class=Base)
+
 
 # 文章元数据
 class Article_Meta_Data(db.Model):
     # 指定数据模型在数据库中的表名称 如果未指定那么为类名称的小写
-    __tablename__ = 'article_meta_data'
+    __tablename__ = "article_meta_data"
     # 主键 但是无需为其赋值 SQLite数据库会自动为其生成一个唯一的值
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
@@ -24,7 +27,7 @@ class Article_Meta_Data(db.Model):
 
     # 文章指导者 存在Optional 默认nullable=True
     instructor: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-   
+
     # 文章封面链接 真实image存储地址 由于特别设计，所以可以由category+相对路径转换而来
     # 例如 PythonLearn/PythonPackage/Flask/images/cover-image.png 其 cover_image_url = "redered-articles/PythonLearn-PythonPackage-Flask/images/cover-image.png"
     cover_image_url: Mapped[str] = mapped_column(String(100))
@@ -33,7 +36,7 @@ class Article_Meta_Data(db.Model):
     rollout_date: Mapped[date] = mapped_column(Date)
 
     # 表示文章最后更新的日期 只精确到年月日 --> 使用文件最后修改日期 不显式指定
-    ultimate_modified_date: Mapped[date] = mapped_column(Date)    
+    ultimate_modified_date: Mapped[date] = mapped_column(Date)
 
     # 文章内容简介
     brief_introduction: Mapped[str] = mapped_column(Text)
@@ -49,7 +52,7 @@ class Article_Meta_Data(db.Model):
 
     # 文章内容哈希，用于判断是否需要更新
     content_hash: Mapped[str] = mapped_column(String(64))
-    
+
     # 文章分类 使用 mptt 待开发和测试
     # 关于category 在metadata中并不显示指定 而是根据路径来 比如说 ~/PersonalArticles/PythonLearn/PythonPackage/Basic.md
     # 那么这篇Basic.md 的category其实就是 PythonLearn --> PythonPackage
@@ -57,7 +60,8 @@ class Article_Meta_Data(db.Model):
     # category = db.relationship('Category')
 
     def __repr__(self):
-        return f'<Article {self.title}>'
+        return f"<Article {self.title}>"
+
 
 # mptt 待开发和测试
 # class Article_Category(db.Model):

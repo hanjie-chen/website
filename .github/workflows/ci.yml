@@ -28,9 +28,23 @@ jobs:
       - name: Validate compose (dev overlay)
         run: docker compose -f compose.yml -f compose.dev.yml config
 
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: shellcheck -x scripts/deploy/*.sh articles-sync/*.sh
+
       # 跑 web-app tests.
       - name: Build web-app (test)
         run: docker compose -f compose.yml -f compose.dev.yml build web-app
+
+      - name: Run ruff
+        run: docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app ruff check .
+
+      - name: Run format check
+        run: docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app ruff format --check .
 
       - name: Run pytest
         run: docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app pytest -q

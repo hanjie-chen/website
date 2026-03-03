@@ -6,7 +6,9 @@ Articles_Directory = os.environ.get("SOURCE_ARTICLES_DIRECTORY", "/articles/src"
 Rendered_Articles = os.environ.get("RENDERED_ARTICLES_DIRECTORY", "/articles/rendered")
 
 # sqlite database uri (allow override for safe testing)
-SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///project.db")
+SQLALCHEMY_DATABASE_URI = os.environ.get(
+    "SQLALCHEMY_DATABASE_URI", "sqlite:///project.db"
+)
 
 # token for internal reimport endpoint
 REIMPORT_ARTICLES_TOKEN = os.environ.get("REIMPORT_ARTICLES_TOKEN", "")

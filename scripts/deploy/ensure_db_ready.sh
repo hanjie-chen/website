@@ -4,6 +4,7 @@ set -euo pipefail
 # Ensure DB schema is usable after deployment.
 # This script is intended to run after `prod_deploy.sh` and before strict healthy/smoke checks.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/deploy/service_wait.sh
 source "${SCRIPT_DIR}/service_wait.sh"
 
 DEPLOY_SHA="${1:-}"

@@ -4,6 +4,7 @@ set -euo pipefail
 # Wrapper script: wait until target services become healthy.
 # Core waiting logic lives in service_wait.sh.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/deploy/service_wait.sh
 source "${SCRIPT_DIR}/service_wait.sh"
 
 # Per-service wait timeout/interval (seconds).

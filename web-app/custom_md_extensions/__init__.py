@@ -8,4 +8,3 @@ __all__ = [
     "Gfm_Admonition_Extension",
     "Image_Processor_Extension",
 ]
-

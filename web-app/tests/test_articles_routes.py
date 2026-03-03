@@ -43,7 +43,9 @@ def test_view_article_returns_200_for_existing_article(client, app):
         category_path = article.category.replace("/", "-")
         html_dir = Path(app_module.Rendered_Articles) / category_path
         html_dir.mkdir(parents=True, exist_ok=True)
-        (html_dir / f"{article.id}.html").write_text("<h1>Test Content</h1>", encoding="utf-8")
+        (html_dir / f"{article.id}.html").write_text(
+            "<h1>Test Content</h1>", encoding="utf-8"
+        )
         article_id = article.id
 
     response = client.get(f"/articles/{article_id}")

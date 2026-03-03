@@ -15,12 +15,15 @@ from xml.etree.ElementTree import Element, SubElement
 
 
 class Gfm_Admonition_Processor(BlockProcessor):
-    PATTERN = re.compile(r"""
+    PATTERN = re.compile(
+        r"""
         ^\s*                                                # 可能的前导空白
         \[!\s*(note|tip|important|warning|caution)\s*\]     # 匹配 admonition 标签，支持小写
         (?:$|\s*\n)                                         # 行尾或者换行
-    """, re.VERBOSE | re.IGNORECASE)
-    
+    """,
+        re.VERBOSE | re.IGNORECASE,
+    )
+
     def __init__(self, parser: BlockParser):
         super().__init__(parser)
 
@@ -29,16 +32,16 @@ class Gfm_Admonition_Processor(BlockProcessor):
             return False
         match = self.PATTERN.match(block)
         return match is not None
-    
+
     def run(self, parent: Element, blocks: List[str]) -> Optional[bool]:
         if not blocks:
             return False
         match = self.PATTERN.match(blocks[0])
         if not match:
             return False
-        
+
         # 去掉匹配部分，剩下的内容会作为内部块内容
-        blocks[0] = blocks[0][match.end():]
+        blocks[0] = blocks[0][match.end() :]
         admonition_type = match.group(1).lower()  # 统一转换为小写
 
         # 将原来的 blockquote 改为 div，并设置 CSS 类方便样式定制
@@ -61,9 +64,7 @@ class Gfm_Admonition_Extension(Extension):
     def extendMarkdown(self, md: Markdown) -> None:
         md.registerExtension(self)
         md.parser.blockprocessors.register(
-            Gfm_Admonition_Processor(md.parser),
-            "gfm_admonition",
-            105
+            Gfm_Admonition_Processor(md.parser), "gfm_admonition", 105
         )
 
 

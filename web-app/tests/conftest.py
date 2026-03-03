@@ -9,8 +9,8 @@ APP_DIR = os.path.abspath(os.path.join(TESTS_DIR, ".."))
 if APP_DIR not in sys.path:
     sys.path.insert(0, APP_DIR)
 
-import app as app_module
-from models import Article_Meta_Data, db
+import app as app_module  # noqa: E402
+from models import Article_Meta_Data, db  # noqa: E402
 
 
 @pytest.fixture()
@@ -38,7 +38,9 @@ def app(tmp_path):
     with app_module.app.app_context():
         # Remove only test rows (file_path starts with tests/) to stay safe.
         db.session.execute(
-            db.delete(Article_Meta_Data).where(Article_Meta_Data.file_path.like("tests/%"))
+            db.delete(Article_Meta_Data).where(
+                Article_Meta_Data.file_path.like("tests/%")
+            )
         )
         db.session.commit()
         db.session.remove()

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/deploy/service_wait.sh
 source "${SCRIPT_DIR}/service_wait.sh"
 
 # Wait timeout for initial article source sync.

@@ -10,3 +10,4 @@ pygments
 beautifulsoup4
 gunicorn
 pytest>=8,<9
+ruff

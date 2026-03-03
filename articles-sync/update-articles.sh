@@ -48,13 +48,17 @@ fi
 if [ -n "$WEB_APP_REINDEX_URL" ]; then
     log_message "Triggering reindex: $WEB_APP_REINDEX_URL"
     if [ -n "$REIMPORT_ARTICLES_TOKEN" ]; then
-        curl -fsS -X POST -H "X-REIMPORT-ARTICLES-TOKEN: $REIMPORT_ARTICLES_TOKEN" "$WEB_APP_REINDEX_URL" >/dev/null \
-            && log_message "Reindex triggered successfully" \
-            || log_message "Reindex trigger failed"
+        if curl -fsS -X POST -H "X-REIMPORT-ARTICLES-TOKEN: $REIMPORT_ARTICLES_TOKEN" "$WEB_APP_REINDEX_URL" >/dev/null; then
+            log_message "Reindex triggered successfully"
+        else
+            log_message "Reindex trigger failed"
+        fi
     else
-        curl -fsS -X POST "$WEB_APP_REINDEX_URL" >/dev/null \
-            && log_message "Reindex triggered successfully" \
-            || log_message "Reindex trigger failed"
+        if curl -fsS -X POST "$WEB_APP_REINDEX_URL" >/dev/null; then
+            log_message "Reindex triggered successfully"
+        else
+            log_message "Reindex trigger failed"
+        fi
     fi
 else
     log_message "WEB_APP_REINDEX_URL is not set, skip reindex"
