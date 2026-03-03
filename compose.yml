@@ -70,7 +70,11 @@ services:
       - "80:80"
       - "443:443"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost/ || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -kfsS https://127.0.0.1/ -H 'Host: hanjie-chen.com' >/dev/null || exit 1",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3

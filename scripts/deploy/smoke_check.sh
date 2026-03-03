@@ -5,7 +5,7 @@ set -euo pipefail
 # Intended to run after services are healthy; keeps a short retry window for brief startup jitter.
 BASE_URL="${BASE_URL:-https://127.0.0.1}"
 HOST_HEADER="${HOST_HEADER:-hanjie-chen.com}"
-SMOKE_TIMEOUT_SECONDS="${SMOKE_TIMEOUT_SECONDS:-20}"
+SMOKE_TIMEOUT_SECONDS="${SMOKE_TIMEOUT_SECONDS:-60}"
 SMOKE_INTERVAL_SECONDS="${SMOKE_INTERVAL_SECONDS:-2}"
 
 request() {
@@ -26,6 +26,8 @@ wait_request_ok() {
 
     if (( elapsed >= SMOKE_TIMEOUT_SECONDS )); then
       echo "[smoke] ${path} failed after ${SMOKE_TIMEOUT_SECONDS}s." >&2
+      echo "[smoke] Recent web-app / nginx logs for troubleshooting:" >&2
+      docker compose logs --tail=80 web-app nginx-modsecurity || true
       return 1
     fi
 

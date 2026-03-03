@@ -19,4 +19,9 @@ docker compose pull web-app articles-sync
 # Apply compose changes for all services.
 docker compose up -d --remove-orphans
 
+# nginx can keep stale upstream target after web-app container recreation.
+# Reload nginx so upstream DNS/cache state is refreshed to current container IPs.
+echo "[deploy] Reloading nginx-modsecurity..."
+docker compose exec -T nginx-modsecurity nginx -s reload || docker compose restart nginx-modsecurity
+
 docker compose ps
