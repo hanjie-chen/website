@@ -1,13 +1,23 @@
 #!/usr/bin/env bash
 # Shared waiting helpers for deploy scripts.
+# This file is sourced by other scripts (it is not executed directly).
 
 wait_for_service_state() {
+  # Args:
+  #   1) service name (compose container name)
+  #   2) desired state: healthy | running
+  #   3) timeout seconds (default 180)
+  #   4) poll interval seconds (default 3)
+  #   5) log prefix (default "wait")
   local service="$1"
   local desired_state="$2"   # healthy | running
   local timeout_seconds="${3:-180}"
   local interval_seconds="${4:-3}"
   local log_prefix="${5:-wait}"
 
+  # Docker inspect format differs by target state:
+  # - healthy: use Health.Status when present
+  # - running: use container State.Status
   local inspect_format
   case "${desired_state}" in
     healthy)
@@ -22,6 +32,7 @@ wait_for_service_state() {
       ;;
   esac
 
+  # Poll until desired state, timeout, or fatal state.
   local elapsed=0
   while true; do
     local status

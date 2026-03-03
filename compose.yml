@@ -14,7 +14,7 @@ services:
     volumes:
       - source_md_articles:/articles/src:rw
     environment:
-      - GITHUB_REPO=https://github.com/hanjie-chen/PersonalArticles.git
+      - GITHUB_REPO=https://github.com/hanjie-chen/knowledge-base.git
       - SOURCE_ARTICLES_DIRECTORY=/articles/src
       - REPO_BRANCH=main
       - WEB_APP_REINDEX_URL=http://web-app:5000/internal/reindex
@@ -28,7 +28,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 90s
+      start_period: 600s
     restart: unless-stopped
     logging: *default-logging
   # flask web app container

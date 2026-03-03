@@ -2,7 +2,7 @@
 set -e
 
 ARTICLES_DIR="${SOURCE_ARTICLES_DIRECTORY:-/articles/src}"
-GITHUB_REPO="${GITHUB_REPO:-https://github.com/hanjie-chen/PersonalArticles.git}"
+GITHUB_REPO="${GITHUB_REPO:-https://github.com/hanjie-chen/knowledge-base.git}"
 REPO_BRANCH="${REPO_BRANCH:-main}"
 SU_EXEC_BIN="${SU_EXEC_BIN:-}"
 

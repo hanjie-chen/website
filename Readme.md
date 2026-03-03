@@ -2,26 +2,64 @@
 
 个人网站与博客平台，核心技术栈为 `Flask + SQLite + Docker Compose + Nginx(ModSecurity) + GitHub Actions`。
 
-文章内容来自我的笔记 github repo: [hanjie-chen/PersonalArticles](https://github.com/hanjie-chen/PersonalArticles)，通过定时同步与增量导入自动发布。
+文章内容来自我的笔记 github repo: [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过定时同步与增量导入自动发布。
 
 ## Overview
 
 Repository Layout
 
-```text
+```shell
 .
 ├── articles-sync/                # 同步容器脚本与 Dockerfile
 ├── nginx-modsecurity/            # Nginx/WAF 配置、证书、Basic Auth
 ├── web-app/                      # Flask 应用
 ├── compose.yml                   # 生产配置
+├── scripts/deploy                # CD用脚本
 ├── compose.dev.yml               # 开发覆盖配置
 └── .github/workflows/            # CI/CD
 ```
 
 - web-app: Flask 应用，负责页面路由、文章展示、内部重建接口。
-- articles-sync: 定时 `git pull` 文章仓库，发现更新后调用内部 reindex 接口。
 - nginx-modsecurity: 反向代理 + WAF，处理 HTTPS 和静态资源。
 - dozzle: 容器日志 UI（通过 `/web-log/` 暴露并做 Basic Auth）。
+
+### articles-sync/
+
+定时 `git pull` 文章仓库，发现更新后调用内部 reindex 接口。
+
+```shell
+.
+├── Dockerfile              # 构建 image
+├── cron-heartbeat-sync.sh  # 定时 task 执行 update-articles.sh
+├── init.sh                 # 初始化脚本
+└── update-articles.sh      # 定时更新脚本
+```
+
+`init.sh` 先执行 git clone/git pull，成功之后才会启动 crond
+
+### scripts/deploy/
+
+cd 流程中使用的脚本
+
+```shell
+.
+├── ensure_db_ready.sh
+├── prod_deploy.sh
+├── prod_init.sh
+├── service_wait.sh
+├── smoke_check.sh
+└── wait_services_healthy.sh
+```
+
+`prod_init.sh`: 首次部署初始化：等待 `articles-sync` healthy 后再初始化 DB，最后启动全部服务并执行 smoke check
+
+`prod_deploy.sh <sha>`: 按指定镜像 tag（通常是 commit SHA）部署生产服务
+
+`ensure_db_ready.sh <sha>`: 检查 `article_meta_data` 表是否存在；缺失时自动执行 `init_db.py` 修复
+
+`wait_services_healthy.sh [services...]`:等待指定服务进入 `healthy`（默认 `web-app` 与 `nginx-modsecurity`）
+
+`smoke_check.sh`: 线上链路检查：`/` 与 `/articles`
 
 ## Architecture
 
@@ -65,24 +103,13 @@ REIMPORT_ARTICLES_TOKEN=xxxx
   docker run --rm httpd:2.4-alpine htpasswd -nbB <username> <password>
   ```
 
-3. 运行初始化脚本（封装步骤 3/4/5）
+3. 运行初始化脚本（封装后续步骤）
 
 ```bash
 ./scripts/deploy/prod_init.sh
 ```
 
-手动步骤（等价）：
-
-```bash
-docker compose -f compose.yml up -d articles-sync
-docker compose -f compose.yml run --rm -T web-app python scripts/init_db.py
-docker compose -f compose.yml up -d
-```
-
-说明：
-
-- 使用 `run --rm` 不依赖 `web-app` 已先启动。
-- SQLite 持久化在 `webapp_instance` volume，容器删除不会丢库。
+- 首次拉取文章等待超时可通过 `ARTICLES_SYNC_READY_TIMEOUT` 覆盖（`prod_init.sh` 默认 600 秒）。
 
 ## Tests
 
@@ -135,19 +162,6 @@ location: `.github/workflows/cd.yml`
   - `./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity`
   - `./scripts/deploy/smoke_check.sh`
 
-### Deploy scripts
-
-- `scripts/deploy/prod_init.sh`
-  - 首次部署初始化：等待 `articles-sync` healthy 后再初始化 DB，最后启动全部服务（可选 smoke）
-- `scripts/deploy/prod_deploy.sh <sha>`
-  - 按指定镜像 tag（通常是 commit SHA）部署生产服务
-- `scripts/deploy/ensure_db_ready.sh <sha>`
-  - 检查 `article_meta_data` 表是否存在；缺失时自动执行 `init_db.py` 修复
-- `scripts/deploy/wait_services_healthy.sh [services...]`
-  - 等待指定服务进入 `healthy`（默认 `web-app` 与 `nginx-modsecurity`）
-- `scripts/deploy/smoke_check.sh`
-  - 线上链路检查：`/` 与 `/articles`
-
 ### Rollback
 
 在 GCP VM 上执行（回滚到 `main` 的上一个提交）：
@@ -167,6 +181,7 @@ docker inspect articles-sync --format '{{.Config.Image}}'
 ```
 
 说明：
+
 - `SHA` 是 Git 提交 ID。
 - CI 在 GitHub runner 上构建镜像并推送到 GHCR，tag 包含该提交 SHA。
 - CD 在 VM 上只是按这个 SHA 去 GHCR 拉镜像并运行。
@@ -205,25 +220,39 @@ docker inspect articles-sync --format '{{.Config.Image}}'
    ```
 
 4. devops 推荐
-好，我们回到主线。  
-从 DevOps 角度看，你的项目已经“可上线运行”，但还缺下面这些关键项（按优先级）：
+   好，我们回到主线。  
+   从 DevOps 角度看，你的项目已经“可上线运行”，但还缺下面这些关键项（按优先级）：
 
 **P1（第二阶段）**
+
 1. `CI 质量门禁`  
+
 - 增加 `lint + format check + test coverage threshold`。
+
 2. `安全扫描`  
+
 - `pip-audit`（Python依赖）+ `trivy`（镜像漏洞）进 CI。
+
 3. `依赖更新自动化`  
+
 - 用 Dependabot/Renovate 自动提升级别和安全补丁。
+
 4. `运行手册`  
+
 - 故障排查文档（502、DB 空表、nginx 起不来、证书权限问题）。
 
 **P2（可选增强）**
+
 1. `基础设施即代码`（Terraform）  
+
 - 把 GCP firewall / monitoring / DNS 规则代码化。
+
 2. `集中日志与指标`  
+
 - 如果以后规模变大，再上 Loki/Grafana；当前 Dozzle + Uptime 已够用。
+
 3. `预发环境`  
+
 - 有条件再加 staging，当前单 VM 成本优先可先不做。
 
 5. full-stack 推荐步骤
