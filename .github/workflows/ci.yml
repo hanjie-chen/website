@@ -20,7 +20,7 @@ jobs:
     steps:
       # 拉取代码
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       # 检查 compose.yml 语法
       - name: Validate compose (prod)
         run: docker compose -f compose.yml config
@@ -50,7 +50,7 @@ jobs:
       # - scan locked Python dependencies from requirements.txt
       # - use official PyPA action
       - name: Set up Python for pip-audit
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
