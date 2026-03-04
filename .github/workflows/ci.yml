@@ -46,6 +46,21 @@ jobs:
       - name: Run format check
         run: docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app ruff format --check .
 
+      # Security advisory step (non-blocking for now):
+      # - scan locked Python dependencies from requirements.txt
+      # - use official PyPA action
+      - name: Set up Python for pip-audit
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run pip-audit (advisory, official action)
+        continue-on-error: true
+        uses: pypa/gh-action-pip-audit@v1.1.0
+        with:
+          inputs: web-app/requirements.txt
+          no-deps: true
+
       - name: Run pytest with coverage gate
         run: >
           docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app

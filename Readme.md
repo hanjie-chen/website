@@ -223,10 +223,9 @@ docker inspect articles-sync --format '{{.Config.Image}}'
    好，我们回到主线。  
    从 DevOps 角度看，你的项目已经“可上线运行”，但还缺下面这些关键项（按优先级）：
 
-**P1（第二阶段）**
-2. `安全扫描`  
+5. trivy 的 ci 扫描
 
-- `pip-audit`（Python依赖）+ `trivy`（镜像漏洞）进 CI。
+**P1（第二阶段）**
 
 3. `依赖更新自动化`  
 
