@@ -2,5 +2,9 @@ __pycache__
 instance
 rendered_articles
 
+.pytest_cache
+.ruff_cache
+# pytest-cov file
+.coverage
 # docker realted file
 Dockerfile

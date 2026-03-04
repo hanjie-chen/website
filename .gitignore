@@ -1,6 +1,9 @@
 # ignore python compile file
 __pycache__/
 
+# ignore pytest coverage artifacts
+.coverage
+
 # ignore the generated html file
 rendered-articles/
 

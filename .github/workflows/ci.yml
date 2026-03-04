@@ -46,8 +46,16 @@ jobs:
       - name: Run format check
         run: docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app ruff format --check .
 
-      - name: Run pytest
-        run: docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app pytest -q
+      - name: Run pytest with coverage gate
+        run: >
+          docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app
+          pytest -q
+          --cov=app
+          --cov=import_articles_scripts
+          --cov=markdown_render_scripts
+          --cov=models
+          --cov-report=term-missing
+          --cov-fail-under=30
 
       # GHCR（ghcr.io）集成：
       # - 仅在 push 事件执行（PR 只做检查，不推镜像）

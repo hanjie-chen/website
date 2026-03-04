@@ -224,11 +224,6 @@ docker inspect articles-sync --format '{{.Config.Image}}'
    从 DevOps 角度看，你的项目已经“可上线运行”，但还缺下面这些关键项（按优先级）：
 
 **P1（第二阶段）**
-
-1. `CI 质量门禁`  
-
-- 增加 `lint + format check + test coverage threshold`。
-
 2. `安全扫描`  
 
 - `pip-audit`（Python依赖）+ `trivy`（镜像漏洞）进 CI。
