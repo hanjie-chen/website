@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory, abort
+from flask import Flask, render_template, request, send_from_directory, abort, url_for
 from models import db, Article_Meta_Data
 from import_articles_scripts import import_articles
 import os
@@ -73,6 +73,23 @@ def _build_article_toc(article_content: str):
 
 def _fetch_all_articles():
     return db.session.execute(db.select(Article_Meta_Data)).scalars().all()
+
+
+def _asset_url(filename: str) -> str:
+    static_folder = app.static_folder or ""
+    asset_path = os.path.join(static_folder, filename)
+
+    try:
+        version = int(os.path.getmtime(asset_path))
+    except OSError:
+        return url_for("static", filename=filename)
+
+    return url_for("static", filename=filename, v=version)
+
+
+@app.context_processor
+def inject_asset_url():
+    return {"asset_url": _asset_url}
 
 
 @app.route("/")
