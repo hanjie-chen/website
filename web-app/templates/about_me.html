@@ -9,26 +9,24 @@
 {% block navbar%}
 <!-- Navbar -->
 <nav class="navbar navbar-expand-sm navbar-custom fixed-top">
-    <div class="container">
-        <!-- put my personal website logo here -->
-        <!-- <a class="navbar-brand" href="{{ url_for('index')}}">
-            <img alt="头像" class="rounded" style="width:4vw;" src="{{ url_for('static', filename='images/headavatar/head_avatar_problem.png') }}">
-            </a> -->
-        <span class="emoji {% if request.path == url_for('about_me') %}shake{% endif %}">👋</span> About Me
-        <div class="collapse navbar-collapse" id="mynavbar">
-            <ul class="navbar-nav ms-auto">
-                <!-- 文章页面就可以包含分类和标签了 不用另外起一个页面 -->
+    <div class="container-fluid d-flex justify-content-center">
+        <div class="site-nav-shell px-2 px-lg-3">
+            <a href="{{ url_for('about_me') }}" class="site-nav-brand">
+                <span class="emoji {% if request.path == url_for('about_me') %}shake{% endif %}">👋</span>
+                <span>About Me</span>
+            </a>
+            <ul class="navbar-nav flex-row site-nav-menu">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('article_index') }}" class="text-decoration-none">
-                        Articles
+                    <a class="nav-link" href="{{ url_for('index') }}">
+                        Home
                     </a>
                 </li>
                 <li class="nav-item">
                     <span class="nav-link">|</span>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index') }}">
-                        Home
+                    <a class="nav-link" href="{{ url_for('article_index') }}" class="text-decoration-none">
+                        Articles
                     </a>
                 </li>
             </ul>
@@ -43,27 +41,16 @@
     <div class="content-wrapper">
         <div class="container">
             <div class="content">
-                <p>为什么要写博客？为什么要建立个人网站？</p>
-
-                <p>如果根本就没人来读我的博客，没人来看我的个人网站（现实情况大概率就是这样子），我写的的博客和建立的个人网站的意义何在？</p>
-    
-                <p>我把自己遇到的问题写入到博客中，询问 chatGPT, grok3, Sonnent 等LLM，寻找问题背后的原理，整理他们给我的解释，尽量让我的文章逻辑通顺，然后选择合适的图片作为封面，或者是某些截图（我自己遇到的问题）作为例子和详解，方便读者去理解</p>
-    
-                <p>持续更新文章，渐渐总结某个领域的知识，将零碎的知识整合成一篇完整的博客内容</p>
-    
-                <p>这一切如果没有别人来阅读你写的博客，那么我的写作就是浪费时间吗？</p>
-    
-                <p>写博客的时候，我会整理遇到的问题属于那些方面，他应该被放到那些文件夹或者哪一篇已经存在的文章中。</p>
-    
-                <p>我写博客不是为了有人来看我的文章，而是为了我自己的需要，方便我建立自己的知识库，方便我遇到相同或者相似的问题的时候回顾和查看，博客的目标读者并不是我的观众，而是未来的我，这些文章会让我看到我过去的时间花费在了那些地方，可以让我看到自己思想的演变</p>
-    
-                <p>或许未来有一天某个真正需要我的文章人会看到它</p>
-    
+                <p>为什么要写博客？为什么要建立个人网站？如果根本就没人来读它们，这些文章和个人网站又有什么意义？</p>
+                <p>在 AI 如此强大而且越来越强大的今天，还需要写技术文章吗？直接问 AI 它不香吗？</p>
+                <p>我写这些文章会不会就是浪费时间呢？</p>
+                <p>我整理我遇到的问题，询问各个 ai，寻找问题背后的原理，整理他们给我的解释，尽量让我的文章逻辑通顺，循序渐进，选择合适的图片作为封面，或者是某些截图作为例子和详解，方便读者去理解。</p>
+                <p>持续更新，渐渐总结某个领域的知识，将零碎的知识整合成一篇完整的博客内容。</p>
+                <p>这些行为的意义在哪里呢？</p>
+                <p>写博客不是为了有人来看我的文章，而是为了我自己的需要，方便我建立自己的知识库，方便我遇到相同或者相似的问题的时候回顾和查看，博客的目标读者并不是我的观众，而是未来的我。</p>
+                <p>或许未来有一天某个真正需要这些文章的人（或者是 AI 😂）会看到它</p>
                 <p>我写博客是因为我在思考，因为我在学习和成长，因为我希望把这些东西记录在某个地方。</p>
-    
                 <p>如果有人读了，那就更好。如果没有，那我的目的还是达成了。</p>
-    
-                <p>这才是真正的重点</p>
             </div>
         </div>
     </div>

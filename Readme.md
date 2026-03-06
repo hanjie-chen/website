@@ -140,7 +140,7 @@ docker compose -f compose.yml -f compose.dev.yml run --rm -T web-app pytest -q
 location: `.github/workflows/ci.yml`
 
 - 触发：
-  - `push` 到任意分支
+  - `push` 到 `main`
   - `pull_request` 到 `main`
 - 执行内容：
   - 校验 `compose.yml` 与 `compose.dev.yml`
@@ -193,6 +193,26 @@ docker inspect articles-sync --format '{{.Config.Image}}'
 - `SSH_USER`
 - `SSH_PRIVATE_KEY`
 
+## Terraform (GCP IaC)
+
+Terraform 目录位于 `infra/terraform/gcp/`，当前使用 GCS backend 保存 state。
+
+当前已纳入 Terraform 管理的 GCP 资源：
+
+- 生产 VM：`google_compute_instance.web`
+- Cloudflare 到 origin 的 HTTPS firewall：`google_compute_firewall.allow_cf_https`
+- 生产 uptime check：`google_monitoring_uptime_check_config.website_https`
+
+当前流程是 `import-first`，不是直接新建整套基础设施：
+
+```bash
+cd infra/terraform/gcp
+terraform init
+terraform plan
+```
+
+更详细的 Terraform 使用说明见：`infra/terraform/gcp/README.md`
+
 ## Logging
 
 - 日志 UI：`/web-log/`（Dozzle）
@@ -204,6 +224,98 @@ docker inspect articles-sync --format '{{.Config.Image}}'
 - 内部重建接口：`POST /internal/reindex`
 - 鉴权头：`X-REIMPORT-ARTICLES-TOKEN`
 - WAF：`nginx-modsecurity` 默认开启；`/web-log/` 路径按需放行以保证日志流功能
+
+## Runbook (Troubleshooting)
+
+### 1) 502 Bad Gateway
+
+症状：
+
+- 访问首页或 `/articles` 返回 `502`
+
+排查：
+
+```bash
+docker compose ps
+docker compose logs --tail=120 nginx-modsecurity web-app
+docker compose exec -T nginx-modsecurity getent hosts web-app
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' web-app
+```
+
+常见根因：
+
+- `nginx-modsecurity` 仍在转发旧的 `web-app` IP
+
+修复：
+
+```bash
+docker compose kill -s HUP nginx-modsecurity || docker compose restart nginx-modsecurity
+curl -k -i https://127.0.0.1/ -H 'Host: hanjie-chen.com'
+```
+
+### 2) `/articles` 出现问题
+
+症状：
+
+- `web-app` 日志出现 `sqlite3.OperationalError: no such table: article_meta_data`
+
+排查：
+
+```bash
+docker compose logs --tail=120 web-app
+```
+
+修复（生产推荐）：
+
+```bash
+./scripts/deploy/ensure_db_ready.sh <deploy_sha>
+```
+
+修复（手动）：
+
+```bash
+docker compose run --rm -T web-app python scripts/init_db.py
+```
+
+### 3) nginx-modsecurity 起不来
+
+症状：
+
+- `nginx-modsecurity` 容器反复重启或 `unhealthy`
+
+排查：
+
+```bash
+docker compose logs --tail=200 nginx-modsecurity
+```
+
+常见根因：
+
+- 配置语法错误
+- upstream 服务名不存在（例如 `host not found in upstream "dozzle"`）
+
+修复：
+
+```bash
+docker compose up -d dozzle
+docker compose restart nginx-modsecurity
+```
+
+### 4) 证书权限问题（`BIO_new_file() failed` / `Permission denied`）
+
+症状：
+
+- 启动 nginx 时提示读取 `*.crt` 或 `*.key` 权限不足
+
+修复：
+
+```bash
+chmod 755 nginx-modsecurity/ssl
+chmod 644 nginx-modsecurity/ssl/hanjie-chen.com.crt
+sudo chown root:101 nginx-modsecurity/ssl/hanjie-chen.com.key
+sudo chmod 640 nginx-modsecurity/ssl/hanjie-chen.com.key
+docker compose restart nginx-modsecurity
+```
 
 ## Roadmap
 
@@ -225,16 +337,7 @@ docker inspect articles-sync --format '{{.Config.Image}}'
 
 5. trivy 的 ci 扫描
 
-**P1（第二阶段）**
-
-3. `依赖更新自动化`  
-
-- 用 Dependabot/Renovate 自动提升级别和安全补丁。
-
-4. `运行手册`  
-
-- 故障排查文档（502、DB 空表、nginx 起不来、证书权限问题）。
-
+6. terraform gcp service account instead of gcoud login
 **P2（可选增强）**
 
 1. `基础设施即代码`（Terraform）  
@@ -245,8 +348,5 @@ docker inspect articles-sync --format '{{.Config.Image}}'
 
 - 如果以后规模变大，再上 Loki/Grafana；当前 Dozzle + Uptime 已够用。
 
-3. `预发环境`  
-
-- 有条件再加 staging，当前单 VM 成本优先可先不做。
 
 5. full-stack 推荐步骤

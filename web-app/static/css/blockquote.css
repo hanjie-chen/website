@@ -1,52 +1,22 @@
-blockquote {
-  background-color: rgba(108, 117, 125, 0.05);
-  border-left: 5px solid #6c757d;
-  border-radius: 6px;
-  padding: 40px 20px 20px 30px; /* Even more top padding */
-  margin: 20px 0 20px 15px;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.article-body blockquote {
+  margin: 1.6rem 0;
+  padding: 0.2rem 0 0.2rem 1rem;
+  border-left: 2px solid rgba(121, 184, 255, 0.42);
+  color: rgba(203, 213, 225, 0.94);
+  background: transparent;
+  box-shadow: none;
 }
 
-/* Left dot from Option 3 */
-blockquote::before {
-  content: '';
-  position: absolute;
-  width: 15px;
-  height: 15px;
-  background-color: #6c757d;
-  border-radius: 50%;
-  left: -10px;
-  top: 15px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+.article-body blockquote::before,
+.article-body blockquote::after,
+.article-body blockquote p:last-child::after {
+  content: none;
 }
 
-/* Opening quote from Option 4 */
-blockquote::after {
-  content: '"';
-  font-size: 4em;
-  position: absolute;
-  left: 10px;
-  top: 5px;
-  opacity: 0.3;
-  color: #6c757d;
-  line-height: 0.8;
+.article-body blockquote p {
+  margin-bottom: 0.8rem;
 }
 
-/* Closing quote from Option 4 */
-blockquote p:last-child::after {
-  content: '"';
-  font-size: 4em;
-  position: absolute;
-  right: 10px;
-  bottom: -25px;
-  opacity: 0.3;
-  color: #6c757d;
-  line-height: 0.8;
-}
-
-blockquote p {
+.article-body blockquote p:last-child {
   margin-bottom: 0;
-  position: relative;
-  z-index: 1;
 }

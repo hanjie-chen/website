@@ -9,17 +9,13 @@
 {% block navbar%}
 <!-- Navbar -->
 <nav class="navbar navbar-expand-sm navbar-custom fixed-top">
-    <div class="container">
-        <!-- put my personal website logo here -->
-        <!-- <a class="navbar-brand" href="{{ url_for('index')}}">
-            <img alt="头像" class="rounded" style="width:4vw;" src="{{ url_for('static', filename='images/headavatar/head_avatar_problem.png') }}">
-            </a> -->
-        <span>
-            🏡 Welcome to my personal website
-        </span>
-        <div class="collapse navbar-collapse" id="mynavbar">
-            <ul class="navbar-nav ms-auto">
-                <!-- 文章页面就可以包含分类和标签了 不用另外起一个页面 -->
+    <div class="container-fluid d-flex justify-content-center">
+        <div class="site-nav-shell px-2 px-lg-3">
+            <a href="{{ url_for('index') }}" class="site-nav-brand">
+                <span>🏡</span>
+                <span>Welcome to my personal website</span>
+            </a>
+            <ul class="navbar-nav flex-row site-nav-menu">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('article_index') }}" class="text-decoration-none">
                         Articles

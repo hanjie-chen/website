@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, send_from_directory, abort
 from models import db, Article_Meta_Data
 from import_articles_scripts import import_articles
 import os
+import re
+from bs4 import BeautifulSoup
+from navigation import build_docs_context, build_article_shell_context
 
 from config import (
     Articles_Directory,
@@ -32,6 +35,46 @@ app.add_url_rule(
 db.init_app(app)
 
 
+def _slugify_heading(text: str) -> str:
+    slug = re.sub(r"[^\w\s-]", "", text, flags=re.UNICODE).strip().lower()
+    slug = re.sub(r"[-\s]+", "-", slug, flags=re.UNICODE)
+    return slug or "section"
+
+
+def _build_article_toc(article_content: str):
+    soup = BeautifulSoup(article_content, "html.parser")
+    toc_items = []
+    slug_counts = {}
+
+    for heading in soup.find_all(["h1", "h2", "h3"]):
+        heading_text = heading.get_text(" ", strip=True)
+        if not heading_text:
+            continue
+
+        base_slug = _slugify_heading(heading_text)
+        slug_counts[base_slug] = slug_counts.get(base_slug, 0) + 1
+        heading_id = (
+            base_slug
+            if slug_counts[base_slug] == 1
+            else f"{base_slug}-{slug_counts[base_slug]}"
+        )
+
+        heading["id"] = heading_id
+        toc_items.append(
+            {
+                "id": heading_id,
+                "text": heading_text,
+                "level": int(heading.name[1]),
+            }
+        )
+
+    return str(soup), toc_items
+
+
+def _fetch_all_articles():
+    return db.session.execute(db.select(Article_Meta_Data)).scalars().all()
+
+
 @app.route("/")
 def index():
     # use the file in the templates
@@ -40,9 +83,20 @@ def index():
 
 @app.route("/articles")
 def article_index():
-    # 从数据库中获取所有文章
-    articles = db.session.execute(db.select(Article_Meta_Data)).scalars().all()
-    return render_template("article_index.html", articles=articles)
+    articles = _fetch_all_articles()
+    docs_context = build_docs_context(articles, current_category="")
+    return render_template("article_index.html", **docs_context)
+
+
+@app.route("/articles/category/<path:category_path>")
+def article_category(category_path):
+    articles = _fetch_all_articles()
+    docs_context = build_docs_context(articles, current_category=category_path)
+
+    if category_path and docs_context["current_node"].path != category_path:
+        abort(404)
+
+    return render_template("article_index.html", **docs_context)
 
 
 @app.route("/about")
@@ -80,9 +134,17 @@ def view_article(article_id):
     except FileNotFoundError:
         abort(404)
 
+    article_content, toc_items = _build_article_toc(article_content)
+    shell_context = build_article_shell_context(_fetch_all_articles(), article)
+
     # 返回模板，使用相对路径
     return render_template(
-        "article_details.html", article=article, article_content=article_content
+        "article_details.html",
+        article=article,
+        article_content=article_content,
+        toc_items=toc_items,
+        current_article_id=article.id,
+        **shell_context,
     )
 
 

@@ -25,19 +25,17 @@ from markdown_render_scripts import render_markdown_to_html
 brief_intro_pattern = re.compile(r"```.*?BriefIntroduction:\s*(.*?)```", re.DOTALL)
 
 
+def _is_hidden_item(item_name: str):
+    return item_name.startswith(".") or (
+        item_name.startswith("__") and item_name.endswith("__")
+    )
+
+
 def divide_files_and_folders(path: str):
     """return the files and folders in a directory"""
     all_items = os.listdir(path)
-    # ignore the folder named "__<foldername>__" and ".<foldername>"
-    # for dev, let shows the "__template__" for md render test
-    files_and_folders = [
-        item
-        for item in all_items
-        if not (
-            # (item.startswith('__') and item.endswith('__')) or
-            item.startswith(".")
-        )
-    ]
+    # ignore dotfiles and internal template folders like "__template__"
+    files_and_folders = [item for item in all_items if not _is_hidden_item(item)]
     files = [
         file for file in files_and_folders if os.path.isfile(os.path.join(path, file))
     ]

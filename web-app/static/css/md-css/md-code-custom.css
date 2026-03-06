@@ -2,65 +2,123 @@
 
 /* block code style */
 .codehilite {
-    /* 代码块和上下文之间空出距离 左右不空 */
-    margin: 1.6rem 0;
-  
-    /* 让圆角与语法高亮背景相融合，如需阴影可加上 box-shadow */
-    border-radius: 6px;
-    /* 可选的小阴影，若需要更明显可调大数值 */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  
-    /* 若不需要在外层强行滚动，可一般设置为 auto 或 hidden */
-    overflow: hidden;
-  }
-  
-  /* deal with code-->pre and lineos-->pre*/
-  .codehilite pre {
-    /* 去掉默认 margin，避免出现“底部空白大于顶部”等不一致情况 */
-    margin: 0;
-    /* 给内部留些 padding，保证文字不贴边；可依据个人审美微调 */
-    padding: 1rem 0.5rem;
-  
-    /* 让 pre 的圆角与外层保持一致 */
-    border-radius: inherit;
-  
-    /* 仅需要水平滚动 */
-    overflow-x: auto;
-    overflow-y: hidden;
+  margin: 1.5rem 0;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  background: #1f2430;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
 
-    /* set line height */
-    line-height: 1.5;
-  
-  }
+.codehilite pre {
+  margin: 0;
+  padding: 0.95rem 0.5rem;
+  border-radius: inherit;
+  overflow-x: auto;
+  overflow-y: hidden;
+  line-height: 1.55;
+}
+
+.codehilite table {
+  margin: 0;
+  width: 100%;
+  table-layout: fixed;
+}
 
 .codehilite td.linenos {
-    
-    background-color: #21252B; /* line number background color */
-    color: #5C6370; /* line number color */
+  width: 3.25rem;
+  min-width: 3.25rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  color: rgba(140, 152, 170, 0.88);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: right;
+  user-select: none;
+  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+}
 
-    /* spilt line in right */
-    border-right: 1px solid #3D4043;
-  
-    /* 行号右对齐 禁止选择行号 */
-    text-align: right;
-    user-select: none;
-    vertical-align: top;
-  }
+.codehilite td.linenos pre {
+  padding-left: 0.45rem;
+  padding-right: 0.65rem;
+}
+
+.codehilite td.code {
+  width: auto;
+}
+
+.codehilite td.code pre {
+  padding-left: 0.85rem;
+  padding-right: 0.85rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.codehilite td.code pre::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
   
 /* 鼠标选中行号的时候无背景显示 */
 .codehilite td.linenos::selection {
   background: none; 
 }
 
+.code-copy-btn {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  padding: 0.24rem 0.62rem;
+  background: rgba(13, 17, 23, 0.72);
+  color: rgba(226, 232, 240, 0.88);
+  font-size: 0.72rem;
+  font-weight: 550;
+  line-height: 1.2;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    transform 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.codehilite:hover .code-copy-btn,
+.code-copy-btn:focus-visible,
+.code-copy-btn.is-copied {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.code-copy-btn:hover {
+  background: rgba(121, 184, 255, 0.14);
+  border-color: rgba(121, 184, 255, 0.26);
+  color: #f8fbff;
+}
+
+.code-copy-btn:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.7);
+  outline-offset: 2px;
+}
+
+.code-copy-btn.is-copied {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #dcfce7;
+}
+
 /* for inline code */
 p code,
 li code,
 blockquote code {
-  background-color: #343941;
-  color: var(--text-primary-color);
-  padding: 0.18rem 0.4rem 0.22rem;
-  border-radius: 6px;
-  font-size: 1em;
+  background-color: rgba(148, 163, 184, 0.12);
+  color: #dbeafe;
+  padding: 0.12rem 0.34rem 0.16rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 5px;
+  font-size: 0.95em;
   font-weight: 500;
 }
 
@@ -70,8 +128,8 @@ h1 code,
 h2 code,
 h3 code 
 {
-  background-color: #343941;
-  color: var(--text-primary-color);
-  border-radius: 6px;
-  padding: 0% 1%;
+  background-color: rgba(148, 163, 184, 0.12);
+  color: #e2e8f0;
+  border-radius: 5px;
+  padding: 0.08em 0.28em;
 }

@@ -19,8 +19,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='font/font.css') }}">
     <!-- pointed body color -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/docs-shell.css')}}">
     <!-- engage articles index page card -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/card.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/article-details.css')}}">
     <!-- engage bockquote style -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/blockquote.css')}}">
     <!-- engage title style -->
@@ -61,6 +63,8 @@
     </main>
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="{{ url_for('static', filename='bootstrap5/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='code-copy.js') }}"></script>
+    <script src="{{ url_for('static', filename='article-toc.js') }}"></script>
     {% block script %}
 
     {% endblock %}

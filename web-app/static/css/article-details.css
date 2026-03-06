@@ -1,0 +1,219 @@
+@import url(style.css);
+
+.article-page-shell {
+  width: min(100%, 1760px);
+}
+
+.article-main-column {
+  min-width: 0;
+}
+
+.article-content-card {
+  background: linear-gradient(
+    180deg,
+    rgba(28, 30, 34, 0.82) 0%,
+    rgba(22, 24, 28, 0.72) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.18);
+  padding: 1.65rem 1.9rem;
+}
+
+.article-body {
+  min-width: 0;
+  color: rgba(226, 232, 240, 0.94);
+  font-size: 1.02rem;
+  line-height: 1.78;
+}
+
+.article-body h1[id],
+.article-body h2[id],
+.article-body h3[id] {
+  scroll-margin-top: 88px;
+}
+
+.article-body p,
+.article-body ul,
+.article-body ol,
+.article-body table,
+.article-body .admonition,
+.article-body .codehilite,
+.article-body blockquote {
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+}
+
+.article-body p {
+  color: rgba(203, 213, 225, 0.96);
+}
+
+.article-body strong {
+  color: #f8fafc;
+  font-weight: 650;
+}
+
+.article-body a {
+  color: #79b8ff;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(121, 184, 255, 0.25);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.article-body a:hover {
+  color: #a6d1ff;
+  border-color: rgba(166, 209, 255, 0.45);
+}
+
+.article-body ul,
+.article-body ol {
+  padding-left: 1.4rem;
+}
+
+.article-body li {
+  margin-bottom: 0.45rem;
+  color: rgba(203, 213, 225, 0.96);
+}
+
+.article-body li > ul,
+.article-body li > ol {
+  margin-top: 0.45rem;
+  margin-bottom: 0.6rem;
+}
+
+.article-body hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.article-body img {
+  border-radius: 12px;
+}
+
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.article-body thead {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.article-body th,
+.article-body td {
+  padding: 0.78rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-body th {
+  color: #f8fafc;
+  font-weight: 650;
+}
+
+.article-body tr:last-child td {
+  border-bottom: 0;
+}
+
+.article-toc-column {
+  display: none;
+}
+
+.article-toc {
+  position: sticky;
+  top: 84px;
+  border-radius: 18px;
+  padding: 0.9rem 0.85rem 1rem;
+  background: rgba(18, 20, 24, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
+  max-height: calc(100vh - 108px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.article-toc::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.article-toc-title {
+  margin: 0 0 0.85rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(156, 163, 175, 0.92);
+}
+
+.article-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.article-toc-item + .article-toc-item {
+  margin-top: 0.2rem;
+}
+
+.article-toc-link {
+  display: block;
+  border-radius: 10px;
+  padding: 0.38rem 0.56rem;
+  color: rgba(219, 220, 226, 0.8);
+  text-decoration: none;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.article-toc-link:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: rgba(248, 251, 255, 0.96);
+  transform: translateX(2px);
+}
+
+.article-toc-link.is-active {
+  background: rgba(59, 130, 246, 0.14);
+  color: #f8fbff;
+}
+
+.article-toc-link.level-1 {
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+.article-toc-link.level-2 {
+  font-size: 0.88rem;
+  padding-left: 1rem;
+}
+
+.article-toc-link.level-3 {
+  font-size: 0.84rem;
+  padding-left: 1.35rem;
+  color: rgba(156, 163, 175, 0.92);
+}
+
+@media (min-width: 1200px) {
+  .article-toc-column {
+    display: block;
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .article-content-card {
+    padding: 1.5rem 1.2rem;
+    border-radius: 14px;
+  }
+}

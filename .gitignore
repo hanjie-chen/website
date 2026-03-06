@@ -18,3 +18,10 @@ logs/
 .env
 nginx-modsecurity/.htpasswd
 nginx-modsecurity/ssl/
+
+# ignore tf related file
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+terraform.tfvars
+*.tfplan

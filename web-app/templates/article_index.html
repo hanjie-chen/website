@@ -1,23 +1,20 @@
 {% extends "base.html" %}
+{% import "_docs_tree.html" as docs_tree %}
 
 {% block title %}
-<title>Plain Aritcles</title>
+<title>Articles</title>
 {% endblock%}
 
 <!-- Navbar -->
 {% block navbar%}
 <nav class="navbar navbar-expand-sm navbar-custom fixed-top">
-    <div class="container">
-        <ul class="navbar-nav me-auto">
-            <li class="nav-item">
-                <a href="{{ url_for('article_index')}}" class="nav-link">
-                    📚 Articles
-                </a>
-            </li>
-        </ul>
-
-        <div class="collapse navbar-collapse" id="mynavbar">
-            <ul class="navbar-nav ms-auto">
+    <div class="container-fluid d-flex justify-content-center">
+        <div class="site-nav-shell px-2 px-lg-3">
+            <a href="{{ url_for('article_index') }}" class="site-nav-brand">
+                <span>📚</span>
+                <span>Articles</span>
+            </a>
+            <ul class="navbar-nav flex-row site-nav-menu">
                 <!-- Home链接 -->
                 <li class="nav-item">
                     <a href="{{ url_for('index')}}" class="nav-link">
@@ -44,44 +41,120 @@
 
 <!-- Main Content -->
 {% block main_content%}
-<div class="main-content container flex-grow-1 d-flex align-items-center justify-content-center">
-    <div class="content-wrapper">
-        <div class="container">
-            <div class="content">
-                <h5 class="mb-3">文章列表</h5>
-                <div class="row">
-                    {% for article in articles %}
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100">
-                            <div class="card-img-wrapper position-relative" style="padding-top: 56.25%;">
-                                <!-- 16:9 比例 -->
-                                <img src="{{ article.cover_image_url }}"
-                                    class="card-img-top position-absolute top-50 start-50 translate-middle"
-                                    alt="{{ article.title }}"
-                                    style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;">
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">{{ article.title }}</h5>
-                                <p class="card-text flex-grow-1">{{ article.brief_introduction[:100] }}...</p>
-                                <div class="mt-auto">
-                                    <p class="card-text">
-                                        <small>
-                                            作者: {{ article.author }} | 发布日期: {{ article.rollout_date }} |
-                                            category:
-                                            {{ article.category }}
-                                        </small>
-                                    </p>
-                                    <a href="{{ url_for('view_article', article_id=article.id) }}"
-                                        class="btn btn-primary">阅读更多</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
+<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
+    <div class="content-wrapper docs-shell px-2 px-lg-3">
+        <div class="row g-3">
+            <aside class="col-xl-2 docs-sidebar-column">
+                <nav class="docs-sidebar" aria-label="Articles navigation">
+                    <p class="docs-sidebar-title">Browse</p>
+                    {{ docs_tree.render_nodes(nav_root.children) }}
+                </nav>
+            </aside>
 
+            <section class="col-12 col-xl-10">
+                <div class="docs-content-panel">
+                    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+                        {% for crumb in breadcrumbs %}
+                        {% if not loop.first %}
+                        <span class="docs-breadcrumb-separator">/</span>
+                        {% endif %}
+
+                        {% if crumb.url and not loop.last %}
+                        <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
+                        {% else %}
+                        <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
+                        {% endif %}
+                        {% endfor %}
+                    </nav>
+
+                    {% if current_category %}
+                    <p class="docs-overline">Section</p>
+                    <h1 class="docs-page-title">{{ current_category_label }}</h1>
+                    <p class="docs-page-subtitle">
+                        浏览当前分类下的子分类与文章。路径：<code>{{ current_category }}</code>
+                    </p>
+
+                    {% if category_children %}
+                    <div class="docs-section-header">
+                        <h2 class="docs-section-title">Subcategories</h2>
+                        <span class="docs-section-caption">{{ category_children|length }} sections</span>
+                    </div>
+                    <div class="docs-category-grid">
+                        {% for category in category_children %}
+                        <a href="{{ url_for('article_category', category_path=category.path) }}" class="docs-category-card">
+                            <h3 class="docs-category-name">{{ category.label }}</h3>
+                            <span class="docs-category-meta">{{ category.article_count }} articles</span>
+                            <span class="docs-category-path">{{ category.path }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if category_articles %}
+                    <div class="docs-section-header">
+                        <h2 class="docs-section-title">
+                            {% if category_children %}Articles in This Section{% else %}Articles{% endif %}
+                        </h2>
+                        <span class="docs-section-caption">{{ category_articles|length }} articles</span>
+                    </div>
+                    <div class="docs-article-list">
+                        {% for article in category_articles %}
+                        <a href="{{ url_for('view_article', article_id=article.id) }}" class="docs-article-row">
+                            <h3 class="docs-article-title">{{ article.title }}</h3>
+                            <p class="docs-article-summary">{{ article.brief_introduction }}</p>
+                            <div class="docs-article-meta">
+                                <span>作者：{{ article.author }}</span>
+                                <span>发布：{{ article.rollout_date }}</span>
+                                <span>更新：{{ article.ultimate_modified_date }}</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% elif not category_children %}
+                    <div class="docs-empty-state">这个分类下暂时没有可显示的文章。</div>
+                    {% endif %}
+                    {% else %}
+                    <p class="docs-overline">Documentation</p>
+                    <h1 class="docs-page-title">Articles</h1>
+                    <p class="docs-page-subtitle">
+                        按分类浏览整个知识库，或者直接从最近更新的文章开始。
+                    </p>
+
+                    <div class="docs-section-header">
+                        <h2 class="docs-section-title">Top-Level Categories</h2>
+                        <span class="docs-section-caption">{{ category_children|length }} sections</span>
+                    </div>
+                    <div class="docs-category-grid">
+                        {% for category in category_children %}
+                        <a href="{{ url_for('article_category', category_path=category.path) }}" class="docs-category-card">
+                            <h3 class="docs-category-name">{{ category.label }}</h3>
+                            <span class="docs-category-meta">{{ category.article_count }} articles</span>
+                            <span class="docs-category-path">{{ category.path }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+
+                    <div class="docs-section-header">
+                        <h2 class="docs-section-title">Recent Articles</h2>
+                        <span class="docs-section-caption">{{ recent_articles|length }} items</span>
+                    </div>
+                    <div class="docs-article-list">
+                        {% for article in recent_articles %}
+                        <a href="{{ url_for('view_article', article_id=article.id) }}" class="docs-article-row">
+                            <h3 class="docs-article-title">{{ article.title }}</h3>
+                            <p class="docs-article-summary">{{ article.brief_introduction }}</p>
+                            <div class="docs-article-meta">
+                                <span>{{ article.category }}</span>
+                                <span>发布：{{ article.rollout_date }}</span>
+                                <span>更新：{{ article.ultimate_modified_date }}</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
     </div>
 </div>
 {% endblock %}

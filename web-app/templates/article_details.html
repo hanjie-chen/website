@@ -1,4 +1,5 @@
 {% extends "base.html"%}
+{% import "_docs_tree.html" as docs_tree %}
 
 
 {% block title %}
@@ -9,9 +10,13 @@
 {% block navbar%}
 <!-- Navbar -->
 <nav class="navbar navbar-expand-sm navbar-custom fixed-top">
-    <div class="container">
-        <div class="collapse navbar-collapse" id="mynavbar">
-            <ul class="navbar-nav ms-auto">
+    <div class="container-fluid d-flex justify-content-center">
+        <div class="site-nav-shell px-2 px-lg-3">
+            <a href="{{ url_for('article_index') }}" class="site-nav-brand">
+                <span>📚</span>
+                <span>Articles</span>
+            </a>
+            <ul class="navbar-nav flex-row site-nav-menu">
                 <!-- Home链接 -->
                 <li class="nav-item">
                     <a href="{{ url_for('index')}}" class="nav-link">
@@ -26,16 +31,6 @@
 
                 <!-- About Me链接 -->
                 <li class="nav-item">
-                    <a href="{{ url_for('article_index')}}" class="nav-link">
-                        Articles
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <span class="nav-link">|</span>
-                </li>
-
-                <li class="nav-item">
                     <a href="{{ url_for('about_me')}}" class="nav-link">
                         About Me
                     </a>
@@ -48,23 +43,58 @@
 
 <!-- Main Content -->
 {% block main_content%}
-<div class="main-content container flex-grow-1 d-flex align-items-center justify-content-center">
-    <div class="content-wrapper">
-        <div class="container">
-            <div class="content">
-                <article>
-                    <header class="mb-4">
-                        <h1 class="fw-bolder mb-1">{{ article.title }}</h1>
-                        <div class="fst-italic mb-2">
-                            作者: {{ article.author }} | 发布日期: {{ article.rollout_date }} | last modified: {{article. ultimate_modified_date}}
-                        </div>
-                        <div class="badge bg-secondary text-decoration-none link-light">
-                            {{ article.category }}
-                        </div>
-                    </header>
-                    {{ article_content|safe }}
-                </article>
+<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
+    <div class="content-wrapper article-page-shell docs-shell px-2 px-lg-3">
+        <div class="row g-3">
+            <aside class="col-xl-2 docs-sidebar-column">
+                <nav class="docs-sidebar" aria-label="Section navigation">
+                    <p class="docs-sidebar-title">In This Section</p>
+                    {{ docs_tree.render_nodes(nav_root.children, current_article_id) }}
+                </nav>
+            </aside>
+
+            <div class="col-12 col-xl-8 article-main-column">
+                <div class="article-content-card">
+                    <article class="article-body">
+                        <header class="mb-4">
+                            <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+                                {% for crumb in breadcrumbs %}
+                                {% if not loop.first %}
+                                <span class="docs-breadcrumb-separator">/</span>
+                                {% endif %}
+
+                                {% if crumb.url and not loop.last %}
+                                <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
+                                {% else %}
+                                <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
+                                {% endif %}
+                                {% endfor %}
+                            </nav>
+                            <h1 class="article-page-title">{{ article.title }}</h1>
+                            <div class="fst-italic mb-2">
+                                作者: {{ article.author }} | 发布日期: {{ article.rollout_date }} | last modified: {{article. ultimate_modified_date}}
+                            </div>
+                        </header>
+                        {{ article_content|safe }}
+                    </article>
+                </div>
             </div>
+            {% if toc_items %}
+            <aside class="col-xl-2 article-toc-column">
+                <nav class="article-toc" aria-label="On this page" data-article-toc>
+                    <p class="article-toc-title">On This Page</p>
+                    <ol class="article-toc-list">
+                        {% for item in toc_items %}
+                        <li class="article-toc-item">
+                            <a href="#{{ item.id }}" class="article-toc-link level-{{ item.level }}">
+                                {{ item.text }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </nav>
+            </aside>
+            {% endif %}
         </div>
     </div>
 </div>
