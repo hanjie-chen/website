@@ -158,9 +158,7 @@ def build_category_tree(
         )
 
         is_current = node.path == current_category
-        is_ancestor = bool(
-            node.path and current_category.startswith(f"{node.path}/")
-        )
+        is_ancestor = bool(node.path and current_category.startswith(f"{node.path}/"))
         node.active = is_current
         node.expanded = node.path == "" or is_current or is_ancestor
 
