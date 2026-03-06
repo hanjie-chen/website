@@ -15,8 +15,7 @@
   margin: 0;
   padding: 0.95rem 0.5rem;
   border-radius: inherit;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   line-height: 1.55;
 }
 
@@ -27,8 +26,8 @@
 }
 
 .codehilite td.linenos {
-  width: 3.25rem;
-  min-width: 3.25rem;
+  width: 3.5rem;
+  min-width: 3.5rem;
   background-color: rgba(255, 255, 255, 0.03);
   color: rgba(140, 152, 170, 0.88);
   border-right: 1px solid rgba(255, 255, 255, 0.06);
@@ -39,24 +38,41 @@
 }
 
 .codehilite td.linenos pre {
-  padding-left: 0.45rem;
-  padding-right: 0.65rem;
+  padding-left: 0.35rem;
+  padding-right: 0.55rem;
+  overflow: visible;
+}
+
+.codehilite td.linenos .normal,
+.codehilite td.linenos .special,
+.codehilite span.linenos {
+  display: inline-block;
+  min-width: 3ch;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: right;
 }
 
 .codehilite td.code {
   width: auto;
 }
 
-.codehilite td.code pre {
-  padding-left: 0.85rem;
-  padding-right: 0.85rem;
+.codehilite td.code > div {
+  overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-.codehilite td.code pre::-webkit-scrollbar {
+.codehilite td.code > div::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+.codehilite td.code pre {
+  padding-left: 0.85rem;
+  padding-right: 0.85rem;
+  overflow: visible;
 }
   
 /* 鼠标选中行号的时候无背景显示 */
