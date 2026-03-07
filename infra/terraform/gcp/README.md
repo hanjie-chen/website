@@ -10,6 +10,8 @@ Current Terraform coverage:
 - `google_compute_firewall.allow_cf_https`
 - `google_monitoring_uptime_check_config.website_https`
 
+Cloudflare IPv4 source ranges are not stored statically in Terraform variables. They are fetched from the official Cloudflare endpoint during `plan/apply`.
+
 Current non-managed items:
 
 - notification channel
@@ -30,6 +32,13 @@ Example:
 gcloud auth application-default login
 ```
 
+For GitHub Actions automation, the repository uses GCP Workload Identity Federation (WIF) instead of personal ADC.
+
+Workflow secret names:
+
+- `GCP_WIF_PROVIDER`
+- `GCP_TERRAFORM_SERVICE_ACCOUNT`
+
 ## Workflow
 
 Initialize:
@@ -43,6 +52,12 @@ Check current state:
 
 ```bash
 terraform plan
+```
+
+Apply current state:
+
+```bash
+terraform apply
 ```
 
 ## Import-first
@@ -80,3 +95,4 @@ No changes. Your infrastructure matches the configuration.
 - `firewall.tf` currently tracks the existing Cloudflare HTTPS allow rule only.
 - `monitoring.tf` currently tracks the existing HTTPS uptime check only.
 - `.terraform.lock.hcl` should be committed.
+- `.github/workflows/infra-sync.yml` runs Terraform on a weekly schedule to keep Cloudflare firewall CIDRs up to date.

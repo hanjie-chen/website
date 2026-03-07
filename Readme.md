@@ -192,6 +192,8 @@ docker inspect articles-sync --format '{{.Config.Image}}'
 - `SSH_PORT`
 - `SSH_USER`
 - `SSH_PRIVATE_KEY`
+- `GCP_WIF_PROVIDER` (`projects/.../locations/global/workloadIdentityPools/.../providers/...`)
+- `GCP_TERRAFORM_SERVICE_ACCOUNT` (`terraform@<project>.iam.gserviceaccount.com`)
 
 ## Terraform (GCP IaC)
 
@@ -202,6 +204,8 @@ Terraform 目录位于 `infra/terraform/gcp/`，当前使用 GCS backend 保存 
 - 生产 VM：`google_compute_instance.web`
 - Cloudflare 到 origin 的 HTTPS firewall：`google_compute_firewall.allow_cf_https`
 - 生产 uptime check：`google_monitoring_uptime_check_config.website_https`
+
+使用 infra-sync.yml 每周动态拉取 cloudflare IPv4 地址范围，github actions使用 GCP WIF 验证
 
 当前流程是 `import-first`，不是直接新建整套基础设施：
 
@@ -319,8 +323,6 @@ docker compose restart nginx-modsecurity
 
 ## Roadmap
 
-1. 文章界面的 css/html 调优，目前太难看，或许可以让 gemini 3 参与进来
-
 2. 数据库 sqlite databse 可视化，方便 debug
 
 3. 在 gcp vm 的 firewall rule 中我仅仅允许了 cf 的 ip 但是这些地址有可能会发生变动，每次变动都会需要我手动修改，如何自动化这个过程呢？
@@ -338,15 +340,5 @@ docker compose restart nginx-modsecurity
 5. trivy 的 ci 扫描
 
 6. terraform gcp service account instead of gcoud login
-**P2（可选增强）**
-
-1. `基础设施即代码`（Terraform）  
-
-- 把 GCP firewall / monitoring / DNS 规则代码化。
-
-2. `集中日志与指标`  
-
-- 如果以后规模变大，再上 Loki/Grafana；当前 Dozzle + Uptime 已够用。
-
 
 5. full-stack 推荐步骤

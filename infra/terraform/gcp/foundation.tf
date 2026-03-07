@@ -9,6 +9,12 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 6.0"
     }
+
+    # Fetch Cloudflare IP ranges directly from the official endpoint.
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.0"
+    }
   }
 
   # Remote state backend (GCS). Bucket/prefix are passed at init time:

@@ -1,0 +1,65 @@
+name: Terraform Infra Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 0"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-infra-sync
+  cancel-in-progress: false
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform/gcp
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.6
+
+      - name: Terraform Init
+        run: terraform init -no-color
+
+      - name: Terraform Validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          set +e
+          terraform plan -no-color -detailed-exitcode -out=tfplan
+          exitcode=$?
+          set -e
+
+          if [ "$exitcode" -eq 1 ]; then
+            echo "Terraform plan failed."
+            exit 1
+          fi
+
+          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
+
+      - name: Explain plan result
+        if: steps.plan.outputs.exitcode == '0'
+        run: echo "Terraform plan succeeded with no changes."
+
+      - name: Explain plan result with drift
+        if: steps.plan.outputs.exitcode == '2'
+        run: echo "Terraform plan succeeded and detected changes. Apply is intentionally disabled in this workflow."
