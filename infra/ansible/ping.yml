@@ -1,0 +1,8 @@
+---
+- name: Verify Ansible can reach the GCP VM
+  hosts: gcp_vm
+  gather_facts: false
+
+  tasks:
+    - name: Run the built-in connectivity check
+      ansible.builtin.ping:

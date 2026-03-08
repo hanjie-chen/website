@@ -1,6 +1,6 @@
 # Personal Website
 
-个人网站与博客平台，核心技术栈为 `Flask + SQLite + Docker Compose + Nginx(ModSecurity) + GitHub Actions`。
+个人网站与博客平台，核心技术栈为 `Flask + SQLite + Docker Compose + Nginx(ModSecurity) + GitHub Actions + GCP + Cloudflare`。
 
 文章内容来自我的笔记 github repo: [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过定时同步与增量导入自动发布。
 
@@ -10,13 +10,13 @@ Repository Layout
 
 ```shell
 .
-├── articles-sync/                # 同步容器脚本与 Dockerfile
-├── nginx-modsecurity/            # Nginx/WAF 配置、证书、Basic Auth
-├── web-app/                      # Flask 应用
-├── compose.yml                   # 生产配置
-├── scripts/deploy                # CD用脚本
-├── compose.dev.yml               # 开发覆盖配置
-└── .github/workflows/            # CI/CD
+├── articles-sync/		  # knowledge-base 同步容器
+├── compose.dev.yml		  # dev 配置
+├── compose.yml			    # prod 配置
+├── infra/				      # terraform / ansible 配置
+├── nginx-modsecurity/	# Nginx/WAF 配置、证书、Basic Auth
+├── scripts/deploy		  # CD用脚本
+└── web-app/			      # Flask 应用
 ```
 
 - web-app: Flask 应用，负责页面路由、文章展示、内部重建接口。
@@ -25,7 +25,7 @@ Repository Layout
 
 ### articles-sync/
 
-定时 `git pull` 文章仓库，发现更新后调用内部 reindex 接口。
+定时 `git pull` 文章仓库，发现更新后调用内部 reindex 接口，从而触发 web-app 重新渲染文章
 
 ```shell
 .
@@ -53,7 +53,7 @@ cd 流程中使用的脚本
 
 `prod_init.sh`: 首次部署初始化：等待 `articles-sync` healthy 后再初始化 DB，最后启动全部服务并执行 smoke check
 
-`prod_deploy.sh <sha>`: 按指定镜像 tag（通常是 commit SHA）部署生产服务
+`prod_deploy.sh <sha>`: 按指定镜像 tag（commit SHA）部署生产服务
 
 `ensure_db_ready.sh <sha>`: 检查 `article_meta_data` 表是否存在；缺失时自动执行 `init_db.py` 修复
 
@@ -63,7 +63,7 @@ cd 流程中使用的脚本
 
 ## Architecture
 
-- 线上流量：`Client -> Cloudflare -> Nginx(ModSecurity) -> Flask`
+- 线上流量：`Client -> Cloudflare -> gcp-vm [Nginx(ModSecurity) -> Flask]`
 - 内容更新：`articles-sync (cron) -> git pull -> POST /internal/reindex`
 - 持久化（docker volume）：
   - `source_md_articles`：Markdown 源文
@@ -83,9 +83,57 @@ docker compose -f compose.yml up -d
 docker compose -f compose.yml -f compose.dev.yml up -d --remove-orphans
 ```
 
+## Infrastructure Provisioning
+
+在执行应用部署之前，先确认 GCP 基础设施已经准备完成。
+
+当前由 Terraform 管理的资源：
+
+- 生产 VM：`google_compute_instance.web`
+- Cloudflare 到 origin 的 HTTPS firewall：`google_compute_firewall.allow_cf_https`
+- 生产 uptime check：`google_monitoring_uptime_check_config.website_https`
+
+初始化或检查基础设施：
+
+```bash
+cd infra/terraform/gcp
+terraform init
+terraform plan
+```
+
+说明：
+
+- 当前 Terraform 流程是 `import-first`，不是直接新建整套基础设施
+- `infra-sync.yml` 会每周运行一次，动态拉取 Cloudflare 官方 IPv4 列表；如果 `terraform plan` 检测到 firewall 需要更新，则自动 `apply`
+- GitHub Actions 通过 GCP WIF 完成认证
+- 更详细的 Terraform 使用说明见：`infra/terraform/gcp/README.md`
+
+### Host Bootstrap
+
+Ansible 目录位于 `infra/ansible/`，负责 VM 内部的 host bootstrap，不负责应用部署。
+
+当前最小 playbook：
+
+- `inventory.ini`：定义 `gcp-vm`
+- `ping.yml`：验证 Ansible 能通过 SSH 管理这台 VM
+- `bootstrap.yml`：按 Docker 官方 Ubuntu 安装文档配置 Docker Engine
+
+运行方式：
+
+```bash
+ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ping.yml
+ansible-playbook -i infra/ansible/inventory.ini infra/ansible/bootstrap.yml --ask-become-pass
+```
+
+说明：
+
+- Ansible 通过 SSH 管理现有 VM，不需要额外 agent
+- `bootstrap.yml` 目前只负责 host config（Docker 安装），不替代现有 `cd.yml`
+- 这台 `Ubuntu 25.10` VM 需要将 `sudo` alternatives 切回传统 `sudo`，否则 Ansible `become` 与默认 `sudo-rs` 不兼容
+
 ## Production deploy
 
-首次部署或重建环境时，按顺序执行：
+在 GCP VM、firewall、uptime check 等基础设施已经准备完成后，按顺序执行下面的应用部署步骤：
 
 1. 配置 `.env`
 
@@ -194,28 +242,6 @@ docker inspect articles-sync --format '{{.Config.Image}}'
 - `SSH_PRIVATE_KEY`
 - `GCP_WIF_PROVIDER` (`projects/.../locations/global/workloadIdentityPools/.../providers/...`)
 - `GCP_TERRAFORM_SERVICE_ACCOUNT` (`terraform@<project>.iam.gserviceaccount.com`)
-
-## Terraform (GCP IaC)
-
-Terraform 目录位于 `infra/terraform/gcp/`，当前使用 GCS backend 保存 state。
-
-当前已纳入 Terraform 管理的 GCP 资源：
-
-- 生产 VM：`google_compute_instance.web`
-- Cloudflare 到 origin 的 HTTPS firewall：`google_compute_firewall.allow_cf_https`
-- 生产 uptime check：`google_monitoring_uptime_check_config.website_https`
-
-使用 infra-sync.yml 每周动态拉取 cloudflare IPv4 地址范围，github actions使用 GCP WIF 验证
-
-当前流程是 `import-first`，不是直接新建整套基础设施：
-
-```bash
-cd infra/terraform/gcp
-terraform init
-terraform plan
-```
-
-更详细的 Terraform 使用说明见：`infra/terraform/gcp/README.md`
 
 ## Logging
 
@@ -334,11 +360,10 @@ docker compose restart nginx-modsecurity
    ```
 
 4. devops 推荐
-   好，我们回到主线。  
-   从 DevOps 角度看，你的项目已经“可上线运行”，但还缺下面这些关键项（按优先级）：
+   好，我们回到主线。从 DevOps 角度看，你的项目已经“可上线运行”，但还缺下面这些关键项（按优先级）：
 
 5. trivy 的 ci 扫描
 
 6. terraform gcp service account instead of gcoud login
 
-5. full-stack 推荐步骤
+7. full-stack 推荐步骤

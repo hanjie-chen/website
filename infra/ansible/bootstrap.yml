@@ -1,0 +1,99 @@
+---
+- name: Bootstrap the GCP VM
+  hosts: gcp_vm
+  become: true
+  # We need distro/architecture facts to construct Docker's official apt repo.
+  gather_facts: true
+
+  vars:
+    # Docker's apt repository uses Debian-style architecture names.
+    docker_apt_arch_map:
+      x86_64: amd64
+      aarch64: arm64
+    docker_apt_arch: >-
+      {{
+        docker_apt_arch_map.get(
+          ansible_facts["architecture"],
+          ansible_facts["architecture"]
+        )
+      }}
+
+  tasks:
+    # Match the first step of the Docker docs and make later apt work predictable.
+    - name: Refresh the apt package index
+      ansible.builtin.apt:
+        update_cache: true
+
+    # Docker recommends removing distro packages that may conflict with the
+    # official Docker Engine packages.
+    - name: Remove conflicting Docker-related distro packages
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-doc
+          - docker-compose
+          - docker-compose-v2
+          - podman-docker
+          - containerd
+          - runc
+        state: absent
+
+    # We follow Docker's Ubuntu installation guide. `gnupg` is added because the
+    # Ansible `apt_repository` module needs `gpg` on the managed host.
+    - name: Install Docker apt prerequisites
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+
+    # Docker stores its repository signing key under /etc/apt/keyrings.
+    - name: Create the Docker apt keyring directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    # Equivalent to the official `curl -fsSL ... -o /etc/apt/keyrings/docker.asc`.
+    - name: Download Docker's official GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    # Add Docker's official stable apt repository for this Ubuntu release.
+    - name: Add Docker's apt repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/ubuntu
+          {{ ansible_facts["distribution_release"] }} stable
+        filename: docker
+        state: present
+
+    # Install Docker Engine plus the buildx / compose plugins used by this project.
+    - name: Install Docker Engine and plugins
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+
+    # Ensure the daemon is available immediately and after reboot.
+    - name: Ensure the Docker service is enabled and started
+      ansible.builtin.service:
+        name: docker
+        enabled: true
+        state: started
+
+    # Allow the SSH deployment user to run Docker commands without sudo.
+    - name: Add the deployment user to the docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true

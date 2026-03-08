@@ -60,6 +60,10 @@ jobs:
         if: steps.plan.outputs.exitcode == '0'
         run: echo "Terraform plan succeeded with no changes."
 
-      - name: Explain plan result with drift
+      - name: Explain plan result with changes
         if: steps.plan.outputs.exitcode == '2'
-        run: echo "Terraform plan succeeded and detected changes. Apply is intentionally disabled in this workflow."
+        run: echo "Terraform plan succeeded and detected changes. Applying changes now."
+
+      - name: Terraform Apply
+        if: steps.plan.outputs.exitcode == '2'
+        run: terraform apply -no-color -auto-approve tfplan
