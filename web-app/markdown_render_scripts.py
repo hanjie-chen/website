@@ -1,5 +1,6 @@
 import markdown
 import os
+import pymdownx.emoji
 from custom_md_extensions import Gfm_Admonition_Extension, Image_Processor_Extension
 
 
@@ -21,11 +22,19 @@ def render_markdown_to_html(
         "md_in_html",
         "sane_lists",
         "codehilite",
+        "pymdownx.emoji",
         Gfm_Admonition_Extension(),
         Image_Processor_Extension(base_url=url_base_path),
     ]
 
-    my_extension_configs = {"codehilite": {"linenums": True}}
+    my_extension_configs = {
+        "codehilite": {"linenums": True},
+        "pymdownx.emoji": {
+            "emoji_index": pymdownx.emoji.gemoji,
+            "emoji_generator": pymdownx.emoji.to_alt,
+            "alt": "unicode",
+        },
+    }
 
     # Configure markdown converter with extensions
     md = markdown.Markdown(

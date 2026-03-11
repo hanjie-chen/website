@@ -31,7 +31,9 @@ jinja2==3.1.6
     #   -r requirements.in
     #   flask
 markdown==3.10.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   pymdown-extensions
 markupsafe==3.0.3
     # via
     #   flask
@@ -49,6 +51,8 @@ pygments==2.19.2
     # via
     #   -r requirements.in
     #   pytest
+pymdown-extensions==10.21
+    # via -r requirements.in
 pytest==8.4.2
     # via
     #   -r requirements.in
@@ -58,7 +62,9 @@ pytest-cov==7.0.0
 python-frontmatter==1.1.0
     # via -r requirements.in
 pyyaml==6.0.3
-    # via python-frontmatter
+    # via
+    #   pymdown-extensions
+    #   python-frontmatter
 ruff==0.15.5
     # via -r requirements.in
 soupsieve==2.8.3

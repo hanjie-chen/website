@@ -21,6 +21,9 @@ services:
     command: ["flask", "run", "--host=0.0.0.0", "--debug"]
 
   nginx-modsecurity:
+    ports: !override
+      - "8081:80"
+      - "8444:443"
     volumes:
       - ./nginx-modsecurity/conf.d/default.conf:/etc/nginx/templates/conf.d/default.conf.template
       - rendered_html_articles:/usr/share/nginx/html/rendered-articles
