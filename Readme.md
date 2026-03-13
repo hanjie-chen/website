@@ -351,14 +351,6 @@ docker compose restart nginx-modsecurity
 
 2. 数据库 sqlite databse 可视化，方便 debug
 
-3. 在 gcp vm 的 firewall rule 中我仅仅允许了 cf 的 ip 但是这些地址有可能会发生变动，每次变动都会需要我手动修改，如何自动化这个过程呢？
-
-   我通过下面的这个命令得到的 cf ipv4 地址
-
-   ```
-   curl -s https://www.cloudflare.com/ips-v4 | tr '\n' ','
-   ```
-
 4. devops 推荐
    好，我们回到主线。从 DevOps 角度看，你的项目已经“可上线运行”，但还缺下面这些关键项（按优先级）：
 

@@ -3,7 +3,12 @@
 
 {% block title %}
 <title>About Me - Plain</title>
-{% endblock%}
+{% endblock %}
+
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ asset_url('css/about-me.css') }}">
+{% endblock %}
 
 
 {% block navbar%}
@@ -25,7 +30,7 @@
                     <span class="nav-link">|</span>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('article_index') }}" class="text-decoration-none">
+                    <a class="nav-link" href="{{ url_for('article_index') }}">
                         Articles
                     </a>
                 </li>
@@ -35,24 +40,216 @@
 </nav>
 {% endblock %}
 
-<!-- Main Content -->
+
 {% block main_content%}
-<div class="main-content container flex-grow-1 d-flex align-items-center justify-content-center">
-    <div class="content-wrapper">
-        <div class="container">
-            <div class="content">
-                <p>为什么要写博客？为什么要建立个人网站？如果根本就没人来读它们，这些文章和个人网站又有什么意义？</p>
-                <p>在 AI 如此强大而且越来越强大的今天，还需要写技术文章吗？直接问 AI 它不香吗？</p>
-                <p>我写这些文章会不会就是浪费时间呢？</p>
-                <p>我整理我遇到的问题，询问各个 ai，寻找问题背后的原理，整理他们给我的解释，尽量让我的文章逻辑通顺，循序渐进，选择合适的图片作为封面，或者是某些截图作为例子和详解，方便读者去理解。</p>
-                <p>持续更新，渐渐总结某个领域的知识，将零碎的知识整合成一篇完整的博客内容。</p>
-                <p>这些行为的意义在哪里呢？</p>
-                <p>写博客不是为了有人来看我的文章，而是为了我自己的需要，方便我建立自己的知识库，方便我遇到相同或者相似的问题的时候回顾和查看，博客的目标读者并不是我的观众，而是未来的我。</p>
-                <p>或许未来有一天某个真正需要这些文章的人（或者是 AI 😂）会看到它</p>
-                <p>我写博客是因为我在思考，因为我在学习和成长，因为我希望把这些东西记录在某个地方。</p>
-                <p>如果有人读了，那就更好。如果没有，那我的目的还是达成了。</p>
+<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
+    <div class="content-wrapper about-page-shell px-2 px-lg-3">
+        <section class="about-hero about-panel">
+            <div class="row g-4 align-items-center">
+                <div class="col-12 col-lg-7">
+                    <p class="about-overline">Profile / Hiring Page</p>
+                    <h1 class="about-hero-title">
+                        <span class="about-hero-name-primary">陈翰杰</span>
+                        <span class="about-hero-name-divider">/</span>
+                        <span class="about-hero-name-secondary">Hanjie Chen</span>
+                    </h1>
+                    <p class="about-hero-subtitle">Cloud / DevOps / Full-stack</p>
+                    <p class="about-hero-copy">
+                        我目前把精力放在云基础设施、自动化部署与 Python 工程实践上，持续通过个人项目把
+                        Terraform、Docker、Linux、Nginx、python Flask 和 GCP / Azure 串成一条完整链路。
+                    </p>
+                    <p class="about-hero-copy">
+                        最近的 AI 相当的好用，我使用 LLM / agent 工作流辅助调研、调试、重构与文档整理，例如 Codex 这一类 coding agent。
+                    </p>
+                    <p class="about-hero-copy">
+                        我正在寻找偏 Cloud / DevOps / Full-stack 方向的机会，也愿意承担需要较强执行力、学习能力和工程落地能力的初中级岗位。
+                    </p>
+                    <div class="about-cta-group">
+                        <button class="btn about-btn-primary" type="button" disabled aria-disabled="true">
+                            Download Resume
+                            <span class="about-btn-note">Coming Soon</span>
+                        </button>
+                        <a class="btn about-btn-secondary" href="#contact">Contact Me</a>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-5">
+                    <div class="about-hero-aside">
+                        <img alt="avatar" class="about-avatar"
+                            src="{{ asset_url('images/headavatar/head_avatar_problem.png') }}">
+                        <div class="about-status-list">
+                            <div class="about-status-pill">
+                                <span class="about-status-label">Focus</span>
+                                <span class="about-status-value">Cloud / DevOps / Full-stack</span>
+                            </div>
+                            <div class="about-status-pill">
+                                <span class="about-status-label">Status</span>
+                                <span class="about-status-value">Open to opportunities</span>
+                            </div>
+                            <div class="about-status-pill">
+                                <span class="about-status-label">Location</span>
+                                <span class="about-status-value">Shanghai CN / Remote-friendly</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
+
+        <section class="about-section about-panel">
+            <div class="about-section-heading">
+                <p class="about-overline">Quick Profile</p>
+                <h2>我是谁 / Who I Am</h2>
+            </div>
+            <div class="about-grid-two">
+                <div class="about-info-card">
+                    <p>我目前处于职业起步阶段，正在通过真实项目、部署实践和持续写作，逐步建立自己的作品集与工程判断力。</p>
+                    <p>当前的主线方向是 Cloud / DevOps / Full-stack，重点放在基础设施、部署链路、Python 服务和可重复交付。</p>
+                </div>
+                <div class="about-info-card">
+                    <p>我希望进入一个能持续做工程落地、系统学习并承担真实责任的团队，而不是只停留在表层使用技术。</p>
+                    <p>相比单点炫技，我更看重把学习、实现、记录和复盘串成闭环，并长期积累成可以证明能力的成果。</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section about-panel">
+            <div class="about-section-heading">
+                <p class="about-overline">How I Work</p>
+                <h2>我如何工作 / How I Work</h2>
+            </div>
+            <div class="about-grid-two">
+                <div class="about-info-card">
+                    <p>我喜欢把零散的问题整理成可以复用的工程方案，而不是只停留在“跑通一次”。</p>
+                    <p>我擅长通过文档化、脚本化和环境重建，去验证自己是否真正理解一个技术问题。</p>
+                </div>
+                <div class="about-info-card">
+                    <p>我当前最关注的主题是基础设施自动化、Linux 系统实践、容器化部署，以及云平台上的可重复交付。</p>
+                    <p>对我来说，写文档和做项目不是分开的两件事，它们共同构成了我理解技术和证明能力的方式。</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section about-panel">
+            <div class="about-section-heading">
+                <p class="about-overline">What I Work With</p>
+                <h2>我在做什么 / What I Work With</h2>
+            </div>
+            <div class="about-skill-grid">
+                <article class="about-skill-card">
+                    <h3>Infrastructure Automation</h3>
+                    <p>使用 Terraform 组织云资源配置，关注可重复部署、环境一致性和基础设施变更的可追踪性。</p>
+                </article>
+                <article class="about-skill-card">
+                    <h3>Python Backend & AI-assisted Delivery</h3>
+                    <p>使用 Flask 构建实际可运行的服务，同时熟练把 Codex 这类 agent 纳入调试、重构、脚本整理与文档产出流程。</p>
+                </article>
+                <article class="about-skill-card">
+                    <h3>Linux / Docker / Nginx</h3>
+                    <p>围绕 Linux、容器和反向代理做真实部署实践，关心服务编排、静态资源、WAF、日志和生产链路稳定性。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="about-section about-panel">
+            <div class="about-section-heading">
+                <p class="about-overline">Selected Projects</p>
+                <h2>代表项目 / Featured Project</h2>
+            </div>
+            <article class="about-project-card about-project-card-featured">
+                <div class="about-project-meta">github.com/hanjie-chen/website</div>
+                <h3>Personal Website as a Production-style System</h3>
+                <p>
+                    这个项目并不只是一个个人主页，而是一套完整的内容发布与部署系统：使用 Flask 提供页面和内部接口，
+                    通过 Markdown 渲染、文章同步与数据库索引完成内容发布，再结合 Docker Compose、Nginx、Cloudflare、
+                    GCP 和 GitHub Actions 形成一条可以持续迭代的上线链路。
+                </p>
+                <p class="about-project-tags">Flask · Docker Compose · Nginx · Cloudflare · GCP · CI/CD · Terraform</p>
+                <div class="about-project-actions">
+                    <a href="/" class="about-inline-link">Live Site</a>
+                    <a href="https://github.com/hanjie-chen/website" class="about-inline-link" target="_blank" rel="noreferrer">Source Code</a>
+                </div>
+            </article>
+        </section>
+
+        <section class="about-section about-panel">
+            <div class="about-section-heading">
+                <p class="about-overline">Education & Current Status</p>
+                <h2>当前状态 / Current Status</h2>
+            </div>
+            <div class="about-status-grid">
+                <article class="about-mini-card">
+                    <h3>Career Stage</h3>
+                    <p>职业起步阶段，正在持续通过项目与文档构建作品集。</p>
+                </article>
+                <article class="about-mini-card">
+                    <h3>Learning Track</h3>
+                    <p>以项目驱动自学为主，重点补强 Linux、网络、云平台和自动化工程实践。</p>
+                </article>
+                <article class="about-mini-card">
+                    <h3>Target Role</h3>
+                    <p>Cloud / DevOps / Infrastructure 方向，也接受需要较强工程执行力的后端与平台类岗位。</p>
+                </article>
+                <article class="about-mini-card">
+                    <h3>Availability</h3>
+                    <p>目前正在积极寻找机会，愿意尽快进入真实业务环境持续成长。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="about-section about-panel">
+            <div class="about-section-heading">
+                <p class="about-overline">Why I Write</p>
+                <h2>为什么写博客 / Why I Write</h2>
+            </div>
+            <div class="about-essay">
+                <p>
+                    为什么要写博客？为什么要建立个人网站？
+                </p>
+                <p>    
+                如果根本就没人来读它们，这个网站和这些文章又有什么意义？在 AI 如此强大而且越来越强大的今天，还需要写技术文章吗？直接问 AI 不香吗？
+                </p>
+                <p>
+                    写技术文章会不会就是浪费时间呢？
+                </p>
+                <p>
+                    对我来说，写作本身就是学习过程的一部分。因为我在思考，因为我在学习和成长，因为我希望把这些东西记录在某个地方。
+                </p>
+                <p>
+                    记录遇到的问题，询问各个 ai，理解问题背后的原理，尽量让文章逻辑通顺，循序渐进，充满案例、详解和截图，方便读者去理解。
+                    持续更新，渐渐总结某个领域的知识，将零碎的知识整合成一篇完整的内容。
+                </p>
+                <p>
+                    所以写博客不是为了有人来看我的文章，而是为了我自己的需要，方便我建立自己的知识库，方便我遇到相同或者相似的问题的时候回顾和查看。
+                </p>
+                    
+                <p>
+                    博客的目标读者并不是我的观众，而是未来的我；或许未来有一天某个真正需要这些文章的人（或者是 AI 😂）会看到它。
+                </p>
+                    
+                <p>
+                如果有人读了，那就更好。如果没有，那它们也已经完成了自己的意义。
+                </p>
+                    
+                
+            </div>
+        </section>
+
+        <section class="about-section about-panel" id="contact">
+            <div class="about-section-heading">
+                <p class="about-overline">Contact</p>
+                <h2>联系我 / Get In Touch</h2>
+            </div>
+            <div class="about-contact-grid">
+                <a class="about-contact-card" href="mailto:hanjie-chen@outlook.com">
+                    <span class="about-contact-label">Email</span>
+                    <span class="about-contact-value">hanjie-chen@outlook.com</span>
+                </a>
+                <a class="about-contact-card" href="https://github.com/hanjie-chen" target="_blank" rel="noreferrer">
+                    <span class="about-contact-label">GitHub</span>
+                    <span class="about-contact-value">github.com/hanjie-chen</span>
+                </a>
+            </div>
+        </section>
     </div>
 </div>
 {% endblock %}
