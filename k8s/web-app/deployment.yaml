@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: website-web-app
+  namespace: k8s-lab
+spec:
+  # Keep one Pod running for this first local-learning version.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: website-web-app
+  template:
+    metadata:
+      labels:
+        app: website-web-app
+    spec:
+      containers:
+        - name: web-app
+          image: website-web-app:k8s-lab
+          # Use the image we build and load into the local k3s node.
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+          # These map directly to config.py environment lookups.
+          env:
+            - name: APP_ENV
+              value: production
+            - name: SOURCE_ARTICLES_DIRECTORY
+              value: /articles/src
+            - name: RENDERED_ARTICLES_DIRECTORY
+              value: /articles/rendered
+            - name: SQLALCHEMY_DATABASE_URI
+              value: sqlite:////app/instance/project.db
+          # Bootstrap the minimal local runtime, then start Gunicorn.
+          command:
+            - /bin/sh
+            - -lc
+          args:
+            - >
+              mkdir -p /articles/src /articles/rendered /app/instance &&
+              python -c "from app import app; from models import db; ctx = app.app_context(); ctx.push(); db.create_all()" &&
+              gunicorn -w 2 -b 0.0.0.0:5000 app:app
+          # Readiness gates traffic; liveness restarts a stuck container.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          volumeMounts:
+            - name: articles-src
+              mountPath: /articles/src
+            - name: rendered-articles
+              mountPath: /articles/rendered
+            - name: webapp-instance
+              mountPath: /app/instance
+      # emptyDir keeps this first version simple; data disappears with the Pod.
+      volumes:
+        - name: articles-src
+          emptyDir: {}
+        - name: rendered-articles
+          emptyDir: {}
+        - name: webapp-instance
+          emptyDir: {}
+
+
