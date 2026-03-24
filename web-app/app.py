@@ -45,6 +45,8 @@ def _build_article_toc(article_content: str):
     soup = BeautifulSoup(article_content, "html.parser")
     toc_items = []
     slug_counts = {}
+    current_h1 = None
+    current_h2 = None
 
     for heading in soup.find_all(["h1", "h2", "h3"]):
         heading_text = heading.get_text(" ", strip=True)
@@ -60,13 +62,31 @@ def _build_article_toc(article_content: str):
         )
 
         heading["id"] = heading_id
-        toc_items.append(
-            {
-                "id": heading_id,
-                "text": heading_text,
-                "level": int(heading.name[1]),
-            }
-        )
+        toc_item = {
+            "id": heading_id,
+            "text": heading_text,
+            "level": int(heading.name[1]),
+            "children": [],
+        }
+
+        # Build a shallow page outline: h1 owns following h2 items, and h2 owns h3.
+        if toc_item["level"] == 1:
+            toc_items.append(toc_item)
+            current_h1 = toc_item
+            current_h2 = None
+        elif toc_item["level"] == 2:
+            if current_h1 is not None:
+                current_h1["children"].append(toc_item)
+            else:
+                toc_items.append(toc_item)
+            current_h2 = toc_item
+        else:
+            if current_h2 is not None:
+                current_h2["children"].append(toc_item)
+            elif current_h1 is not None:
+                current_h1["children"].append(toc_item)
+            else:
+                toc_items.append(toc_item)
 
     return str(soup), toc_items
 

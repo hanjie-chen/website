@@ -1,6 +1,24 @@
 {% extends "base.html"%}
 {% import "_docs_tree.html" as docs_tree %}
 
+{% macro render_toc_items(items) %}
+<ol class="article-toc-list">
+    {% for item in items %}
+    <li class="article-toc-item{% if item.children %} has-children{% endif %}" data-toc-node data-toc-id="{{ item.id }}"
+        data-toc-level="{{ item.level }}">
+        <a href="#{{ item.id }}" class="article-toc-link level-{{ item.level }}" data-toc-link>
+            {{ item.text }}
+        </a>
+        {% if item.children %}
+        <div class="article-toc-subtree">
+            {{ render_toc_items(item.children) }}
+        </div>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ol>
+{% endmacro %}
+
 
 {% block title %}
 <title>{{ article.title }}</title>
@@ -83,15 +101,7 @@
             <aside class="col-xl-2 article-toc-column">
                 <nav class="article-toc" aria-label="On this page" data-article-toc>
                     <p class="article-toc-title">On This Page</p>
-                    <ol class="article-toc-list">
-                        {% for item in toc_items %}
-                        <li class="article-toc-item">
-                            <a href="#{{ item.id }}" class="article-toc-link level-{{ item.level }}">
-                                {{ item.text }}
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ol>
+                    {{ render_toc_items(toc_items) }}
                 </nav>
             </aside>
             {% endif %}

@@ -94,6 +94,32 @@ def test_view_article_returns_200_for_existing_article(client, app):
     assert 'href="/articles/category/tests/category"' in body
 
 
+def test_view_article_renders_nested_toc_markup(client, app):
+    with app.app_context():
+        article = _insert_article(
+            title="Nested TOC Article",
+            category="tests/nested",
+            file_path="tests/nested/toc.md",
+        )
+        category_path = article.category.replace("/", "-")
+        html_dir = Path(app_module.Rendered_Articles) / category_path
+        html_dir.mkdir(parents=True, exist_ok=True)
+        (html_dir / f"{article.id}.html").write_text(
+            "<h1>Intro</h1><h2>Setup</h2><h3>Git Add</h3>",
+            encoding="utf-8",
+        )
+
+    response = client.get(f"/articles/{article.id}")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "data-article-toc" in body
+    assert 'data-toc-id="intro"' in body
+    assert 'data-toc-id="setup"' in body
+    assert 'data-toc-id="git-add"' in body
+    assert "article-toc-subtree" in body
+
+
 def test_view_article_left_nav_lists_same_category_articles(client, app):
     with app.app_context():
         article = _insert_article(

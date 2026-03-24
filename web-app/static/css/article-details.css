@@ -169,6 +169,14 @@
   margin-top: 0.2rem;
 }
 
+.article-toc-subtree {
+  display: none;
+}
+
+.article-toc-item.is-expanded > .article-toc-subtree {
+  display: block;
+}
+
 .article-toc-link {
   display: block;
   border-radius: 10px;
@@ -192,6 +200,10 @@
   color: #f8fbff;
 }
 
+.article-toc-item.is-current-branch > .article-toc-link:not(.is-active) {
+  color: rgba(231, 235, 243, 0.92);
+}
+
 .article-toc-link.level-1 {
   font-size: 0.94rem;
   font-weight: 600;
@@ -199,12 +211,14 @@
 
 .article-toc-link.level-2 {
   font-size: 0.88rem;
-  padding-left: 1rem;
+  margin-left: 0.72rem;
+  padding-left: 0.88rem;
 }
 
 .article-toc-link.level-3 {
   font-size: 0.84rem;
-  padding-left: 1.35rem;
+  margin-left: 1.45rem;
+  padding-left: 0.88rem;
   color: rgba(156, 163, 175, 0.92);
 }
 
