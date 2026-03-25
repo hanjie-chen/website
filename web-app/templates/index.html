@@ -37,20 +37,87 @@
 
 <!-- Main Content -->
 {% block main_content%}
-<div class="main-content container-fluid flex-grow-1 d-flex align-items-center justify-content-center">
-    <div class="content-wrapper">
-        <div class="container text-center mb-4">
-            <img alt="avatar" class="rounded" style="width: 8vw;"
-                src="{{ asset_url('images/headavatar/head_avatar_problem.png') }}">
-        </div>
-        <div class="content">
-            <h5 class="mb-3">👋 hi, 我是 hanjie, earth online 的一名NPC</h5>
-            <h5 class="mb-3">🎓 我是一名 emm…… 原神玩家（好吧，这么说是因为我不知道应该说什么）</h5>
-            <h5 class="mb-3">💻 这个 website 使用了 python, flask, docker, nginx, gcp 等技术和服务构建</h5>
-            <h5 class="mb-3">🌟 喜欢二次元，省流——是个宅男</h5>
-            <h5 class="mb-3">🚀 我的长期目标每天可以自由支配自己的时间，尝试自己感兴趣的事情</h5>
-            <h5 class="mb-3">📫 联系我：<a href="mailto:hanjiechen@outlook.com">hanjie-chen@outlook.com</a></h5>
-        </div>
+<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
+    <div class="content-wrapper home-page-shell px-2 px-lg-3">
+        <section class="home-hero">
+            <div class="home-hero-copy">
+                <p class="home-overline">PERSONAL SITE / KNOWLEDGE BASE</p>
+                <h1 class="home-hero-title">Build, Learn, Document.</h1>
+                <p class="home-hero-lead">
+                    这里记录我的工程实践、技术笔记和持续构建中的项目。
+                </p>
+                <p class="home-hero-support">
+                    内容主要围绕 Cloud、DevOps、Full-stack、Python，以及 AI-assisted workflow。
+                </p>
+                <div class="home-hero-actions">
+                    <a href="{{ url_for('article_index') }}" class="home-cta home-cta-primary">
+                        Read Articles
+                    </a>
+                    <a href="{{ url_for('about_me') }}" class="home-cta home-cta-secondary">
+                        About Me
+                    </a>
+                </div>
+            </div>
+            <div class="home-hero-media">
+                <div class="home-avatar-frame">
+                    <img alt="avatar" class="home-avatar"
+                        src="{{ asset_url('images/headavatar/head_avatar_problem.png') }}">
+                </div>
+            </div>
+        </section>
+
+        <section class="home-section">
+            <div class="home-section-heading">
+                <p class="home-overline">START HERE</p>
+                <h2>What you'll find here</h2>
+            </div>
+            <div class="home-entry-grid">
+                <article class="home-entry-card">
+                    <h3>Articles</h3>
+                    <p>技术笔记、部署记录、实践文章，以及围绕 Cloud / DevOps / Full-stack 的持续整理。</p>
+                </article>
+                <article class="home-entry-card">
+                    <h3>About Me</h3>
+                    <p>更完整的个人介绍、当前关注点、工作方式，以及与求职相关的信息。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="home-section">
+            <div class="home-section-heading">
+                <p class="home-overline">CURRENT FOCUS</p>
+                <h2>Current Focus</h2>
+            </div>
+            <div class="home-focus-grid">
+                <article class="home-focus-card">
+                    <h3>Cloud / DevOps</h3>
+                    <p>Terraform, GCP, Cloudflare, deployment workflows.</p>
+                </article>
+                <article class="home-focus-card">
+                    <h3>Full-stack / Python</h3>
+                    <p>Flask, backend services, and containerized applications.</p>
+                </article>
+                <article class="home-focus-card">
+                    <h3>AI-assisted workflow</h3>
+                    <p>Using LLM and agent tools to support debugging, refactoring, and documentation.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="home-section home-note-card">
+            <div class="home-section-heading">
+                <p class="home-overline">WHY THIS SITE EXISTS</p>
+                <h2>Why This Site Exists</h2>
+            </div>
+            <div class="home-note-copy">
+                <p>
+                    这个网站既是我的技术知识库，也是我整理项目、验证理解和持续输出的地方。
+                </p>
+                <p>
+                    我希望它是一个长期可维护、可复用、可迭代的工程记录，而不只是零散文章的集合。
+                </p>
+            </div>
+        </section>
     </div>
 </div>
 {% endblock %}

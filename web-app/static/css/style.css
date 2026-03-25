@@ -94,6 +94,201 @@ body {
     /* 让内容区域自动占据剩余空间 */
 }
 
+.home-page-shell {
+    width: min(100%, 1520px);
+    display: grid;
+    gap: 1.35rem;
+    padding-top: 1.15rem;
+}
+
+.home-hero,
+.home-section {
+    background: linear-gradient(
+        180deg,
+        rgba(28, 30, 34, 0.82) 0%,
+        rgba(22, 24, 28, 0.72) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 22px;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.16);
+}
+
+.home-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(200px, 0.65fr);
+    gap: 2rem;
+    align-items: center;
+    padding: 2rem 2.1rem;
+}
+
+.home-hero-copy {
+    min-width: 0;
+}
+
+.home-overline {
+    margin: 0 0 0.7rem;
+    font-size: 0.82rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-color);
+}
+
+.home-hero-title {
+    margin: 0;
+    font-size: clamp(2.35rem, 4vw, 4.35rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+}
+
+.home-hero-lead,
+.home-hero-support {
+    max-width: 42rem;
+    color: rgba(219, 220, 226, 0.9);
+    font-size: 1.03rem;
+    line-height: 1.78;
+}
+
+.home-hero-lead {
+    margin: 1.35rem 0 0.4rem;
+}
+
+.home-hero-support {
+    margin: 0;
+}
+
+.home-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    margin-top: 1.6rem;
+}
+
+.home-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.78rem 1.2rem;
+    border-radius: 999px;
+    font-size: 0.98rem;
+    text-decoration: none;
+    transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.home-cta:hover {
+    transform: translateY(-1px);
+}
+
+.home-cta-primary {
+    background: rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(96, 165, 250, 0.34);
+    color: #f8fbff;
+}
+
+.home-cta-primary:hover {
+    color: #f8fbff;
+    background: rgba(59, 130, 246, 0.24);
+}
+
+.home-cta-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-primary-color);
+}
+
+.home-cta-secondary:hover {
+    color: var(--text-primary-color);
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.home-hero-media {
+    display: flex;
+    justify-content: center;
+}
+
+.home-avatar-frame {
+    width: min(100%, 240px);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 26px;
+    background: linear-gradient(
+        160deg,
+        rgba(59, 130, 246, 0.14) 0%,
+        rgba(30, 41, 59, 0.45) 100%
+    );
+    border: 1px solid rgba(96, 165, 250, 0.22);
+}
+
+.home-avatar {
+    width: min(100%, 200px);
+    height: auto;
+    border-radius: 22px;
+}
+
+.home-section {
+    padding: 1.65rem 1.8rem;
+}
+
+.home-section-heading {
+    margin-bottom: 1.1rem;
+}
+
+.home-section-heading h2 {
+    margin: 0;
+    font-size: clamp(1.55rem, 2.8vw, 2.4rem);
+}
+
+.home-entry-grid,
+.home-focus-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.home-entry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.home-focus-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.home-entry-card,
+.home-focus-card {
+    padding: 1.2rem 1.25rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.home-entry-card h3,
+.home-focus-card h3 {
+    margin: 0 0 0.7rem;
+    font-size: 1.4rem;
+}
+
+.home-entry-card p,
+.home-focus-card p,
+.home-note-copy p {
+    margin: 0;
+    color: rgba(203, 213, 225, 0.94);
+    line-height: 1.72;
+}
+
+.home-note-copy {
+    max-width: 56rem;
+    display: grid;
+    gap: 0.8rem;
+}
+
+@media (min-width: 1200px) {
+    .home-hero-title {
+        white-space: nowrap;
+    }
+}
+
 .footer-custom {
     /* 基础设置 */
     /* height: 6vh; */
@@ -139,6 +334,46 @@ body {
 
     .card {
         margin-bottom: 1.5rem;
+    }
+
+    .home-page-shell {
+        gap: 1rem;
+    }
+
+    .home-hero,
+    .home-section {
+        border-radius: 18px;
+    }
+
+    .home-hero {
+        grid-template-columns: 1fr;
+        padding: 1.4rem 1.2rem;
+        gap: 1.3rem;
+    }
+
+    .home-section {
+        padding: 1.35rem 1.2rem;
+    }
+
+    .home-entry-grid,
+    .home-focus-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-avatar-frame {
+        width: min(100%, 180px);
+    }
+
+    .home-avatar {
+        width: min(100%, 148px);
+    }
+
+    .home-cta {
+        width: 100%;
+    }
+
+    .home-hero-title {
+        white-space: normal;
     }
 }
 
