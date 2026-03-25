@@ -35,3 +35,4 @@ jobs:
             ./scripts/deploy/ensure_db_ready.sh "${DEPLOY_SHA}"
             ./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity
             ./scripts/deploy/smoke_check.sh
+            ./scripts/deploy/cleanup_old_images.sh "${DEPLOY_SHA}"
