@@ -1,6 +1,8 @@
 #!/bin/sh
+set -e
 
 ARTICLES_DIR="${SOURCE_ARTICLES_DIRECTORY:-/articles/src}"
+GITHUB_REPO="${GITHUB_REPO:-https://github.com/hanjie-chen/knowledge-base.git}"
 REPO_BRANCH="${REPO_BRANCH:-main}"
 WEB_APP_REINDEX_URL="${WEB_APP_REINDEX_URL:-}"
 REIMPORT_ARTICLES_TOKEN="${REIMPORT_ARTICLES_TOKEN:-}"
@@ -9,30 +11,72 @@ log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SYNC] $1"
 }
 
+reclone_repository() {
+    parent_dir="$(dirname "$ARTICLES_DIR")"
+    repo_name="$(basename "$ARTICLES_DIR")"
+    tmp_dir="${parent_dir}/.${repo_name}.reclone.$$"
+
+    log_message "Recloning article repository from scratch"
+
+    rm -rf "$tmp_dir"
+    mkdir -p "$parent_dir"
+
+    if /usr/bin/git clone --depth=1 -b "$REPO_BRANCH" "$GITHUB_REPO" "$tmp_dir"; then
+        rm -rf "$ARTICLES_DIR"
+        mv "$tmp_dir" "$ARTICLES_DIR"
+    else
+        rm -rf "$tmp_dir"
+        log_message "Repository reclone failed"
+        exit 1
+    fi
+}
+
 echo "----------------------------------------"
 log_message "Starting articles synchronization"
+log_message "Using GITHUB_REPO: $GITHUB_REPO"
 log_message "Using REPO_BRANCH: $REPO_BRANCH"
+
+# This service mirrors the latest branch state only. It does not preserve local history.
+if [ ! -d "$ARTICLES_DIR/.git" ]; then
+    log_message "$ARTICLES_DIR is not a git repository, rebuilding local mirror"
+    reclone_repository
+fi
 
 # go to articles dir
 cd "$ARTICLES_DIR" || {
-    log_message "Failed to change directory to /articles/src"
+    log_message "Failed to change directory to $ARTICLES_DIR"
     exit 1
 }
-
-# check if it is a git repo
-if [ ! -d ".git" ]; then
-    log_message "/articles/src is not a git repository"
-    exit 1
-fi
 
 # get current HEAD
 before_head="$(/usr/bin/git rev-parse HEAD 2>/dev/null || true)"
 
-# 执行 git pull
-if /usr/bin/git pull origin "$REPO_BRANCH"; then
-    log_message "Git pull successful"
+# Track the configured remote explicitly so a recreated repository with the same name
+# can still be mirrored without depending on local branch history.
+if ! /usr/bin/git remote set-url origin "$GITHUB_REPO"; then
+    log_message "Failed to update origin URL, rebuilding local mirror"
+    reclone_repository
+    cd "$ARTICLES_DIR" || {
+        log_message "Failed to change directory to $ARTICLES_DIR after reclone"
+        exit 1
+    }
+fi
+
+if /usr/bin/git fetch --depth=1 origin "$REPO_BRANCH"; then
+    log_message "Git fetch successful"
 else
-    log_message "Git pull failed with exit code $?"
+    log_message "Git fetch failed, rebuilding local mirror"
+    reclone_repository
+    cd "$ARTICLES_DIR" || {
+        log_message "Failed to change directory to $ARTICLES_DIR after reclone"
+        exit 1
+    }
+fi
+
+if /usr/bin/git reset --hard FETCH_HEAD && /usr/bin/git clean -fd; then
+    log_message "Local mirror reset to remote branch state"
+else
+    log_message "Failed to reset working tree to fetched state"
     exit 1
 fi
 
