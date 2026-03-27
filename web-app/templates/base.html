@@ -15,6 +15,9 @@
 
     <!--engage Bootstrap 5 CSS -->
     <link rel="stylesheet" href="{{ asset_url('bootstrap5/css/bootstrap.min.css') }}">
+    <!-- preload the lightweight Chinese UI subset so fixed labels can settle earlier -->
+    <link rel="preload" href="{{ asset_url('font/PingFangSC/PingFang-SC-UI-subset.woff2') }}" as="font"
+        type="font/woff2" crossorigin>
     <!-- use the pointed font -->
     <link rel="stylesheet" href="{{ asset_url('font/font.css') }}">
     <!-- pointed body color -->

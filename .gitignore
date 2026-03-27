@@ -1,5 +1,7 @@
 # ignore python compile file
 __pycache__/
+.pytest_cache/
+.ruff_cache/
 
 # ignore pytest coverage artifacts
 .coverage

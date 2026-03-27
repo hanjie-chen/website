@@ -4,26 +4,42 @@
 /* 英文 */
 @font-face {
     font-family: 'JetBrainsMono';
-    src: url('./JetBrainsMono/JetBrainsMono-Regular.woff2') format('woff2'),
+    src: local('JetBrains Mono'),
+        local('JetBrainsMono-Regular'),
+        url('./JetBrainsMono/JetBrainsMono-Regular.woff2') format('woff2'),
         url('./JetBrainsMono/JetBrainsMono-Regular.ttf') format('truetype');
-
+    font-display: swap;
 }
 
 /* 中文 */
 @font-face {
+    font-family: 'PingFangSCUI';
+    src: local('PingFang SC'),
+        local('PingFangSC-Regular'),
+        url('./PingFangSC/PingFang-SC-UI-subset.woff2') format('woff2');
+    font-display: fallback;
+}
+
+@font-face {
     font-family: 'PingFangSC';
-    src: url('./PingFangSC/PingFang-SC-Regular.ttf') format('truetype');
+    src: local('PingFang SC'),
+        local('PingFangSC-Regular'),
+        url('./PingFangSC/PingFang-SC-Regular.woff2') format('woff2'),
+        url('./PingFangSC/PingFang-SC-Regular.ttf') format('truetype');
+    font-display: fallback;
 }
 
 /* 优先加载JetrainsMono字体 如果字符不能使用其加载 那么使用苹方简体加载 如果还是不行加载系统默认的monospace
    通过这样子的方式实现英文数字加载JetbrainMono 中文加载苹方简体
  */
 body {
-    font-family: 'JetBrainsMono', 'PingFangSC', monospace;
+    font-family: 'JetBrainsMono', 'PingFangSCUI', 'PingFangSC', 'PingFang SC',
+        'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', monospace;
 }
 
 /* 将 JetBrain Mono 应用到 <code> 和 <pre> 标签 */
 code,
 pre {
-    font-family: 'JetBrainsMono', 'PingFangSC', monospace;
+    font-family: 'JetBrainsMono', 'PingFangSCUI', 'PingFangSC', 'PingFang SC',
+        'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', monospace;
 }
