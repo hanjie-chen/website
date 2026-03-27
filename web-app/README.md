@@ -135,8 +135,6 @@ Most important files:
 - `404.html`
   - not-found page
 
-There is also `TemplatesOverview.md`, which can be helpful when looking specifically at template responsibilities.
-
 ### `static/`
 
 Frontend assets used by the templates.
@@ -164,16 +162,14 @@ Commonly touched files:
 
 There is also `StaticOverivew.md`, which can be helpful when mapping static assets at a lower level.
 
-Font-related helper:
+Important font files:
 
-- `scripts/build_pingfang_ui_subset.py`
-  - extracts fixed UI copy from templates and writes the character list used to build the lightweight Chinese UI subset font
+- `static/font/font.css`
+  - loads JetBrains Mono, the PingFang UI subset, the full PingFang fallback, and the system fallback chain
 - `static/font/PingFangSC/PingFang-SC-UI-subset.txt`
   - generated character list for the UI-only PingFang SC subset
 - `static/font/PingFangSC/PingFang-SC-UI-subset.woff2`
   - lightweight Chinese font subset used for fixed UI text before falling back to the full PingFang font
-- `static/font/font.css`
-  - loads JetBrains Mono, the PingFang UI subset, the full PingFang fallback, and the system fallback chain
 
 ### `custom_md_extensions/`
 
@@ -185,6 +181,22 @@ This is where site-specific rendering behavior lives, such as:
 - GFM-style admonition handling
 
 Start here when you want to change rendered Markdown semantics rather than just page-level CSS.
+
+### `scripts/`
+
+Small helper scripts that support the web app but are not part of the Flask request path itself.
+
+Current scripts:
+
+- `init_db.py`
+  - initializes the SQLite schema used by the application
+- `build_pingfang_ui_subset.py`
+  - extracts fixed UI copy from templates and generates the character list used to build the lightweight PingFang UI subset font
+
+Start here when you want to change:
+
+- database bootstrap behavior
+- UI font subset generation inputs
 
 ### `tests/`
 
