@@ -18,7 +18,6 @@ from config import Rendered_Articles, IS_DEV
 from models import Article_Meta_Data
 from markdown_render_scripts import render_markdown_to_html
 
-# future considered: use pathlib.Path instead of os.path
 # consider use python logging package to instead of print information
 
 # regular expression pre-compile
@@ -26,6 +25,7 @@ brief_intro_pattern = re.compile(r"```.*?BriefIntroduction:\s*(.*?)```", re.DOTA
 
 
 def _is_hidden_item(item_name: str):
+    # Ignore dotfiles/directories and internal placeholders such as "__template__".
     return item_name.startswith(".") or (
         item_name.startswith("__") and item_name.endswith("__")
     )
@@ -113,6 +113,7 @@ def _parse_article(md_path: str):
 
 
 def _article_category(rel_path: str):
+    # Categories are derived from the markdown path relative to the repo root.
     return os.path.split(rel_path)[0]
 
 
@@ -159,8 +160,8 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
                 )
                 return
 
-            # Hash unchanged but rendered HTML is missing (e.g. dev cleanup or manual deletion).
-            # Re-render to keep DB state and filesystem output consistent.
+            # Keep the rendered directory self-healing: if HTML was deleted manually
+            # or by a dev cleanup, regenerate it without touching DB metadata.
             if render_markdown_to_html(
                 content_part, exist_check.id, output_path, url_base_path
             ):
@@ -242,6 +243,9 @@ def _scan_articles(
 ):
     files, folders = divide_files_and_folders(current_dir)
 
+    # A directory only becomes a publishable article folder if it also owns
+    # an assets directory. Root-level helper markdown files such as README.md
+    # are therefore ignored unless they live in a real article folder.
     if "images" in folders:
         assets_folder = "images"
     elif "assets" in folders:
@@ -265,6 +269,8 @@ def _scan_articles(
 
 def _cleanup_rendered_dir():
     if IS_DEV and os.path.exists(Rendered_Articles):
+        # Dev mode rebuilds the rendered tree from scratch to avoid stale HTML
+        # masking template or markdown changes during local iteration.
         for root, dirs, files in os.walk(Rendered_Articles, topdown=False):
             for file in files:
                 os.remove(os.path.join(root, file))
@@ -273,6 +279,8 @@ def _cleanup_rendered_dir():
 
 
 def _sync_deleted_articles(db: SQLAlchemy, seen_file_paths: set):
+    # The database is treated as a mirror of what the scanner saw this run.
+    # Anything missing from seen_file_paths is considered deleted upstream.
     existing_articles = db.session.execute(db.select(Article_Meta_Data)).scalars().all()
     for article in existing_articles:
         if article.file_path not in seen_file_paths:
@@ -290,6 +298,8 @@ def _sync_deleted_articles(db: SQLAlchemy, seen_file_paths: set):
                 )
             ).scalar()
             if not remaining_in_category:
+                # Remove the rendered category directory once its last article
+                # disappears so the output tree stays tidy.
                 category_dir = os.path.join(Rendered_Articles, category_path)
                 if os.path.isdir(category_dir):
                     shutil.rmtree(category_dir)
