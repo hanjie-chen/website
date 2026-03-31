@@ -35,6 +35,85 @@ def test_articles_index_returns_200(client):
     assert "Top-Level Categories" in response.get_data(as_text=True)
 
 
+def test_api_articles_returns_minimal_summary_fields(client, app):
+    with app.app_context():
+        first = _insert_article(
+            title="Terraform Intro",
+            category="tests/infra",
+            file_path="tests/infra/terraform-intro.md",
+        )
+        second = _insert_article(
+            title="Ansible Ping",
+            category="tests/ansible",
+            file_path="tests/ansible/ping.md",
+        )
+        expected_items = [
+            {
+                "id": first.id,
+                "title": "Terraform Intro",
+                "category": "tests/infra",
+                "brief": "test intro",
+            },
+            {
+                "id": second.id,
+                "title": "Ansible Ping",
+                "category": "tests/ansible",
+                "brief": "test intro",
+            },
+        ]
+
+    response = client.get("/api/articles")
+
+    assert response.status_code == 200
+    assert response.get_json() == {"items": expected_items}
+
+
+def test_api_articles_keeps_chinese_text_readable(client, app):
+    with app.app_context():
+        _insert_article(
+            title="docker volume 使用基础",
+            category="tests/docker",
+            file_path="tests/docker/volume.md",
+        )
+
+    response = client.get("/api/articles")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "docker volume 使用基础" in body
+    assert "\\u4f7f\\u7528" not in body
+
+
+def test_api_article_detail_returns_expanded_metadata_only(client, app):
+    with app.app_context():
+        article = _insert_article(
+            title="Terraform Intro",
+            category="tests/infra",
+            file_path="tests/infra/terraform-intro.md",
+        )
+        article_id = article.id
+        expected_payload = {
+            "id": article.id,
+            "title": "Terraform Intro",
+            "author": "tester",
+            "instructor": "mentor",
+            "category": "tests/infra",
+            "brief": "test intro",
+            "rollout_date": article.rollout_date.isoformat(),
+            "ultimate_modified_date": article.ultimate_modified_date.isoformat(),
+        }
+
+    response = client.get(f"/api/articles/{article_id}")
+
+    assert response.status_code == 200
+    assert response.get_json() == expected_payload
+
+
+def test_api_article_detail_returns_404_for_missing_article(client):
+    response = client.get("/api/articles/999999")
+    assert response.status_code == 404
+
+
 def test_article_category_returns_200(client, app):
     with app.app_context():
         _insert_article(

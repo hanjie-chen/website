@@ -16,6 +16,7 @@ from config import (
 
 
 app = Flask(__name__)
+app.json.ensure_ascii = False
 
 # configure the database uri
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
@@ -95,6 +96,34 @@ def _fetch_all_articles():
     return db.session.execute(db.select(Article_Meta_Data)).scalars().all()
 
 
+def _fetch_api_articles():
+    return db.session.execute(
+        db.select(Article_Meta_Data).order_by(Article_Meta_Data.id)
+    ).scalars().all()
+
+
+def _serialize_article_summary(article: Article_Meta_Data):
+    return {
+        "id": article.id,
+        "title": article.title,
+        "category": article.category,
+        "brief": article.brief_introduction,
+    }
+
+
+def _serialize_article_detail(article: Article_Meta_Data):
+    return {
+        "id": article.id,
+        "title": article.title,
+        "author": article.author,
+        "instructor": article.instructor,
+        "category": article.category,
+        "brief": article.brief_introduction,
+        "rollout_date": article.rollout_date.isoformat(),
+        "ultimate_modified_date": article.ultimate_modified_date.isoformat(),
+    }
+
+
 def _asset_url(filename: str) -> str:
     static_folder = app.static_folder or ""
     asset_path = os.path.join(static_folder, filename)
@@ -139,6 +168,27 @@ def article_category(category_path):
 @app.route("/about")
 def about_me():
     return render_template("about_me.html")
+
+
+@app.route("/api/articles")
+def api_articles():
+    return {
+        "items": [
+            _serialize_article_summary(article) for article in _fetch_api_articles()
+        ]
+    }
+
+
+@app.route("/api/articles/<int:article_id>")
+def api_article_detail(article_id):
+    article = db.session.execute(
+        db.select(Article_Meta_Data).where(Article_Meta_Data.id == article_id)
+    ).scalar()
+
+    if not article:
+        abort(404)
+
+    return _serialize_article_detail(article)
 
 
 # deal with 404 error
