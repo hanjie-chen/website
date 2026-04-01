@@ -14,6 +14,7 @@ Examples:
 ## Working Rules
 
 - Keep changes focused. Do not mix unrelated refactors into the same task.
+- Keep the root `Readme.md` concise. Put subsystem details in the nearest subsystem `README.md`, and only keep repo-level overview, entry points, and security/operations summaries in the root README.
 - If you change subsystem behavior, update that subsystem's `README.md` in the same change.
 - If you add, remove, or rename files that are documented, update the relevant `README.md` immediately.
 - If a change affects high-level repo behavior, also update the root `Readme.md`.

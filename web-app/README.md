@@ -9,6 +9,7 @@ If `articles-sync` is responsible for keeping the Markdown source up to date, `w
 The `web-app` subsystem covers four major areas:
 
 - serving the homepage, article pages, docs-style category pages, and the About page
+- exposing read-only article metadata APIs for public consumption
 - importing Markdown articles into the SQLite metadata database
 - rendering article Markdown into static HTML files under the rendered article directory
 - providing internal endpoints and helpers used by the deployment and sync flows
@@ -29,12 +30,16 @@ What it does:
   - `/articles/category/<path>`
   - `/articles/<int:article_id>`
   - `/about`
+- serves the public read-only JSON APIs:
+  - `GET /api/articles`
+  - `GET /api/articles/<int:article_id>`
 - exposes the internal `POST /internal/reindex` endpoint used by `articles-sync`
 - builds the article TOC for the right-hand page navigation
 
 Start here when you want to change:
 
 - application routing
+- API response shape for article metadata
 - article page rendering context
 - the internal reindex trigger
 - homepage or About page view wiring
@@ -111,6 +116,7 @@ Important implication:
 - article metadata lives in SQLite
 - article body HTML lives in the rendered article directory
 - the public article page needs both
+- the public article APIs currently expose metadata only, not rendered article HTML
 
 ## Directory Map
 
@@ -207,7 +213,7 @@ Important test files:
 - `test_smoke.py`
   - high-level page content checks
 - `test_articles_routes.py`
-  - article and docs page route behavior
+  - article, docs page, and public article API route behavior
 - `test_article_toc.py`
   - TOC structure expectations
 - `test_navigation.py`
