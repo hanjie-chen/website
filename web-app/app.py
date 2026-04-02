@@ -97,9 +97,11 @@ def _fetch_all_articles():
 
 
 def _fetch_api_articles():
-    return db.session.execute(
-        db.select(Article_Meta_Data).order_by(Article_Meta_Data.id)
-    ).scalars().all()
+    return (
+        db.session.execute(db.select(Article_Meta_Data).order_by(Article_Meta_Data.id))
+        .scalars()
+        .all()
+    )
 
 
 def _serialize_article_summary(article: Article_Meta_Data):
