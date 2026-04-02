@@ -8,7 +8,7 @@ WEB_APP_REINDEX_URL="${WEB_APP_REINDEX_URL:-}"
 REIMPORT_ARTICLES_TOKEN="${REIMPORT_ARTICLES_TOKEN:-}"
 
 log_message() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SYNC] $1"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S %z %Z')] [SYNC] $1"
 }
 
 reclone_repository() {

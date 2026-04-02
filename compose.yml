@@ -5,7 +5,7 @@ x-logging: &default-logging
     max-file: "5"
 
 services:
-  # pull github articles repo once a day
+  # pull github articles repo on a recurring schedule
   articles-sync:
     container_name: articles-sync
     # Production image is built/pushed by CI to GHCR.
@@ -17,6 +17,8 @@ services:
       - GITHUB_REPO=https://github.com/hanjie-chen/knowledge-base.git
       - SOURCE_ARTICLES_DIRECTORY=/articles/src
       - REPO_BRANCH=main
+      - TZ=UTC
+      - "CRON_SCHEDULE=0 */4 * * *"
       - WEB_APP_REINDEX_URL=http://web-app:5000/internal/reindex
       - REIMPORT_ARTICLES_TOKEN=${REIMPORT_ARTICLES_TOKEN}
     healthcheck:

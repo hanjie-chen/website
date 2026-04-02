@@ -37,6 +37,7 @@ Container entry flow.
 What it does:
 
 - resolves the article source directory and repo settings
+- resolves the cron schedule used for periodic syncs
 - verifies that `su-exec` is available
 - shallow-clones the source repository into `/articles/src` if the directory is empty
 - otherwise runs an immediate update via `update-articles.sh`
@@ -79,7 +80,7 @@ When the container starts for the first time:
 1. `init.sh` checks whether `/articles/src` is empty.
 2. If empty, the upstream article repository is shallow-cloned into the shared volume.
 3. If not empty, the service performs an immediate sync with `update-articles.sh`.
-4. A daily cron job is installed.
+4. A recurring cron job is installed.
 5. `crond` stays in the foreground so the container remains alive.
 
 ### Scheduled Sync
@@ -87,10 +88,12 @@ When the container starts for the first time:
 The default cron entry configured by `init.sh` is:
 
 ```cron
-0 16 * * * /usr/local/bin/cron-heartbeat-sync.sh >> /proc/1/fd/1 2>&1
+0 */4 * * * /usr/local/bin/cron-heartbeat-sync.sh >> /proc/1/fd/1 2>&1
 ```
 
-This means the container performs one scheduled sync each day at `16:00` container time and writes cron output to container stdout.
+This means the container performs one scheduled sync every 4 hours and writes cron output to container stdout.
+
+The schedule can be overridden with `CRON_SCHEDULE`.
 
 ### Reindex Trigger
 
@@ -129,6 +132,10 @@ This keeps disk usage low, avoids carrying full history, and makes the sync resi
   - branch to clone and pull
 - `SOURCE_ARTICLES_DIRECTORY`
   - shared directory used by both `articles-sync` and `web-app`
+- `CRON_SCHEDULE`
+  - cron expression used by `crond`; default is `0 */4 * * *`
+- `TZ`
+  - optional container timezone for cron and log timestamps; `compose.yml` sets this service to `UTC`
 
 ### Reindex Settings
 
@@ -142,6 +149,7 @@ This keeps disk usage low, avoids carrying full history, and makes the sync resi
 - Git operations run as `appuser`, not as root.
 - Cron is installed for root, but the actual sync command switches to `appuser`.
 - The service treats `/articles/src` as a disposable mirror of the latest branch state.
+- Sync and cron log lines include the timezone offset and timezone name to make commit-time comparisons easier.
 - The Compose health check for `articles-sync` only verifies:
   - `/articles/src/.git` exists
   - `crond` is running

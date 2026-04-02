@@ -4,15 +4,17 @@ set -e
 ARTICLES_DIR="${SOURCE_ARTICLES_DIRECTORY:-/articles/src}"
 GITHUB_REPO="${GITHUB_REPO:-https://github.com/hanjie-chen/knowledge-base.git}"
 REPO_BRANCH="${REPO_BRANCH:-main}"
+CRON_SCHEDULE="${CRON_SCHEDULE:-0 */4 * * *}"
 SU_EXEC_BIN="${SU_EXEC_BIN:-}"
 
 # record the time
 log_message() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INIT] $1"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S %z %Z')] [INIT] $1"
 }
 # record the repo and branch message
 log_message "Using GITHUB_REPO: $GITHUB_REPO"
 log_message "Using REPO_BRANCH: $REPO_BRANCH"
+log_message "Using CRON_SCHEDULE: $CRON_SCHEDULE"
 if [ -z "$SU_EXEC_BIN" ]; then
     SU_EXEC_BIN="$(command -v su-exec || true)"
 fi
@@ -41,12 +43,13 @@ fi
 
 # Create a temporary crontab file
 cat << EOF > /tmp/crontab
-0 16 * * * /usr/local/bin/cron-heartbeat-sync.sh >> /proc/1/fd/1 2>&1
+$CRON_SCHEDULE /usr/local/bin/cron-heartbeat-sync.sh >> /proc/1/fd/1 2>&1
 EOF
 
 # Install crontab for root, then delete it
 crontab -u root /tmp/crontab
 rm /tmp/crontab
+log_message "Installed cron schedule for articles sync"
 
 # 设置 umask
 umask 022
