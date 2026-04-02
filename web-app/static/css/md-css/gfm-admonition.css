@@ -1,103 +1,112 @@
 :root {
-    --ad-border-color: rgba(148, 163, 184, 0.14);
-    --ad-border: 1px solid var(--ad-border-color);
-    --note-bg: rgba(29, 34, 40, 0.9);
-    --tip-bg: rgba(26, 35, 33, 0.9);
-    --warning-bg: rgba(39, 34, 27, 0.9);
-    --important-bg: rgba(25, 35, 39, 0.9);
-    --caution-bg: rgba(39, 28, 30, 0.92);
-    --ad-padding: 14px 16px 16px 16px;
-    --ad-margin: 18px 0;
-    --ad-radius: 12px;
-    --ad-box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-    --title-font-size: 0.92em;
-    --ad-title-color: rgba(224, 231, 239, 0.96);
-    --ad-body-color: rgba(208, 216, 226, 0.94);
-    --ad-title-divider: rgba(148, 163, 184, 0.14);
+    --ad-rail-color: rgba(148, 163, 184, 0.28);
+    --ad-margin: 1.2rem 0 1.35rem;
+    --ad-padding-left: 1rem;
+    --ad-rail-width: 2.5px;
+    --title-font-size: 0.82em;
+    --ad-title-color: rgba(224, 231, 239, 0.94);
+    --ad-body-color: rgba(203, 213, 225, 0.96);
 }
 
 /* 基础 admonition 样式 */
 .admonition {
-    border: var(--ad-border);
-    padding: var(--ad-padding);
+    position: relative;
+    border: 0;
+    padding: 0.05rem 0 0 var(--ad-padding-left);
     margin: var(--ad-margin);
-    border-radius: var(--ad-radius);
-    box-shadow: var(--ad-box-shadow);
-    background-image: linear-gradient(
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.admonition::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.16rem;
+    bottom: 0.16rem;
+    width: var(--ad-rail-width);
+    border-radius: 999px;
+    background: linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.02) 0%,
-        rgba(255, 255, 255, 0) 100%
+        rgba(255, 255, 255, 0.16) 0%,
+        var(--ad-rail-color) 14%,
+        var(--ad-rail-color) 86%,
+        rgba(255, 255, 255, 0.08) 100%
     );
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
 }
 
 /* admonition 标题样式 */
 .admonition .admonition-title {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
+    gap: 0.45rem;
     font-weight: 700;
-    margin-bottom: 0.85rem;
-    padding-bottom: 0.55rem;
+    margin: 0 0 0.72rem;
+    padding-bottom: 0.42rem;
     color: var(--ad-title-color);
-    border-bottom: 1px solid var(--ad-title-divider);
     font-size: var(--title-font-size);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .admonition .admonition-title::before {
     content: "";
-    width: 0.5rem;
-    height: 0.5rem;
+    width: 0.36rem;
+    height: 0.36rem;
     flex: 0 0 auto;
     border-radius: 999px;
     background-color: currentColor;
-    opacity: 0.9;
+    opacity: 0.88;
 }
 
 .admonition p,
-.admonition li {
+.admonition li,
+.admonition ul,
+.admonition ol {
     color: var(--ad-body-color);
+}
+
+.admonition p:not(.admonition-title) {
+    margin-top: 0;
+    margin-bottom: 0.9rem;
+}
+
+.admonition ul,
+.admonition ol {
+    margin-top: 0;
+    margin-bottom: 0.9rem;
 }
 
 .admonition > :last-child {
     margin-bottom: 0;
 }
 
-/* 针对不同类型设置背景颜色 */
+/* 针对不同类型设置 rail 和标题颜色 */
 .admonition.note {
-    background-color: var(--note-bg);
     --ad-title-color: rgba(191, 219, 254, 0.94);
-    --ad-title-divider: rgba(96, 165, 250, 0.12);
-    --ad-border-color: rgba(148, 163, 184, 0.13);
+    --ad-rail-color: rgba(96, 165, 250, 0.46);
 }
 
 .admonition.tip {
-    background-color: var(--tip-bg);
     --ad-title-color: rgba(167, 243, 208, 0.94);
-    --ad-title-divider: rgba(52, 211, 153, 0.12);
-    --ad-border-color: rgba(134, 239, 172, 0.14);
+    --ad-rail-color: rgba(52, 211, 153, 0.44);
 }
 
 .admonition.warning {
-    background-color: var(--warning-bg);
     --ad-title-color: rgba(253, 224, 71, 0.94);
-    --ad-title-divider: rgba(245, 158, 11, 0.14);
-    --ad-border-color: rgba(251, 191, 36, 0.14);
+    --ad-rail-color: rgba(245, 158, 11, 0.46);
 }
 
 .admonition.important {
-    background-color: var(--important-bg);
     --ad-title-color: rgba(186, 230, 253, 0.94);
-    --ad-title-divider: rgba(56, 189, 248, 0.12);
-    --ad-border-color: rgba(125, 211, 252, 0.14);
+    --ad-rail-color: rgba(56, 189, 248, 0.46);
 }
 
 .admonition.caution {
-    background-color: var(--caution-bg);
     --ad-title-color: rgba(254, 202, 202, 0.94);
-    --ad-title-divider: rgba(248, 113, 113, 0.14);
-    --ad-border-color: rgba(252, 165, 165, 0.15);
+    --ad-rail-color: rgba(248, 113, 113, 0.46);
 }
