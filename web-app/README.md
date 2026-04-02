@@ -269,6 +269,7 @@ Look at:
 - `static/css/title.css`
 - `static/css/blockquote.css`
 - `static/css/md-css/` if you are changing code blocks, tables, or admonitions
+  - `gfm-admonition.css` keeps note/tip/warning callouts visually distinct from code blocks while staying within the site's restrained docs styling
 
 ### Change article import rules
 
