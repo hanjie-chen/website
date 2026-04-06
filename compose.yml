@@ -83,8 +83,10 @@ services:
     volumes:
       - ./nginx-modsecurity/conf.d/default.conf:/etc/nginx/templates/conf.d/default.conf.template
       - ./nginx-modsecurity/.htpasswd:/etc/nginx/.htpasswd:ro # load dozzle panel usr-pwd
-      # Dev HTTPS only: self-signed cert/key mount.
-      # Replace with Let's Encrypt cert path when moving to public production.
+      # TLS cert/key mount for nginx.
+      # Development can use self-signed files in ./nginx-modsecurity/ssl.
+      # Production mounts origin cert material at the same in-container path
+      # (currently Cloudflare Origin CA in prod).
       - ./nginx-modsecurity/ssl:/etc/nginx/ssl:ro
       - rendered_html_articles:/usr/share/nginx/html/rendered-articles
     depends_on:

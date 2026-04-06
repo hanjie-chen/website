@@ -177,6 +177,29 @@ Important font files:
 - `static/font/PingFangSC/PingFang-SC-UI-subset.woff2`
   - lightweight Chinese font subset used for fixed UI text before falling back to the full PingFang font
 
+### Asset versioning
+
+Templates load site-owned static assets through `asset_url(...)`, which is injected from `app.py`.
+
+What it does:
+
+- looks up the static file's last-modified timestamp with `os.path.getmtime(...)`
+- appends that timestamp as `?v=<mtime>` to the generated `/static/...` URL
+- keeps emitting the same version while the file is unchanged
+- emits a new version only after the file on disk changes
+
+Important implication:
+
+- this is a file-versioning mechanism, not a per-request random token
+- `/static/css/about-me.css?v=123` and `/static/css/about-me.css?v=456` are different cache keys
+- that lets browsers and Cloudflare keep caching old asset URLs safely while new page renders point to the new URL after a CSS/JS/image update
+- production currently relies on this versioned `/static/...?...` pattern to make Cloudflare edge caching safe for site-owned CSS, JS, fonts, and images
+
+Start in `app.py` if you want to change:
+
+- how static asset version strings are generated
+- whether assets use mtime, content hash, or some other cache-busting strategy
+
 ### `custom_md_extensions/`
 
 Custom Markdown extension implementations.

@@ -131,6 +131,9 @@ def _asset_url(filename: str) -> str:
     asset_path = os.path.join(static_folder, filename)
 
     try:
+        # Use the file mtime as a stable asset version.
+        # The value only changes when the file on disk changes, so templates keep
+        # emitting the same URL until a CSS/JS/image update actually happens.
         version = int(os.path.getmtime(asset_path))
     except OSError:
         return url_for("static", filename=filename)

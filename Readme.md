@@ -186,6 +186,8 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - 鉴权头：`X-REIMPORT-ARTICLES-TOKEN`
 - `nginx-modsecurity` 默认开启 WAF
 - `/web-log/` 使用 Nginx Basic Auth 保护 Dozzle 日志面板
+- 生产环境的 origin TLS 由 Nginx 挂载 Cloudflare Origin CA 证书；开发环境可使用自签名证书
+- Cloudflare 目前已对 `/static/*` 启用 edge cache；`/rendered-articles/*.html` 暂未纳入缓存计划
 
 ## Roadmap
 
@@ -195,3 +197,18 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 4. uv project best practice migrate
 5. light mode
 6. support rss
+
+### Cloudflare Optimization Plan
+
+按顺序逐步推进，避免聊天上下文丢失：
+
+1. 已完成：为 `/static/*` 配置 Cloudflare Cache Rule 并验证 CSS / JS / font / image 资源命中；`/rendered-articles/*` 仍按资源类型单独评估
+2. 为内容更新链路补充 cache purge plan，明确 `reindex` 后需要主动清理的 URL 范围
+3. 把 `/web-log/` 从单纯 Nginx Basic Auth 升级为 Cloudflare Access 保护，并评估是否保留双层保护
+4. 复查生产 TLS / Origin hardening，记录 Cloudflare Origin CA、`Full (strict)` 与 Authenticated Origin Pulls 的当前状态和后续补强项
+5. 接入 Cloudflare Web Analytics，补齐边缘侧访问观测
+6. 接入 Cloudflare AI Crawl Control，观察并管理 AI crawler 对博客与知识库内容的抓取
+7. 为公开只读 API（`/api/articles*`）设计 Cloudflare WAF custom rules 与 rate limiting 策略
+8. 评估 Cloudflare Email Routing，为站点域名增加自定义邮箱转发
+9. 在新增联系表单、留言、简历下载申请等交互后，接入 Cloudflare Turnstile
+10. 结合现有 `support rss` 目标，评估使用 Workers / Pages 承载 `rss.xml`、`sitemap.xml` 或其他轻量 edge 实验

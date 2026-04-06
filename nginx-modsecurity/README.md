@@ -73,6 +73,8 @@ Primary Nginx server config for:
 ### `ssl/hanjie-chen.com.crt`
 
 Certificate file mounted into the container.
+In production this path is intended for the Cloudflare Origin CA certificate.
+In development it can be a self-signed certificate.
 
 ### `ssl/hanjie-chen.com.key`
 
@@ -87,7 +89,8 @@ Basic Auth credentials used for `/web-log/`.
 - WAF stays enabled for the public site by default.
 - `/web-log/` is the only intentionally relaxed path in the current config.
 - Even though WAF is disabled on `/web-log/`, that endpoint is still protected with Basic Auth.
-- Certificate and key management are external operational concerns; this directory only defines the mounted file locations expected by Nginx.
+- Production currently uses Cloudflare Origin CA material at the mounted TLS paths.
+- Development can use self-signed TLS material at the same paths.
 
 ## Common Changes
 
