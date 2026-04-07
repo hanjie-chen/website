@@ -7,7 +7,7 @@ At a high level, this subsystem is responsible for:
 - terminating HTTPS
 - proxying public traffic to the Flask app
 - serving rendered article assets directly from Nginx
-- exposing the Dozzle log UI behind Basic Auth
+- exposing the Dozzle log UI behind Cloudflare Access
 - keeping ModSecurity enabled for the public site while relaxing it for the internal log panel path
 
 ## Purpose
@@ -38,7 +38,7 @@ The current routing behavior is defined in [conf.d/default.conf](/home/plain/per
 ### `/web-log/`
 
 - proxied to `dozzle:8080`
-- protected with Nginx Basic Auth
+- currently protected by Cloudflare Access at the edge
 - WebSocket / streaming related headers are preserved
 - ModSecurity is explicitly turned off for this path because Dozzle log queries and streams are noisy enough to trigger CRS rules
 
@@ -80,15 +80,11 @@ In development it can be a self-signed certificate.
 
 Private key file mounted into the container.
 
-### `.htpasswd`
-
-Basic Auth credentials used for `/web-log/`.
-
 ## Security Notes
 
 - WAF stays enabled for the public site by default.
 - `/web-log/` is the only intentionally relaxed path in the current config.
-- Even though WAF is disabled on `/web-log/`, that endpoint is still protected with Basic Auth.
+- Even though WAF is disabled on `/web-log/`, that endpoint is currently protected by Cloudflare Access.
 - Production currently uses Cloudflare Origin CA material at the mounted TLS paths.
 - Development can use self-signed TLS material at the same paths.
 
@@ -105,7 +101,8 @@ Start in:
 Check:
 
 - [conf.d/default.conf](/home/plain/personal-project/website/nginx-modsecurity/conf.d/default.conf)
-- [.htpasswd](/home/plain/personal-project/website/nginx-modsecurity/.htpasswd)
+
+Also consider the matching Cloudflare Access application for `/web-log/*`, because the effective production protection now lives at the edge layer.
 
 ### Replace TLS material
 
@@ -147,7 +144,7 @@ If the proxy is holding onto a stale upstream state after service recreation, re
 Check:
 
 - whether `dozzle` is healthy and reachable
-- whether `.htpasswd` is present and correctly mounted
+- whether Cloudflare Access policy still matches `/web-log/*`
 - whether the current config still preserves the upgrade / connection headers required for streaming
 
 ## Related Files

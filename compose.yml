@@ -82,7 +82,6 @@ services:
       retries: 3
     volumes:
       - ./nginx-modsecurity/conf.d/default.conf:/etc/nginx/templates/conf.d/default.conf.template
-      - ./nginx-modsecurity/.htpasswd:/etc/nginx/.htpasswd:ro # load dozzle panel usr-pwd
       # TLS cert/key mount for nginx.
       # Development can use self-signed files in ./nginx-modsecurity/ssl.
       # Production mounts origin cert material at the same in-container path

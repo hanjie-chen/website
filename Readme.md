@@ -42,7 +42,7 @@ network traffic
 
 - dozzle
 
-  容器日志 UI，通过 Nginx 以 `/web-log/` 暴露并附加 Basic Auth
+  容器日志 UI，通过 Nginx 以 `/web-log/` 暴露，并由 Cloudflare Access 保护
 
 ## Repository Layout
 
@@ -52,7 +52,7 @@ network traffic
 ├── compose.dev.yml      # 开发环境 compose 覆盖
 ├── compose.yml          # 基础 compose / 生产运行配置
 ├── infra/               # Terraform / Ansible / infra workflows
-├── nginx-modsecurity/   # Nginx、ModSecurity、证书与 Basic Auth 相关配置
+├── nginx-modsecurity/   # Nginx、ModSecurity、证书与 /web-log 访问控制相关配置
 ├── scripts/deploy/      # 生产部署、健康检查、镜像清理脚本
 └── web-app/             # Flask 应用、模板、静态资源、测试
 ```
@@ -185,9 +185,9 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - 内部重建接口：`POST /internal/reindex`
 - 鉴权头：`X-REIMPORT-ARTICLES-TOKEN`
 - `nginx-modsecurity` 默认开启 WAF
-- `/web-log/` 使用 Nginx Basic Auth 保护 Dozzle 日志面板
 - 生产环境的 origin TLS 由 Nginx 挂载 Cloudflare Origin CA 证书；开发环境可使用自签名证书
 - Cloudflare 目前已对 `/static/*` 启用 edge cache；`/rendered-articles/*.html` 暂未纳入缓存计划
+- `/web-log/` 目前由 Cloudflare Access 在 edge 侧保护，不再依赖 Nginx Basic Auth
 
 ## Roadmap
 
@@ -203,8 +203,8 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 按顺序逐步推进，避免聊天上下文丢失：
 
 1. 已完成：为 `/static/*` 配置 Cloudflare Cache Rule 并验证 CSS / JS / font / image 资源命中；`/rendered-articles/*` 仍按资源类型单独评估
-2. 为内容更新链路补充 cache purge plan，明确 `reindex` 后需要主动清理的 URL 范围
-3. 把 `/web-log/` 从单纯 Nginx Basic Auth 升级为 Cloudflare Access 保护，并评估是否保留双层保护
+2. 暂缓：当前仅 `/static/*` 进入 Cloudflare edge cache，且依赖 `?v=<mtime>` 解决更新问题；待 HTML 页面或 `rendered-articles` 资源进入缓存后，再补充 `reindex` 后的 cache purge plan
+3. 已完成：`/web-log/` 已接入 Cloudflare Access，并移除了 Nginx Basic Auth
 4. 复查生产 TLS / Origin hardening，记录 Cloudflare Origin CA、`Full (strict)` 与 Authenticated Origin Pulls 的当前状态和后续补强项
 5. 接入 Cloudflare Web Analytics，补齐边缘侧访问观测
 6. 接入 Cloudflare AI Crawl Control，观察并管理 AI crawler 对博客与知识库内容的抓取
