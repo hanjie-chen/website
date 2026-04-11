@@ -111,14 +111,15 @@ def test_homepage_sets_dynamic_html_lang_attribute(client):
     assert '<html lang="zh-CN">' in html
 
 
-def test_homepage_renders_language_switcher(client):
+def test_homepage_renders_compact_language_switcher(client):
     response = client.get("/en/")
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
     assert 'href="/set-language/zh?next=/zh/"' in html
-    assert "中文" in html
-    assert "English" in html
+    assert '<span class="site-language-current">EN</span>' in html
+    assert '>中<' in html
+    assert "English" not in html
 
 
 def test_set_language_redirects_and_persists_cookie(client):

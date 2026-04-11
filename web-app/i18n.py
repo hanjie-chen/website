@@ -11,6 +11,8 @@ HTML_LANG = {
 }
 TRANSLATIONS = {
     "zh": {
+        "language.short.zh": "中",
+        "language.short.en": "EN",
         "language.zh": "中文",
         "language.en": "English",
         "nav.home": "首页",
@@ -133,6 +135,8 @@ TRANSLATIONS = {
         "error.404.body": "你访问的地址不存在。请检查链接，或返回站点首页继续浏览。",
     },
     "en": {
+        "language.short.zh": "中",
+        "language.short.en": "EN",
         "language.zh": "中文",
         "language.en": "English",
         "nav.home": "Home",

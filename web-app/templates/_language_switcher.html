@@ -1,7 +1,5 @@
 <div class="site-language-switcher">
-    <span class="site-language-current">{{ t("language." + current_lang) }}</span>
+    <span class="site-language-current">{{ t("language.short." + current_lang) }}</span>
     <span class="site-language-divider">/</span>
-    <a href="{{ switch_lang_url }}" class="site-language-link">
-        {{ t("language." + alternate_lang) }}
-    </a>
+    <a href="{{ switch_lang_url }}" class="site-language-link">{{ t("language.short." + alternate_lang) }}</a>
 </div>
