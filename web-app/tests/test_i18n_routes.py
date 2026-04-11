@@ -1,3 +1,8 @@
+import pytest
+
+from i18n import get_language_from_header
+
+
 def test_root_redirect_prefers_cookie_over_accept_language(client):
     client.set_cookie("preferred_language", "en")
     response = client.get(
@@ -36,3 +41,14 @@ def test_root_redirect_falls_back_to_default_language_for_invalid_cookie_and_uns
 
     assert response.status_code == 302
     assert response.headers["Location"] == "/zh"
+
+
+@pytest.mark.parametrize("path", ["/en-US", "/english", "/zh-Hant"])
+def test_homepage_rejects_non_canonical_language_paths(client, path):
+    response = client.get(path)
+
+    assert response.status_code == 404
+
+
+def test_accept_language_prefers_higher_q_value():
+    assert get_language_from_header("zh-CN;q=0.4,en-US;q=0.9") == "en"

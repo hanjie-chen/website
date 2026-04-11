@@ -89,13 +89,15 @@ def html_lang_code(lang: Optional[str]) -> str:
     return HTML_LANG.get(normalized, HTML_LANG[DEFAULT_LANGUAGE])
 
 
-def get_language_from_path(path: Optional[str]) -> str:
+def get_language_from_path(path: Optional[str]) -> Optional[str]:
     if not path:
-        return DEFAULT_LANGUAGE
+        return None
 
     first_segment = path.lstrip("/").split("/", 1)[0]
-    normalized = normalize_language(first_segment)
-    return normalized or DEFAULT_LANGUAGE
+    if first_segment in SUPPORTED_LANGUAGES:
+        return first_segment
+
+    return None
 
 
 def public_path(lang: str, suffix: str = "") -> str:

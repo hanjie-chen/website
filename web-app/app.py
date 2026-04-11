@@ -12,7 +12,11 @@ from import_articles_scripts import import_articles
 import os
 import re
 from bs4 import BeautifulSoup
-from i18n import LANG_COOKIE_NAME, resolve_preferred_language, normalize_language
+from i18n import (
+    LANG_COOKIE_NAME,
+    get_language_from_path,
+    resolve_preferred_language,
+)
 from navigation import build_docs_context, build_article_shell_context
 
 from config import (
@@ -165,8 +169,8 @@ def index(lang):
         )
         return redirect(url_for("index", lang=preferred_language), code=302)
 
-    normalized_language = normalize_language(lang)
-    if normalized_language is None:
+    canonical_language = get_language_from_path(lang)
+    if canonical_language is None:
         abort(404)
 
     return render_template("index.html")
