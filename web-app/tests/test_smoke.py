@@ -1,11 +1,13 @@
-def test_homepage_returns_200(client):
-    # Smoke test: app is up and root route is reachable.
+def test_root_redirects_to_canonical_language_homepage(client):
+    # Smoke test: app is up and root route redirects to the preferred language home.
     response = client.get("/")
-    assert response.status_code == 200
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/zh/"
 
 
 def test_homepage_renders_landing_content(client):
-    response = client.get("/")
+    response = client.get("/zh/")
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
@@ -22,7 +24,7 @@ def test_homepage_renders_landing_content(client):
 
 
 def test_homepage_static_assets_are_versioned(client):
-    response = client.get("/")
+    response = client.get("/zh/")
     html = response.get_data(as_text=True)
 
     assert "/static/css/style.css?v=" in html
@@ -31,7 +33,7 @@ def test_homepage_static_assets_are_versioned(client):
 
 
 def test_about_page_renders_hiring_profile_content(client):
-    response = client.get("/about")
+    response = client.get("/zh/about")
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
