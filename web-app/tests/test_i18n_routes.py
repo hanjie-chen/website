@@ -116,10 +116,13 @@ def test_homepage_renders_compact_language_switcher(client):
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert 'href="/set-language/zh?next=/zh/"' in html
-    assert '<span class="site-language-current">EN</span>' in html
-    assert '>中<' in html
-    assert "English" not in html
+    assert (
+        '<div class="site-language-switcher">\n'
+        '    <span class="site-language-current">EN</span>\n'
+        '    <span class="site-language-divider">/</span>\n'
+        '    <a href="/set-language/zh?next=/zh/" class="site-language-link">中</a>\n'
+        "</div>"
+    ) in html
 
 
 def test_set_language_redirects_and_persists_cookie(client):
