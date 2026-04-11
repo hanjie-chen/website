@@ -13,12 +13,12 @@
         <div class="site-nav-shell px-2 px-lg-3">
             <a href="{{ url_for('index', lang=current_lang) }}" class="site-nav-brand">
                 <span>🏡</span>
-                <span>Welcome to my personal website</span>
+                <span>{{ t("home.nav.brand") }}</span>
             </a>
             <ul class="navbar-nav flex-row site-nav-menu">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('article_index', lang=current_lang) }}" class="text-decoration-none">
-                        Articles
+                        {{ t("nav.articles") }}
                     </a>
                 </li>
                 <li class="nav-item">
@@ -26,7 +26,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('about_me', lang=current_lang) }}">
-                        About Me
+                        {{ t("nav.about") }}
                     </a>
                 </li>
             </ul>
@@ -42,20 +42,20 @@
     <div class="content-wrapper home-page-shell px-2 px-lg-3">
         <section class="home-hero">
             <div class="home-hero-copy">
-                <p class="home-overline">PERSONAL SITE / KNOWLEDGE BASE</p>
-                <h1 class="home-hero-title">Build, Learn, Document.</h1>
+                <p class="home-overline">{{ t("home.hero.overline") }}</p>
+                <h1 class="home-hero-title">{{ t("home.hero.title") }}</h1>
                 <p class="home-hero-lead">
-                    这里记录我的工程实践、技术笔记和持续构建中的项目。
+                    {{ t("home.hero.lead") }}
                 </p>
                 <p class="home-hero-support">
-                    内容主要围绕 Cloud、DevOps、Full-stack、Python，以及 AI-assisted workflow。
+                    {{ t("home.hero.support") }}
                 </p>
                 <div class="home-hero-actions">
                     <a href="{{ url_for('article_index', lang=current_lang) }}" class="home-cta home-cta-primary">
-                        Read Articles
+                        {{ t("home.hero.primary_cta") }}
                     </a>
                     <a href="{{ url_for('about_me', lang=current_lang) }}" class="home-cta home-cta-secondary">
-                        About Me
+                        {{ t("home.hero.secondary_cta") }}
                     </a>
                 </div>
             </div>
@@ -69,53 +69,53 @@
 
         <section class="home-section">
             <div class="home-section-heading">
-                <p class="home-overline">START HERE</p>
-                <h2>What you'll find here</h2>
+                <p class="home-overline">{{ t("home.start.overline") }}</p>
+                <h2>{{ t("home.start.title") }}</h2>
             </div>
             <div class="home-entry-grid">
                 <article class="home-entry-card">
-                    <h3>Articles</h3>
-                    <p>技术笔记、部署记录、实践文章，以及围绕 Cloud / DevOps / Full-stack 的持续整理。</p>
+                    <h3>{{ t("home.start.articles_title") }}</h3>
+                    <p>{{ t("home.start.articles_desc") }}</p>
                 </article>
                 <article class="home-entry-card">
-                    <h3>About Me</h3>
-                    <p>更完整的个人介绍、当前关注点、工作方式，以及与求职相关的信息。</p>
+                    <h3>{{ t("home.start.about_title") }}</h3>
+                    <p>{{ t("home.start.about_desc") }}</p>
                 </article>
             </div>
         </section>
 
         <section class="home-section">
             <div class="home-section-heading">
-                <p class="home-overline">CURRENT FOCUS</p>
-                <h2>Current Focus</h2>
+                <p class="home-overline">{{ t("home.focus.overline") }}</p>
+                <h2>{{ t("home.focus.title") }}</h2>
             </div>
             <div class="home-focus-grid">
                 <article class="home-focus-card">
-                    <h3>Cloud / DevOps</h3>
-                    <p>Terraform, GCP, Cloudflare, deployment workflows.</p>
+                    <h3>{{ t("home.focus.cloud_title") }}</h3>
+                    <p>{{ t("home.focus.cloud_desc") }}</p>
                 </article>
                 <article class="home-focus-card">
-                    <h3>Full-stack / Python</h3>
-                    <p>Flask, backend services, and containerized applications.</p>
+                    <h3>{{ t("home.focus.fullstack_title") }}</h3>
+                    <p>{{ t("home.focus.fullstack_desc") }}</p>
                 </article>
                 <article class="home-focus-card">
-                    <h3>AI-assisted workflow</h3>
-                    <p>Using LLM and agent tools to support debugging, refactoring, and documentation.</p>
+                    <h3>{{ t("home.focus.ai_title") }}</h3>
+                    <p>{{ t("home.focus.ai_desc") }}</p>
                 </article>
             </div>
         </section>
 
         <section class="home-section home-note-card">
             <div class="home-section-heading">
-                <p class="home-overline">WHY THIS SITE EXISTS</p>
-                <h2>Why This Site Exists</h2>
+                <p class="home-overline">{{ t("home.note.overline") }}</p>
+                <h2>{{ t("home.note.title") }}</h2>
             </div>
             <div class="home-note-copy">
                 <p>
-                    这个网站既是我的技术知识库，也是我整理项目、验证理解和持续输出的地方。
+                    {{ t("home.note.p1") }}
                 </p>
                 <p>
-                    我希望它是一个长期可维护、可复用、可迭代的工程记录，而不只是零散文章的集合。
+                    {{ t("home.note.p2") }}
                 </p>
             </div>
         </section>

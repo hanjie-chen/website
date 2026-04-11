@@ -127,3 +127,21 @@ def test_set_language_redirects_and_persists_cookie(client):
     assert response.status_code == 302
     assert response.headers["Location"] == "/zh/about"
     assert "preferred_language=zh" in response.headers["Set-Cookie"]
+
+
+def test_localized_404_page_uses_english_copy(client):
+    response = client.get("/en/missing-page")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 404
+    assert "Page Not Found" in html
+    assert "requested URL was not found" in html
+
+
+def test_localized_404_page_uses_chinese_copy(client):
+    response = client.get("/zh/missing-page")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 404
+    assert "页面不存在" in html
+    assert "你访问的地址不存在" in html
