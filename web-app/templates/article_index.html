@@ -7,37 +7,8 @@
 
 <!-- Navbar -->
 {% block navbar%}
-<nav class="navbar navbar-expand-sm navbar-custom fixed-top">
-    <div class="container-fluid d-flex justify-content-center">
-        <div class="site-nav-shell px-2 px-lg-3">
-            <a href="{{ url_for('article_index', lang=current_lang) }}" class="site-nav-brand">
-                <span>📚</span>
-                <span>{{ t("docs.nav.brand") }}</span>
-            </a>
-            <ul class="navbar-nav flex-row site-nav-menu">
-                <!-- Home链接 -->
-                <li class="nav-item">
-                    <a href="{{ url_for('index', lang=current_lang)}}" class="nav-link">
-                        {{ t("nav.home") }}
-                    </a>
-                </li>
-
-                <!-- 分隔符 -->
-                <li class="nav-item">
-                    <span class="nav-link">|</span>
-                </li>
-
-                <!-- About Me链接 -->
-                <li class="nav-item">
-                    <a href="{{ url_for('about_me', lang=current_lang)}}" class="nav-link">
-                        {{ t("nav.about") }}
-                    </a>
-                </li>
-            </ul>
-            {% include "_language_switcher.html" %}
-        </div>
-    </div>
-</nav>
+{% set active_page = "articles" %}
+{% include "_site_topbar.html" %}
 {% endblock %}
 
 <!-- Main Content -->

@@ -115,6 +115,39 @@ def test_about_page_links_stay_in_current_language_namespace(client):
     assert 'href="/en/articles"' in body
 
 
+def test_shared_topbar_uses_fixed_brand_and_english_nav_on_chinese_homepage(client):
+    response = client.get("/zh/")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert '<a href="/zh/" class="site-nav-brand">hanjie site</a>' in body
+    assert '>Home<' in body
+    assert '>Articles<' in body
+    assert '>About<' in body
+    assert "欢迎来到我的个人网站" not in body
+    assert "🏡" not in body
+
+
+def test_homepage_marks_home_link_active(client):
+    response = client.get("/zh/")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert '<a class="nav-link site-nav-link is-active" href="/zh/">Home</a>' in body
+    assert body.count("site-nav-link is-active") == 1
+
+
+def test_about_page_marks_about_link_active(client):
+    response = client.get("/en/about")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert (
+        '<a class="nav-link site-nav-link is-active" href="/en/about">About</a>' in body
+    )
+    assert body.count("site-nav-link is-active") == 1
+
+
 def test_chinese_about_page_keeps_hero_overline_and_removes_duplicate_section_overlines(
     client,
 ):
@@ -168,15 +201,37 @@ def test_homepage_sets_dynamic_html_lang_attribute(client):
     assert '<html lang="zh-CN">' in html
 
 
-def test_homepage_renders_compact_language_switcher(client):
+def test_homepage_renders_left_aligned_segmented_language_switcher_in_fixed_order(
+    client,
+):
     response = client.get("/en/")
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert '<span class="site-language-current">EN</span>' in html
-    assert '<span class="site-language-divider">/</span>' in html
+    assert '<div class="site-nav-identity">' in html
     assert (
-        '<a href="/set-language/zh?next=/zh/" class="site-language-link">中</a>' in html
+        '<a href="/set-language/zh?next=/zh/" class="site-language-option">中</a>'
+        in html
+    )
+    assert 'class="site-language-option is-active"' in html
+    assert ">EN</span>" in html
+    assert (
+        html.index('class="site-nav-brand">hanjie site</a>')
+        < html.index('class="site-language-switcher"')
+        < html.index('class="navbar-nav flex-row site-nav-menu"')
+    )
+
+
+def test_chinese_homepage_marks_current_language_inside_segmented_switcher(client):
+    response = client.get("/zh/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'class="site-language-option is-active"' in html
+    assert ">中</span>" in html
+    assert (
+        '<a href="/set-language/en?next=/en/" class="site-language-option">EN</a>'
+        in html
     )
 
 

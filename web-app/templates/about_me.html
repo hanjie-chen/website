@@ -12,33 +12,8 @@
 
 
 {% block navbar%}
-<!-- Navbar -->
-<nav class="navbar navbar-expand-sm navbar-custom fixed-top">
-    <div class="container-fluid d-flex justify-content-center">
-        <div class="site-nav-shell px-2 px-lg-3">
-            <a href="{{ url_for('about_me', lang=current_lang) }}" class="site-nav-brand">
-                <span class="emoji {% if request.path == url_for('about_me', lang=current_lang) %}shake{% endif %}">👋</span>
-                <span>{{ t("about.nav.brand") }}</span>
-            </a>
-            <ul class="navbar-nav flex-row site-nav-menu">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index', lang=current_lang) }}">
-                        {{ t("nav.home") }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <span class="nav-link">|</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('article_index', lang=current_lang) }}">
-                        {{ t("nav.articles") }}
-                    </a>
-                </li>
-            </ul>
-            {% include "_language_switcher.html" %}
-        </div>
-    </div>
-</nav>
+{% set active_page = "about" %}
+{% include "_site_topbar.html" %}
 {% endblock %}
 
 

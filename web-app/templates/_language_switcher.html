@@ -1,5 +1,9 @@
 <div class="site-language-switcher">
-    <span class="site-language-current">{{ t("language.short." + current_lang) }}</span>
-    <span class="site-language-divider">/</span>
-    <a href="{{ switch_lang_url }}" class="site-language-link">{{ t("language.short." + alternate_lang) }}</a>
+    {% if current_lang == "zh" %}
+    <span class="site-language-option is-active" aria-current="true">{{ t("language.short.zh") }}</span>
+    <a href="{{ switch_lang_url }}" class="site-language-option">{{ t("language.short.en") }}</a>
+    {% else %}
+    <a href="{{ switch_lang_url }}" class="site-language-option">{{ t("language.short.zh") }}</a>
+    <span class="site-language-option is-active" aria-current="true">{{ t("language.short.en") }}</span>
+    {% endif %}
 </div>

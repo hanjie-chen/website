@@ -44,6 +44,21 @@ def test_articles_index_uses_chinese_shell_labels(client):
     assert "最近文章" in body
 
 
+def test_articles_index_uses_shared_english_topbar_and_marks_articles_active(client):
+    response = client.get("/zh/articles")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert '<a href="/zh/" class="site-nav-brand">hanjie site</a>' in body
+    assert '<a class="nav-link site-nav-link" href="/zh/">Home</a>' in body
+    assert (
+        '<a class="nav-link site-nav-link is-active" href="/zh/articles">Articles</a>'
+        in body
+    )
+    assert '<a class="nav-link site-nav-link" href="/zh/about">About</a>' in body
+    assert body.count("site-nav-link is-active") == 1
+
+
 def test_legacy_articles_index_route_returns_404(client):
     response = client.get("/articles")
 
