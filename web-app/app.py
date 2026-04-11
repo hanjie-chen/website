@@ -1,9 +1,18 @@
-from flask import Flask, render_template, request, send_from_directory, abort, url_for
+from flask import (
+    Flask,
+    abort,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from models import db, Article_Meta_Data
 from import_articles_scripts import import_articles
 import os
 import re
 from bs4 import BeautifulSoup
+from i18n import LANG_COOKIE_NAME, resolve_preferred_language, normalize_language
 from navigation import build_docs_context, build_article_shell_context
 
 from config import (
@@ -146,9 +155,20 @@ def inject_asset_url():
     return {"asset_url": _asset_url}
 
 
-@app.route("/")
-def index():
-    # use the file in the templates
+@app.route("/", defaults={"lang": None})
+@app.route("/<lang>")
+def index(lang):
+    if lang is None:
+        preferred_language = resolve_preferred_language(
+            request.cookies.get(LANG_COOKIE_NAME),
+            request.headers.get("Accept-Language"),
+        )
+        return redirect(url_for("index", lang=preferred_language), code=302)
+
+    normalized_language = normalize_language(lang)
+    if normalized_language is None:
+        abort(404)
+
     return render_template("index.html")
 
 
