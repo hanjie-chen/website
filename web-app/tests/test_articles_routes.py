@@ -35,6 +35,12 @@ def test_articles_index_returns_200(client):
     assert "Top-Level Categories" in response.get_data(as_text=True)
 
 
+def test_legacy_articles_index_route_returns_404(client):
+    response = client.get("/articles")
+
+    assert response.status_code == 404
+
+
 def test_api_articles_returns_minimal_summary_fields(client, app):
     with app.app_context():
         first = _insert_article(
@@ -135,6 +141,19 @@ def test_article_category_returns_200(client, app):
     assert "Articles" in body
 
 
+def test_legacy_article_category_route_returns_404(client, app):
+    with app.app_context():
+        _insert_article(
+            title="Terraform Intro",
+            category="tests/infra",
+            file_path="tests/infra/terraform-intro.md",
+        )
+
+    response = client.get("/articles/category/tests/infra")
+
+    assert response.status_code == 404
+
+
 def test_parent_category_hides_empty_articles_section(client, app):
     with app.app_context():
         _insert_article(
@@ -155,6 +174,21 @@ def test_parent_category_hides_empty_articles_section(client, app):
 def test_view_article_returns_404_for_missing_article(client):
     # Unknown article id should return 404.
     response = client.get("/zh/articles/999999")
+    assert response.status_code == 404
+
+
+def test_legacy_article_detail_route_returns_404(client, app):
+    with app.app_context():
+        article = _insert_article()
+        category_path = article.category.replace("/", "-")
+        html_dir = Path(app_module.Rendered_Articles) / category_path
+        html_dir.mkdir(parents=True, exist_ok=True)
+        (html_dir / f"{article.id}.html").write_text(
+            "<h1>Test Content</h1>", encoding="utf-8"
+        )
+
+    response = client.get(f"/articles/{article.id}")
+
     assert response.status_code == 404
 
 

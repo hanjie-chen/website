@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Iterable
 
-from i18n import public_path
+from i18n import SUPPORTED_LANGUAGES, public_path
 
 
 SPECIAL_LABELS = {
@@ -76,7 +76,17 @@ def humanize_segment(segment: str) -> str:
     return " ".join(words) or segment
 
 
-def build_breadcrumbs(category_path: str, article=None, lang: str = "zh"):
+def _require_canonical_language(lang: str) -> str:
+    if lang not in SUPPORTED_LANGUAGES:
+        raise ValueError(
+            f"Expected canonical language in {SUPPORTED_LANGUAGES}, got {lang!r}"
+        )
+
+    return lang
+
+
+def build_breadcrumbs(category_path: str, article=None, lang: str = None):
+    lang = _require_canonical_language(lang)
     breadcrumbs = [{"label": "Articles", "url": public_path(lang, "articles")}]
     parts = split_category_path(category_path)
 
@@ -192,8 +202,9 @@ def build_category_tree(
 
 
 def build_docs_context(
-    articles: Iterable, current_category: str = "", lang: str = "zh"
+    articles: Iterable, current_category: str = "", lang: str = None
 ):
+    lang = _require_canonical_language(lang)
     articles = list(articles)
     nav_root, lookup = build_category_tree(articles, current_category=current_category)
     current_node = lookup.get(current_category, nav_root)
@@ -211,7 +222,8 @@ def build_docs_context(
     }
 
 
-def build_article_shell_context(articles: Iterable, article, lang: str = "zh"):
+def build_article_shell_context(articles: Iterable, article, lang: str = None):
+    lang = _require_canonical_language(lang)
     articles = list(articles)
     nav_root, lookup = build_category_tree(
         articles,

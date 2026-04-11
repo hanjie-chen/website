@@ -1,8 +1,11 @@
 from datetime import date
 from types import SimpleNamespace
 
+import pytest
+
 from navigation import (
     build_article_shell_context,
+    build_breadcrumbs,
     build_docs_context,
     is_hidden_category_path,
 )
@@ -72,3 +75,17 @@ def test_build_article_shell_context_prefixes_breadcrumb_urls_with_language():
         },
         {"label": "Terraform Intro", "url": None},
     ]
+
+
+@pytest.mark.parametrize("lang", ["", "en-US", "fr", " zh "])
+def test_navigation_helpers_reject_non_canonical_languages(lang):
+    article = _article("cloud-infra/terraform", "Terraform Intro")
+
+    with pytest.raises(ValueError):
+        build_breadcrumbs("cloud-infra", lang=lang)
+
+    with pytest.raises(ValueError):
+        build_docs_context([article], current_category="cloud-infra", lang=lang)
+
+    with pytest.raises(ValueError):
+        build_article_shell_context([article], article, lang=lang)

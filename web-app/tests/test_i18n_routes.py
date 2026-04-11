@@ -73,5 +73,31 @@ def test_homepage_redirects_canonical_language_paths_without_trailing_slash(
     assert response.headers["Location"] == expected_location
 
 
+def test_homepage_links_stay_in_current_language_namespace(client):
+    response = client.get("/en/")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'href="/en/"' in body
+    assert 'href="/en/articles"' in body
+    assert 'href="/en/about"' in body
+
+
+def test_about_page_links_stay_in_current_language_namespace(client):
+    response = client.get("/en/about")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'href="/en/about"' in body
+    assert 'href="/en/"' in body
+    assert 'href="/en/articles"' in body
+
+
+def test_legacy_about_route_returns_404(client):
+    response = client.get("/about")
+
+    assert response.status_code == 404
+
+
 def test_accept_language_prefers_higher_q_value():
     assert get_language_from_header("zh-CN;q=0.4,en-US;q=0.9") == "en"
