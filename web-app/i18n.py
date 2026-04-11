@@ -12,11 +12,19 @@ HTML_LANG = {
 TRANSLATIONS = {
     "zh": {
         "language.zh": "中文",
-        "language.en": "英文",
+        "language.en": "English",
+        "nav.home": "首页",
+        "nav.articles": "文章",
+        "nav.about": "关于我",
+        "footer.copy": "翰杰个人站",
     },
     "en": {
-        "language.zh": "Chinese",
+        "language.zh": "中文",
         "language.en": "English",
+        "nav.home": "Home",
+        "nav.articles": "Articles",
+        "nav.about": "About Me",
+        "footer.copy": "for hanjie site",
     },
 }
 
@@ -105,7 +113,22 @@ def public_path(lang: str, suffix: str = "") -> str:
     suffix = suffix or ""
     if suffix and not suffix.startswith("/"):
         suffix = f"/{suffix}"
+    if not suffix:
+        return f"/{normalized}/"
     return f"/{normalized}{suffix}"
+
+
+def alternate_language(lang: str) -> str:
+    normalized = normalize_language(lang) or DEFAULT_LANGUAGE
+    return "en" if normalized == "zh" else "zh"
+
+
+def switch_language_path(path: str, target_lang: str) -> str:
+    parts = [segment for segment in path.split("/") if segment]
+    if parts and parts[0] in SUPPORTED_LANGUAGES:
+        suffix = "/".join(parts[1:])
+        return public_path(target_lang, suffix)
+    return public_path(target_lang)
 
 
 def translate(lang: Optional[str], key: str, fallback: Optional[str] = None) -> str:

@@ -101,3 +101,29 @@ def test_legacy_about_route_returns_404(client):
 
 def test_accept_language_prefers_higher_q_value():
     assert get_language_from_header("zh-CN;q=0.4,en-US;q=0.9") == "en"
+
+
+def test_homepage_sets_dynamic_html_lang_attribute(client):
+    response = client.get("/zh/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert '<html lang="zh-CN">' in html
+
+
+def test_homepage_renders_language_switcher(client):
+    response = client.get("/en/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'href="/set-language/zh?next=/zh/"' in html
+    assert "中文" in html
+    assert "English" in html
+
+
+def test_set_language_redirects_and_persists_cookie(client):
+    response = client.get("/set-language/zh?next=/zh/about", follow_redirects=False)
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/zh/about"
+    assert "preferred_language=zh" in response.headers["Set-Cookie"]

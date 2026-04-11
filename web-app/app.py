@@ -7,15 +7,21 @@ from flask import (
     send_from_directory,
     url_for,
 )
+from urllib.parse import quote
 from models import db, Article_Meta_Data
 from import_articles_scripts import import_articles
 import os
 import re
 from bs4 import BeautifulSoup
 from i18n import (
+    DEFAULT_LANGUAGE,
     LANG_COOKIE_NAME,
+    alternate_language,
     get_language_from_path,
+    html_lang_code,
     resolve_preferred_language,
+    switch_language_path,
+    translate,
 )
 from navigation import build_docs_context, build_article_shell_context
 
@@ -155,8 +161,27 @@ def _asset_url(filename: str) -> str:
 
 
 @app.context_processor
-def inject_asset_url():
-    return {"asset_url": _asset_url}
+def inject_template_helpers():
+    current_lang = None
+    if request.view_args:
+        current_lang = request.view_args.get("lang")
+
+    current_lang = current_lang or get_language_from_path(request.path)
+    if current_lang is None:
+        current_lang = DEFAULT_LANGUAGE
+    target_lang = alternate_language(current_lang)
+    switch_path = switch_language_path(request.path, target_lang)
+
+    return {
+        "asset_url": _asset_url,
+        "current_lang": current_lang,
+        "alternate_lang": target_lang,
+        "html_lang": html_lang_code(current_lang),
+        "switch_lang_url": f"/set-language/{target_lang}?next={quote(switch_path, safe='/')}",
+        "t": lambda key, fallback=None: translate(
+            current_lang, key, fallback=fallback
+        ),
+    }
 
 
 def _require_supported_language(lang: str) -> str:
@@ -185,6 +210,20 @@ def index_without_trailing_slash(lang):
 def index(lang):
     current_lang = _require_supported_language(lang)
     return render_template("index.html", current_lang=current_lang)
+
+
+@app.route("/set-language/<lang>")
+def set_language(lang):
+    current_lang = _require_supported_language(lang)
+    next_path = request.args.get("next") or url_for("index", lang=current_lang)
+    response = redirect(next_path, code=302)
+    response.set_cookie(
+        LANG_COOKIE_NAME,
+        current_lang,
+        max_age=60 * 60 * 24 * 365,
+        samesite="Lax",
+    )
+    return response
 
 
 @app.route("/<lang>/articles")
