@@ -50,5 +50,12 @@ def test_homepage_rejects_non_canonical_language_paths(client, path):
     assert response.status_code == 404
 
 
+@pytest.mark.parametrize("path", ["/zh", "/en"])
+def test_homepage_accepts_canonical_language_paths(client, path):
+    response = client.get(path)
+
+    assert response.status_code == 200
+
+
 def test_accept_language_prefers_higher_q_value():
     assert get_language_from_header("zh-CN;q=0.4,en-US;q=0.9") == "en"
