@@ -59,6 +59,25 @@ def test_homepage_accepts_canonical_language_paths(client, path):
     assert response.status_code == 200
 
 
+def test_chinese_homepage_removes_duplicate_focus_overline(client):
+    response = client.get("/zh/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert html.count("<h2>当前关注</h2>") == 1
+    assert "Cloud / DevOps" in html
+    assert "Full-stack / Python" in html
+    assert "AI-assisted workflow" in html
+
+
+def test_english_homepage_keeps_single_current_focus_heading(client):
+    response = client.get("/en/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert html.count("<h2>Current Focus</h2>") == 1
+
+
 @pytest.mark.parametrize(
     ("path", "expected_location"),
     [
