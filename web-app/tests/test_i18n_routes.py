@@ -115,6 +115,36 @@ def test_about_page_links_stay_in_current_language_namespace(client):
     assert 'href="/en/articles"' in body
 
 
+def test_chinese_about_page_keeps_hero_overline_and_removes_duplicate_section_overlines(
+    client,
+):
+    response = client.get("/zh/about")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert '<p class="about-overline">个人简介 / 求职页面</p>' in html
+    assert "<h2>我是谁</h2>" in html
+    assert "<h2>我如何工作</h2>" in html
+    assert "<h2>联系我</h2>" in html
+    assert '<p class="about-overline">我是谁</p>' not in html
+    assert '<p class="about-overline">我如何工作</p>' not in html
+    assert '<p class="about-overline">联系我</p>' not in html
+
+
+def test_english_about_page_keeps_single_section_titles_after_overline_cleanup(client):
+    response = client.get("/en/about")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert '<p class="about-overline">Profile / Hiring Page</p>' in html
+    assert "<h2>Who I Am</h2>" in html
+    assert "<h2>How I Work</h2>" in html
+    assert "<h2>Contact</h2>" in html
+    assert '<p class="about-overline">Who I Am</p>' not in html
+    assert '<p class="about-overline">How I Work</p>' not in html
+    assert '<p class="about-overline">Contact</p>' not in html
+
+
 @pytest.mark.parametrize("path", ["/zh/", "/en/about"])
 def test_pages_render_shared_footer_site_name(client, path):
     response = client.get(path)
