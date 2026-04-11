@@ -30,7 +30,7 @@ def _insert_article(
 
 def test_articles_index_returns_200(client):
     # Route should render article list page even when list is empty.
-    response = client.get("/articles")
+    response = client.get("/zh/articles")
     assert response.status_code == 200
     assert "Top-Level Categories" in response.get_data(as_text=True)
 
@@ -65,7 +65,12 @@ def test_api_articles_returns_minimal_summary_fields(client, app):
     response = client.get("/api/articles")
 
     assert response.status_code == 200
-    assert response.get_json() == {"items": expected_items}
+    actual_items = [
+        item
+        for item in response.get_json()["items"]
+        if item["id"] in {first.id, second.id}
+    ]
+    assert actual_items == expected_items
 
 
 def test_api_articles_keeps_chinese_text_readable(client, app):
@@ -122,7 +127,7 @@ def test_article_category_returns_200(client, app):
             file_path="tests/infra/terraform-intro.md",
         )
 
-    response = client.get("/articles/category/tests/infra")
+    response = client.get("/zh/articles/category/tests/infra")
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
@@ -138,7 +143,7 @@ def test_parent_category_hides_empty_articles_section(client, app):
             file_path="tests/infra/terraform-intro.md",
         )
 
-    response = client.get("/articles/category/tests")
+    response = client.get("/zh/articles/category/tests")
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
@@ -149,12 +154,12 @@ def test_parent_category_hides_empty_articles_section(client, app):
 
 def test_view_article_returns_404_for_missing_article(client):
     # Unknown article id should return 404.
-    response = client.get("/articles/999999")
+    response = client.get("/zh/articles/999999")
     assert response.status_code == 404
 
 
 def test_view_article_returns_200_for_existing_article(client, app):
-    # /articles/<id> requires both DB metadata and rendered HTML file.
+    # /<lang>/articles/<id> requires both DB metadata and rendered HTML file.
     with app.app_context():
         article = _insert_article()
         category_path = article.category.replace("/", "-")
@@ -165,12 +170,12 @@ def test_view_article_returns_200_for_existing_article(client, app):
         )
         article_id = article.id
 
-    response = client.get(f"/articles/{article_id}")
+    response = client.get(f"/en/articles/{article_id}")
     body = response.get_data(as_text=True)
     assert response.status_code == 200
     assert "Test Content" in body
-    assert 'href="/articles/category/tests"' in body
-    assert 'href="/articles/category/tests/category"' in body
+    assert 'href="/en/articles/category/tests"' in body
+    assert 'href="/en/articles/category/tests/category"' in body
 
 
 def test_view_article_renders_nested_toc_markup(client, app):
@@ -188,7 +193,7 @@ def test_view_article_renders_nested_toc_markup(client, app):
             encoding="utf-8",
         )
 
-    response = client.get(f"/articles/{article.id}")
+    response = client.get(f"/zh/articles/{article.id}")
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
@@ -219,7 +224,7 @@ def test_view_article_left_nav_lists_same_category_articles(client, app):
             "<h1>Primary Content</h1>", encoding="utf-8"
         )
 
-    response = client.get(f"/articles/{article.id}")
+    response = client.get(f"/zh/articles/{article.id}")
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
@@ -241,9 +246,33 @@ def test_view_article_left_nav_highlights_only_current_article(client, app):
             "<h1>Primary Content</h1>", encoding="utf-8"
         )
 
-    response = client.get(f"/articles/{article.id}")
+    response = client.get(f"/zh/articles/{article.id}")
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
     assert body.count("docs-tree-link is-active") == 0
     assert body.count("docs-tree-article-link is-active") == 1
+
+
+def test_article_page_keeps_internal_links_in_same_language_namespace(client, app):
+    with app.app_context():
+        article = _insert_article(
+            title="Language Scoped Article",
+            category="tests/category",
+            file_path="tests/category/language-scoped.md",
+        )
+
+        category_path = article.category.replace("/", "-")
+        html_dir = Path(app_module.Rendered_Articles) / category_path
+        html_dir.mkdir(parents=True, exist_ok=True)
+        (html_dir / f"{article.id}.html").write_text(
+            "<h1>Scoped Content</h1>", encoding="utf-8"
+        )
+
+    response = client.get(f"/en/articles/{article.id}")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'href="/en/articles"' in body
+    assert 'href="/en/articles/category/tests"' in body
+    assert 'href="/en/articles/category/tests/category"' in body

@@ -1,7 +1,11 @@
 from datetime import date
 from types import SimpleNamespace
 
-from navigation import build_docs_context, is_hidden_category_path
+from navigation import (
+    build_article_shell_context,
+    build_docs_context,
+    is_hidden_category_path,
+)
 
 
 def _article(category, title):
@@ -27,8 +31,44 @@ def test_build_docs_context_filters_hidden_categories():
         [
             _article("__template__", "Template"),
             _article("cloud-infra/terraform", "Terraform Intro"),
-        ]
+        ],
+        lang="en",
     )
 
     assert len(docs_context["category_children"]) == 1
     assert docs_context["category_children"][0].path == "cloud-infra"
+
+
+def test_build_docs_context_prefixes_breadcrumb_urls_with_language():
+    docs_context = build_docs_context(
+        [
+            _article("cloud-infra/terraform", "Terraform Intro"),
+        ],
+        current_category="cloud-infra/terraform",
+        lang="en",
+    )
+
+    assert docs_context["breadcrumbs"] == [
+        {"label": "Articles", "url": "/en/articles"},
+        {"label": "Cloud Infra", "url": "/en/articles/category/cloud-infra"},
+        {
+            "label": "Terraform",
+            "url": "/en/articles/category/cloud-infra/terraform",
+        },
+    ]
+
+
+def test_build_article_shell_context_prefixes_breadcrumb_urls_with_language():
+    article = _article("cloud-infra/terraform", "Terraform Intro")
+
+    shell_context = build_article_shell_context([article], article, lang="en")
+
+    assert shell_context["breadcrumbs"] == [
+        {"label": "Articles", "url": "/en/articles"},
+        {"label": "Cloud Infra", "url": "/en/articles/category/cloud-infra"},
+        {
+            "label": "Terraform",
+            "url": "/en/articles/category/cloud-infra/terraform",
+        },
+        {"label": "Terraform Intro", "url": None},
+    ]

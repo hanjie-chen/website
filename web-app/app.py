@@ -159,34 +159,51 @@ def inject_asset_url():
     return {"asset_url": _asset_url}
 
 
-@app.route("/", defaults={"lang": None})
-@app.route("/<lang>")
-def index(lang):
-    if lang is None:
-        preferred_language = resolve_preferred_language(
-            request.cookies.get(LANG_COOKIE_NAME),
-            request.headers.get("Accept-Language"),
-        )
-        return redirect(url_for("index", lang=preferred_language), code=302)
-
+def _require_supported_language(lang: str) -> str:
     canonical_language = get_language_from_path(lang)
     if canonical_language is None:
         abort(404)
+    return canonical_language
 
-    return render_template("index.html")
+
+@app.route("/")
+def root_index():
+    preferred_language = resolve_preferred_language(
+        request.cookies.get(LANG_COOKIE_NAME),
+        request.headers.get("Accept-Language"),
+    )
+    return redirect(url_for("index", lang=preferred_language), code=302)
 
 
-@app.route("/articles")
-def article_index():
+@app.route("/<lang>")
+def index_without_trailing_slash(lang):
+    canonical_language = _require_supported_language(lang)
+    return redirect(url_for("index", lang=canonical_language), code=302)
+
+
+@app.route("/<lang>/")
+def index(lang):
+    current_lang = _require_supported_language(lang)
+    return render_template("index.html", current_lang=current_lang)
+
+
+@app.route("/<lang>/articles")
+def article_index(lang):
+    current_lang = _require_supported_language(lang)
     articles = _fetch_all_articles()
-    docs_context = build_docs_context(articles, current_category="")
+    docs_context = build_docs_context(
+        articles, current_category="", lang=current_lang
+    )
     return render_template("article_index.html", **docs_context)
 
 
-@app.route("/articles/category/<path:category_path>")
-def article_category(category_path):
+@app.route("/<lang>/articles/category/<path:category_path>")
+def article_category(lang, category_path):
+    current_lang = _require_supported_language(lang)
     articles = _fetch_all_articles()
-    docs_context = build_docs_context(articles, current_category=category_path)
+    docs_context = build_docs_context(
+        articles, current_category=category_path, lang=current_lang
+    )
 
     if category_path and docs_context["current_node"].path != category_path:
         abort(404)
@@ -194,9 +211,10 @@ def article_category(category_path):
     return render_template("article_index.html", **docs_context)
 
 
-@app.route("/about")
-def about_me():
-    return render_template("about_me.html")
+@app.route("/<lang>/about")
+def about_me(lang):
+    current_lang = _require_supported_language(lang)
+    return render_template("about_me.html", current_lang=current_lang)
 
 
 @app.route("/api/articles")
@@ -229,8 +247,9 @@ def page_not_found(error_info):  # 接受异常对象作为参数
     ), 404  # 将错误信息传递给模板
 
 
-@app.route("/articles/<int:article_id>")
-def view_article(article_id):
+@app.route("/<lang>/articles/<int:article_id>")
+def view_article(lang, article_id):
+    current_lang = _require_supported_language(lang)
     article = db.session.execute(
         db.select(Article_Meta_Data).where(Article_Meta_Data.id == article_id)
     ).scalar()
@@ -251,7 +270,9 @@ def view_article(article_id):
         abort(404)
 
     article_content, toc_items = _build_article_toc(article_content)
-    shell_context = build_article_shell_context(_fetch_all_articles(), article)
+    shell_context = build_article_shell_context(
+        _fetch_all_articles(), article, lang=current_lang
+    )
 
     # 返回模板，使用相对路径
     return render_template(

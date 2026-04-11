@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Iterable
 
+from i18n import public_path
+
 
 SPECIAL_LABELS = {
     "api": "API",
@@ -74,8 +76,8 @@ def humanize_segment(segment: str) -> str:
     return " ".join(words) or segment
 
 
-def build_breadcrumbs(category_path: str, article=None):
-    breadcrumbs = [{"label": "Articles", "url": "/articles"}]
+def build_breadcrumbs(category_path: str, article=None, lang: str = "zh"):
+    breadcrumbs = [{"label": "Articles", "url": public_path(lang, "articles")}]
     parts = split_category_path(category_path)
 
     if not parts:
@@ -89,7 +91,9 @@ def build_breadcrumbs(category_path: str, article=None):
         breadcrumbs.append(
             {
                 "label": humanize_segment(part),
-                "url": f"/articles/category/{'/'.join(walked_parts)}",
+                "url": public_path(
+                    lang, f"articles/category/{'/'.join(walked_parts)}"
+                ),
             }
         )
 
@@ -187,24 +191,27 @@ def build_category_tree(
     return finalized_root, lookup
 
 
-def build_docs_context(articles: Iterable, current_category: str = ""):
+def build_docs_context(
+    articles: Iterable, current_category: str = "", lang: str = "zh"
+):
     articles = list(articles)
     nav_root, lookup = build_category_tree(articles, current_category=current_category)
     current_node = lookup.get(current_category, nav_root)
 
     return {
+        "current_lang": lang,
         "nav_root": nav_root,
         "current_node": current_node,
         "current_category": current_category,
         "current_category_label": current_node.label,
-        "breadcrumbs": build_breadcrumbs(current_category),
+        "breadcrumbs": build_breadcrumbs(current_category, lang=lang),
         "category_children": current_node.children,
         "category_articles": current_node.articles,
         "recent_articles": sorted(articles, key=_article_sort_key)[:12],
     }
 
 
-def build_article_shell_context(articles: Iterable, article):
+def build_article_shell_context(articles: Iterable, article, lang: str = "zh"):
     articles = list(articles)
     nav_root, lookup = build_category_tree(
         articles,
@@ -214,7 +221,8 @@ def build_article_shell_context(articles: Iterable, article):
     current_node = lookup.get(article.category, nav_root)
 
     return {
+        "current_lang": lang,
         "nav_root": nav_root,
         "current_node": current_node,
-        "breadcrumbs": build_breadcrumbs(article.category, article=article),
+        "breadcrumbs": build_breadcrumbs(article.category, article=article, lang=lang),
     }

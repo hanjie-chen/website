@@ -30,14 +30,14 @@
 <nav class="navbar navbar-expand-sm navbar-custom fixed-top">
     <div class="container-fluid d-flex justify-content-center">
         <div class="site-nav-shell px-2 px-lg-3">
-            <a href="{{ url_for('article_index') }}" class="site-nav-brand">
+            <a href="{{ url_for('article_index', lang=current_lang) }}" class="site-nav-brand">
                 <span>📚</span>
                 <span>Articles</span>
             </a>
             <ul class="navbar-nav flex-row site-nav-menu">
                 <!-- Home链接 -->
                 <li class="nav-item">
-                    <a href="{{ url_for('index')}}" class="nav-link">
+                    <a href="{{ url_for('index', lang=current_lang)}}" class="nav-link">
                         Home
                     </a>
                 </li>
@@ -49,7 +49,7 @@
 
                 <!-- About Me链接 -->
                 <li class="nav-item">
-                    <a href="{{ url_for('about_me')}}" class="nav-link">
+                    <a href="{{ url_for('about_me', lang=current_lang)}}" class="nav-link">
                         About Me
                     </a>
                 </li>
@@ -67,7 +67,7 @@
             <aside class="col-xl-2 docs-sidebar-column">
                 <nav class="docs-sidebar" aria-label="Section navigation">
                     <p class="docs-sidebar-title">In This Section</p>
-                    {{ docs_tree.render_nodes(nav_root.children, current_article_id) }}
+                    {{ docs_tree.render_nodes(nav_root.children, current_lang=current_lang, current_article_id=current_article_id) }}
                 </nav>
             </aside>
 

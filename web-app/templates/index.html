@@ -11,13 +11,13 @@
 <nav class="navbar navbar-expand-sm navbar-custom fixed-top">
     <div class="container-fluid d-flex justify-content-center">
         <div class="site-nav-shell px-2 px-lg-3">
-            <a href="{{ url_for('index') }}" class="site-nav-brand">
+            <a href="{{ url_for('index', lang=current_lang) }}" class="site-nav-brand">
                 <span>🏡</span>
                 <span>Welcome to my personal website</span>
             </a>
             <ul class="navbar-nav flex-row site-nav-menu">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('article_index') }}" class="text-decoration-none">
+                    <a class="nav-link" href="{{ url_for('article_index', lang=current_lang) }}" class="text-decoration-none">
                         Articles
                     </a>
                 </li>
@@ -25,7 +25,7 @@
                     <span class="nav-link">|</span>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('about_me') }}">
+                    <a class="nav-link" href="{{ url_for('about_me', lang=current_lang) }}">
                         About Me
                     </a>
                 </li>
@@ -50,10 +50,10 @@
                     内容主要围绕 Cloud、DevOps、Full-stack、Python，以及 AI-assisted workflow。
                 </p>
                 <div class="home-hero-actions">
-                    <a href="{{ url_for('article_index') }}" class="home-cta home-cta-primary">
+                    <a href="{{ url_for('article_index', lang=current_lang) }}" class="home-cta home-cta-primary">
                         Read Articles
                     </a>
-                    <a href="{{ url_for('about_me') }}" class="home-cta home-cta-secondary">
+                    <a href="{{ url_for('about_me', lang=current_lang) }}" class="home-cta home-cta-secondary">
                         About Me
                     </a>
                 </div>

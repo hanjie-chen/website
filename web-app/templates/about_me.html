@@ -16,13 +16,13 @@
 <nav class="navbar navbar-expand-sm navbar-custom fixed-top">
     <div class="container-fluid d-flex justify-content-center">
         <div class="site-nav-shell px-2 px-lg-3">
-            <a href="{{ url_for('about_me') }}" class="site-nav-brand">
-                <span class="emoji {% if request.path == url_for('about_me') %}shake{% endif %}">👋</span>
+            <a href="{{ url_for('about_me', lang=current_lang) }}" class="site-nav-brand">
+                <span class="emoji {% if request.path == url_for('about_me', lang=current_lang) %}shake{% endif %}">👋</span>
                 <span>About Me</span>
             </a>
             <ul class="navbar-nav flex-row site-nav-menu">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index') }}">
+                    <a class="nav-link" href="{{ url_for('index', lang=current_lang) }}">
                         Home
                     </a>
                 </li>
@@ -30,7 +30,7 @@
                     <span class="nav-link">|</span>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('article_index') }}">
+                    <a class="nav-link" href="{{ url_for('article_index', lang=current_lang) }}">
                         Articles
                     </a>
                 </li>
@@ -165,7 +165,7 @@
                 </p>
                 <p class="about-project-tags">Flask · Docker Compose · Nginx · Cloudflare · GCP · CI/CD · Terraform</p>
                 <div class="about-project-actions">
-                    <a href="/" class="about-inline-link">Live Site</a>
+                    <a href="{{ url_for('index', lang=current_lang) }}" class="about-inline-link">Live Site</a>
                     <a href="https://github.com/hanjie-chen/website" class="about-inline-link" target="_blank" rel="noreferrer">Source Code</a>
                 </div>
             </article>
