@@ -93,6 +93,15 @@ def test_about_page_links_stay_in_current_language_namespace(client):
     assert 'href="/en/articles"' in body
 
 
+@pytest.mark.parametrize("path", ["/zh/", "/en/about"])
+def test_pages_render_shared_footer_site_name(client, path):
+    response = client.get(path)
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "&copy; 2026 hanjie site" in html
+
+
 def test_legacy_about_route_returns_404(client):
     response = client.get("/about")
 
