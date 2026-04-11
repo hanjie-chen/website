@@ -65,6 +65,7 @@ def test_chinese_homepage_removes_duplicate_focus_overline(client):
 
     assert response.status_code == 200
     assert html.count("<h2>当前关注</h2>") == 1
+    assert '<p class="home-overline">当前关注</p>' not in html
     assert "Cloud / DevOps" in html
     assert "Full-stack / Python" in html
     assert "AI-assisted workflow" in html
