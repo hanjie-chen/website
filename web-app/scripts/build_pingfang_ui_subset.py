@@ -16,12 +16,18 @@ is not guaranteed to be present in the template source.
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES_DIR = ROOT / "templates"
 OUTPUT_FILE = ROOT / "static" / "font" / "PingFangSC" / "PingFang-SC-UI-subset.txt"
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from i18n import TRANSLATIONS  # noqa: E402
 
 # Keep a small punctuation reserve so fixed UI copy can evolve without instantly
 # falling back to the full font for common Chinese punctuation.
@@ -53,6 +59,9 @@ def main() -> None:
     for template_path in sorted(TEMPLATES_DIR.glob("*.html")):
         raw_text = template_path.read_text(encoding="utf-8")
         collected_chars.update(extract_subset_chars(strip_template_syntax(raw_text)))
+
+    for translation in TRANSLATIONS.get("zh", {}).values():
+        collected_chars.update(extract_subset_chars(translation))
 
     OUTPUT_FILE.write_text("".join(sorted(collected_chars)), encoding="utf-8")
     print(

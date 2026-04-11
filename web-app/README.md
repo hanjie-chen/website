@@ -24,25 +24,48 @@ What it does:
 
 - creates and configures the Flask app
 - registers `/rendered-articles/...` as an additional static route
-- serves the public routes:
+- resolves the preferred language from the `preferred_language` cookie, then `Accept-Language`, then default `zh`
+- serves the public HTML routes:
   - `/`
-  - `/articles`
-  - `/articles/category/<path>`
-  - `/articles/<int:article_id>`
-  - `/about`
+  - `/<lang>/`
+  - `/<lang>/articles`
+  - `/<lang>/articles/category/<path>`
+  - `/<lang>/articles/<int:article_id>`
+  - `/<lang>/about`
 - serves the public read-only JSON APIs:
   - `GET /api/articles`
   - `GET /api/articles/<int:article_id>`
 - exposes the internal `POST /internal/reindex` endpoint used by `articles-sync`
 - builds the article TOC for the right-hand page navigation
+- injects shared template helpers for `asset_url(...)`, `t(...)`, language switching, and dynamic `html lang`
 
 Start here when you want to change:
 
 - application routing
+- language detection and switch behavior
 - API response shape for article metadata
 - article page rendering context
 - the internal reindex trigger
 - homepage or About page view wiring
+
+### `i18n.py`
+
+Lightweight site i18n helpers.
+
+What it does:
+
+- defines supported public languages (`zh`, `en`)
+- parses `preferred_language` cookie and `Accept-Language`
+- provides translation lookups for fixed UI copy
+- builds language-aware public paths and language-switch URLs
+- maps site language to document `<html lang>` values
+
+Start here when you want to change:
+
+- supported language codes
+- default language selection behavior
+- fixed template copy translations
+- path switching logic between language namespaces
 
 ### `import_articles_scripts.py`
 
