@@ -32,13 +32,13 @@
         <div class="site-nav-shell px-2 px-lg-3">
             <a href="{{ url_for('article_index', lang=current_lang) }}" class="site-nav-brand">
                 <span>📚</span>
-                <span>Articles</span>
+                <span>{{ t("docs.nav.brand") }}</span>
             </a>
             <ul class="navbar-nav flex-row site-nav-menu">
                 <!-- Home链接 -->
                 <li class="nav-item">
                     <a href="{{ url_for('index', lang=current_lang)}}" class="nav-link">
-                        Home
+                        {{ t("nav.home") }}
                     </a>
                 </li>
 
@@ -50,10 +50,11 @@
                 <!-- About Me链接 -->
                 <li class="nav-item">
                     <a href="{{ url_for('about_me', lang=current_lang)}}" class="nav-link">
-                        About Me
+                        {{ t("nav.about") }}
                     </a>
                 </li>
             </ul>
+            {% include "_language_switcher.html" %}
         </div>
     </div>
 </nav>
@@ -66,7 +67,7 @@
         <div class="row g-3">
             <aside class="col-xl-2 docs-sidebar-column">
                 <nav class="docs-sidebar" aria-label="Section navigation">
-                    <p class="docs-sidebar-title">In This Section</p>
+                    <p class="docs-sidebar-title">{{ t("article.sidebar.section_title") }}</p>
                     {{ docs_tree.render_nodes(nav_root.children, current_lang=current_lang, current_article_id=current_article_id) }}
                 </nav>
             </aside>
@@ -90,7 +91,7 @@
                             </nav>
                             <h1 class="article-page-title">{{ article.title }}</h1>
                             <div class="fst-italic mb-2">
-                                作者: {{ article.author }} | 发布日期: {{ article.rollout_date }} | last modified: {{article. ultimate_modified_date}}
+                                {{ t("article.meta.author") }}: {{ article.author }} | {{ t("article.meta.published") }}: {{ article.rollout_date }} | {{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}
                             </div>
                         </header>
                         {{ article_content|safe }}
@@ -100,7 +101,7 @@
             {% if toc_items %}
             <aside class="col-xl-2 article-toc-column">
                 <nav class="article-toc" aria-label="On this page" data-article-toc>
-                    <p class="article-toc-title">On This Page</p>
+                    <p class="article-toc-title">{{ t("article.toc.title") }}</p>
                     {{ render_toc_items(toc_items) }}
                 </nav>
             </aside>

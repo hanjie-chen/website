@@ -32,7 +32,16 @@ def test_articles_index_returns_200(client):
     # Route should render article list page even when list is empty.
     response = client.get("/zh/articles")
     assert response.status_code == 200
-    assert "Top-Level Categories" in response.get_data(as_text=True)
+
+
+def test_articles_index_uses_chinese_shell_labels(client):
+    response = client.get("/zh/articles")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "浏览" in body
+    assert "顶级分类" in body
+    assert "最近文章" in body
 
 
 def test_legacy_articles_index_route_returns_404(client):
@@ -138,7 +147,6 @@ def test_article_category_returns_200(client, app):
 
     assert response.status_code == 200
     assert "Terraform Intro" in body
-    assert "Articles" in body
 
 
 def test_legacy_article_category_route_returns_404(client, app):
@@ -166,9 +174,9 @@ def test_parent_category_hides_empty_articles_section(client, app):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "Subcategories" in body
+    assert "子分类" in body
     assert "Infra" in body
-    assert "Articles in This Section" not in body
+    assert "本节文章" not in body
 
 
 def test_view_article_returns_404_for_missing_article(client):
@@ -210,6 +218,31 @@ def test_view_article_returns_200_for_existing_article(client, app):
     assert "Test Content" in body
     assert 'href="/en/articles/category/tests"' in body
     assert 'href="/en/articles/category/tests/category"' in body
+
+
+def test_view_article_uses_chinese_shell_labels(client, app):
+    with app.app_context():
+        article = _insert_article(
+            title="Chinese Shell Article",
+            category="tests/chinese",
+            file_path="tests/chinese/shell.md",
+        )
+        category_path = article.category.replace("/", "-")
+        html_dir = Path(app_module.Rendered_Articles) / category_path
+        html_dir.mkdir(parents=True, exist_ok=True)
+        (html_dir / f"{article.id}.html").write_text(
+            "<h1>中文内容</h1>", encoding="utf-8"
+        )
+
+    response = client.get(f"/zh/articles/{article.id}")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "本节内容" in body
+    assert "作者:" in body
+    assert "发布:" in body
+    assert "更新:" in body
+    assert "本页目录" in body
 
 
 def test_view_article_renders_nested_toc_markup(client, app):

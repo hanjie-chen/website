@@ -12,13 +12,13 @@
         <div class="site-nav-shell px-2 px-lg-3">
             <a href="{{ url_for('article_index', lang=current_lang) }}" class="site-nav-brand">
                 <span>📚</span>
-                <span>Articles</span>
+                <span>{{ t("docs.nav.brand") }}</span>
             </a>
             <ul class="navbar-nav flex-row site-nav-menu">
                 <!-- Home链接 -->
                 <li class="nav-item">
                     <a href="{{ url_for('index', lang=current_lang)}}" class="nav-link">
-                        Home
+                        {{ t("nav.home") }}
                     </a>
                 </li>
 
@@ -30,10 +30,11 @@
                 <!-- About Me链接 -->
                 <li class="nav-item">
                     <a href="{{ url_for('about_me', lang=current_lang)}}" class="nav-link">
-                        About Me
+                        {{ t("nav.about") }}
                     </a>
                 </li>
             </ul>
+            {% include "_language_switcher.html" %}
         </div>
     </div>
 </nav>
@@ -46,7 +47,7 @@
         <div class="row g-3">
             <aside class="col-xl-2 docs-sidebar-column">
                 <nav class="docs-sidebar" aria-label="Articles navigation">
-                    <p class="docs-sidebar-title">Browse</p>
+                    <p class="docs-sidebar-title">{{ t("docs.sidebar.browse") }}</p>
                     {{ docs_tree.render_nodes(nav_root.children, current_lang=current_lang) }}
                 </nav>
             </aside>
@@ -68,16 +69,16 @@
                     </nav>
 
                     {% if current_category %}
-                    <p class="docs-overline">Section</p>
+                    <p class="docs-overline">{{ t("docs.overline.section") }}</p>
                     <h1 class="docs-page-title">{{ current_category_label }}</h1>
                     <p class="docs-page-subtitle">
-                        浏览当前分类下的子分类与文章。路径：<code>{{ current_category }}</code>
+                        {{ t("docs.page.subtitle.section") }} <code>{{ current_category }}</code>
                     </p>
 
                     {% if category_children %}
                     <div class="docs-section-header">
-                        <h2 class="docs-section-title">Subcategories</h2>
-                        <span class="docs-section-caption">{{ category_children|length }} sections</span>
+                        <h2 class="docs-section-title">{{ t("docs.section.subcategories") }}</h2>
+                        <span class="docs-section-caption">{{ category_children|length }} {{ t("docs.label.sections") }}</span>
                     </div>
                     <div class="docs-category-grid">
                         {% for category in category_children %}
@@ -93,9 +94,9 @@
                     {% if category_articles %}
                     <div class="docs-section-header">
                         <h2 class="docs-section-title">
-                            {% if category_children %}Articles in This Section{% else %}Articles{% endif %}
+                            {% if category_children %}{{ t("docs.section.articles_in_section") }}{% else %}{{ t("docs.section.articles") }}{% endif %}
                         </h2>
-                        <span class="docs-section-caption">{{ category_articles|length }} articles</span>
+                        <span class="docs-section-caption">{{ category_articles|length }} {{ t("docs.label.articles") }}</span>
                     </div>
                     <div class="docs-article-list">
                         {% for article in category_articles %}
@@ -103,26 +104,26 @@
                             <h3 class="docs-article-title">{{ article.title }}</h3>
                             <p class="docs-article-summary">{{ article.brief_introduction }}</p>
                             <div class="docs-article-meta">
-                                <span>作者：{{ article.author }}</span>
-                                <span>发布：{{ article.rollout_date }}</span>
-                                <span>更新：{{ article.ultimate_modified_date }}</span>
+                                <span>{{ t("article.meta.author") }}: {{ article.author }}</span>
+                                <span>{{ t("article.meta.published") }}: {{ article.rollout_date }}</span>
+                                <span>{{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}</span>
                             </div>
                         </a>
                         {% endfor %}
                     </div>
                     {% elif not category_children %}
-                    <div class="docs-empty-state">这个分类下暂时没有可显示的文章。</div>
+                    <div class="docs-empty-state">{{ t("docs.empty.no_articles") }}</div>
                     {% endif %}
                     {% else %}
-                    <p class="docs-overline">Documentation</p>
-                    <h1 class="docs-page-title">Articles</h1>
+                    <p class="docs-overline">{{ t("docs.overline.documentation") }}</p>
+                    <h1 class="docs-page-title">{{ t("docs.page.title.articles") }}</h1>
                     <p class="docs-page-subtitle">
-                        按分类浏览整个知识库，或者直接从最近更新的文章开始。
+                        {{ t("docs.page.subtitle.root") }}
                     </p>
 
                     <div class="docs-section-header">
-                        <h2 class="docs-section-title">Top-Level Categories</h2>
-                        <span class="docs-section-caption">{{ category_children|length }} sections</span>
+                        <h2 class="docs-section-title">{{ t("docs.section.top_level") }}</h2>
+                        <span class="docs-section-caption">{{ category_children|length }} {{ t("docs.label.sections") }}</span>
                     </div>
                     <div class="docs-category-grid">
                         {% for category in category_children %}
@@ -135,8 +136,8 @@
                     </div>
 
                     <div class="docs-section-header">
-                        <h2 class="docs-section-title">Recent Articles</h2>
-                        <span class="docs-section-caption">{{ recent_articles|length }} items</span>
+                        <h2 class="docs-section-title">{{ t("docs.section.recent") }}</h2>
+                        <span class="docs-section-caption">{{ recent_articles|length }} {{ t("docs.label.items") }}</span>
                     </div>
                     <div class="docs-article-list">
                         {% for article in recent_articles %}
@@ -145,8 +146,8 @@
                             <p class="docs-article-summary">{{ article.brief_introduction }}</p>
                             <div class="docs-article-meta">
                                 <span>{{ article.category }}</span>
-                                <span>发布：{{ article.rollout_date }}</span>
-                                <span>更新：{{ article.ultimate_modified_date }}</span>
+                                <span>{{ t("article.meta.published") }}: {{ article.rollout_date }}</span>
+                                <span>{{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}</span>
                             </div>
                         </a>
                         {% endfor %}
