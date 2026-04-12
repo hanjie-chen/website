@@ -89,10 +89,13 @@ def test_about_page_renders_chinese_hiring_profile_content(client):
     assert response.status_code == 200
     assert "about-hero-name-primary" in html
     assert "Hanjie Chen" in html
-    assert "下载简历" in html
-    assert "敬请期待" in html
+    assert "PROFILE / HIRING PAGE" in html
+    assert "Download Resume" in html
+    assert "Coming Soon" in html
+    assert "Contact Me" in html
+    assert "Open to opportunities" in html
+    assert "Shanghai CN / Remote-friendly" in html
     assert "为什么写博客" in html
     assert "我是谁" in html
     assert "我如何工作" in html
-    assert "联系我" in html
-    assert "Download Resume" not in html
+    assert "下载简历" not in html

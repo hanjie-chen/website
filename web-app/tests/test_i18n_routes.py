@@ -192,7 +192,12 @@ def test_chinese_about_page_keeps_hero_overline_and_removes_duplicate_section_ov
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert '<p class="about-overline">个人简介 / 求职页面</p>' in html
+    assert '<p class="about-overline">PROFILE / HIRING PAGE</p>' in html
+    assert "Download Resume" in html
+    assert "Coming Soon" in html
+    assert "Contact Me" in html
+    assert "Open to opportunities" in html
+    assert "Shanghai CN / Remote-friendly" in html
     assert html.count('class="about-overline"') == 1
     assert "<h2>我是谁</h2>" in html
     assert "<h2>我如何工作</h2>" in html
