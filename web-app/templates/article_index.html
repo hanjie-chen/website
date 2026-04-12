@@ -25,6 +25,7 @@
 
             <section class="col-12 col-xl-10">
                 <div class="docs-content-panel">
+                    {% if current_category %}
                     <nav class="docs-breadcrumb" aria-label="Breadcrumb">
                         {% for crumb in breadcrumbs %}
                         {% if not loop.first %}
@@ -38,6 +39,7 @@
                         {% endif %}
                         {% endfor %}
                     </nav>
+                    {% endif %}
 
                     {% if current_category %}
                     <p class="docs-overline">{{ t("docs.overline.section") }}</p>
@@ -86,7 +88,10 @@
                     <div class="docs-empty-state">{{ t("docs.empty.no_articles") }}</div>
                     {% endif %}
                     {% else %}
-                    <p class="docs-overline">{{ t("docs.overline.documentation") }}</p>
+                    {% set docs_overline = t("docs.overline.documentation") %}
+                    {% if docs_overline %}
+                    <p class="docs-overline">{{ docs_overline }}</p>
+                    {% endif %}
                     <h1 class="docs-page-title">{{ t("docs.page.title.articles") }}</h1>
                     <p class="docs-page-subtitle">
                         {{ t("docs.page.subtitle.root") }}

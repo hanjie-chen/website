@@ -40,8 +40,8 @@ def test_articles_index_uses_chinese_shell_labels(client):
 
     assert response.status_code == 200
     assert "浏览" in body
-    assert "顶级分类" in body
-    assert "最近文章" in body
+    assert "主要分类" in body
+    assert "最新文章" in body
 
 
 def test_articles_index_uses_shared_english_topbar_and_marks_articles_active(client):
