@@ -150,7 +150,6 @@ body {
 }
 
 .home-page-shell {
-    width: min(100%, 1520px);
     display: grid;
     gap: 1.35rem;
     padding-top: 1.15rem;
@@ -169,10 +168,6 @@ body {
 }
 
 .home-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1.7fr) minmax(200px, 0.65fr);
-    gap: 2rem;
-    align-items: center;
     padding: 2rem 2.1rem;
 }
 
@@ -212,9 +207,6 @@ body {
 }
 
 .home-hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.85rem;
     margin-top: 1.6rem;
 }
 
@@ -288,26 +280,12 @@ body {
 }
 
 .home-section-heading {
-    margin-bottom: 1.1rem;
+    margin: 0;
 }
 
 .home-section-heading h2 {
     margin: 0;
     font-size: clamp(1.55rem, 2.8vw, 2.4rem);
-}
-
-.home-entry-grid,
-.home-focus-grid {
-    display: grid;
-    gap: 1rem;
-}
-
-.home-entry-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.home-focus-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .home-entry-card,
@@ -336,6 +314,28 @@ body {
     max-width: 56rem;
     display: grid;
     gap: 0.8rem;
+}
+
+@media (orientation: portrait) and (max-width: 1280px) {
+    .home-entry-col,
+    .home-focus-col {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .home-entry-row,
+    .home-focus-row {
+        row-gap: 1rem !important;
+    }
+
+    .home-note-row {
+        row-gap: 0.85rem !important;
+    }
+
+    .home-note-copy {
+        max-width: 42rem;
+    }
 }
 
 @media (min-width: 1200px) {
@@ -414,18 +414,11 @@ body {
     }
 
     .home-hero {
-        grid-template-columns: 1fr;
         padding: 1.4rem 1.2rem;
-        gap: 1.3rem;
     }
 
     .home-section {
         padding: 1.35rem 1.2rem;
-    }
-
-    .home-entry-grid,
-    .home-focus-grid {
-        grid-template-columns: 1fr;
     }
 
     .home-avatar-frame {

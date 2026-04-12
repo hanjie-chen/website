@@ -72,7 +72,7 @@ def test_chinese_homepage_uses_english_current_focus_heading_with_mixed_language
     assert "我主要关注 Cloud、DevOps、Full-stack、Python 和 AI-assisted workflow。" in html
     assert "Read Articles" in html
     assert "About" in html
-    assert "START HERE" in html
+    assert "START HERE" not in html
     assert "What you&#39;ll find here" in html
     assert "技术笔记、部署记录、实践文章，以及围绕 Cloud / DevOps / Full-stack 的持续整理。" in html
     assert "更完整的个人介绍、当前关注、工作方式，以及与求职相关的信息。" in html
@@ -83,6 +83,19 @@ def test_chinese_homepage_uses_english_current_focus_heading_with_mixed_language
     assert "围绕 Terraform、GCP、Cloudflare 和 deployment workflow 持续实践。" in html
     assert "Full-stack / Python" in html
     assert "AI-assisted workflow" in html
+    assert html.count("<h2>Why This Site Exists</h2>") == 1
+    assert "<h2>为什么做这个网站</h2>" not in html
+    assert '<p class="home-overline">为什么做这个网站</p>' not in html
+    assert "这个网站既是我的技术知识库，也是我整理项目、验证理解和持续输出的地方。" in html
+    assert "我希望它是一份长期可维护、可复用、可迭代的工程记录，而不只是零散文章的集合。" in html
+    assert 'class="row align-items-center g-4 g-xl-5 home-hero-row"' in html
+    assert html.count('class="col-12 col-lg-6 d-flex home-entry-col"') == 2
+    assert html.count('class="col-12 col-md-6 col-xl-4 d-flex home-focus-col"') == 3
+    assert 'class="row g-4 home-note-row"' in html
+    assert html.count('class="col-12"') >= 2
+    assert "home-section-inner" not in html
+    assert "home-entry-grid" not in html
+    assert "home-focus-grid" not in html
 
 
 def test_english_homepage_keeps_single_current_focus_heading(client):
@@ -92,13 +105,15 @@ def test_english_homepage_keeps_single_current_focus_heading(client):
     assert response.status_code == 200
     assert html.count("<h2>Current Focus</h2>") == 1
     assert "CURRENT FOCUS" not in html
-    assert "START HERE" in html
+    assert "START HERE" not in html
     assert "What you&#39;ll find here" in html
     assert "Articles" in html
     assert "Build, Learn, Document." in html
     assert "Read Articles" in html
     assert "About" in html
     assert "About Me" not in html
+    assert html.count("<h2>Why This Site Exists</h2>") == 1
+    assert "WHY THIS SITE EXISTS" not in html
 
 
 @pytest.mark.parametrize(
