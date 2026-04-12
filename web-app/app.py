@@ -178,9 +178,7 @@ def inject_template_helpers():
         "alternate_lang": target_lang,
         "html_lang": html_lang_code(current_lang),
         "switch_lang_url": f"/set-language/{target_lang}?next={quote(switch_path, safe='/')}",
-        "t": lambda key, fallback=None: translate(
-            current_lang, key, fallback=fallback
-        ),
+        "t": lambda key, fallback=None: translate(current_lang, key, fallback=fallback),
     }
 
 
@@ -230,9 +228,7 @@ def set_language(lang):
 def article_index(lang):
     current_lang = _require_supported_language(lang)
     articles = _fetch_all_articles()
-    docs_context = build_docs_context(
-        articles, current_category="", lang=current_lang
-    )
+    docs_context = build_docs_context(articles, current_category="", lang=current_lang)
     return render_template("article_index.html", **docs_context)
 
 

@@ -101,9 +101,7 @@ def build_breadcrumbs(category_path: str, article=None, lang: str = None):
         breadcrumbs.append(
             {
                 "label": humanize_segment(part),
-                "url": public_path(
-                    lang, f"articles/category/{'/'.join(walked_parts)}"
-                ),
+                "url": public_path(lang, f"articles/category/{'/'.join(walked_parts)}"),
             }
         )
 

@@ -69,12 +69,17 @@ def test_chinese_homepage_uses_english_current_focus_heading_with_mixed_language
     assert "PERSONAL SITE / KNOWLEDGE BASE" in html
     assert "Build, Learn, Document." in html
     assert "这里记录我的工程实践、技术笔记，以及正在持续推进的项目。" in html
-    assert "我主要关注 Cloud、DevOps、Full-stack、Python 和 AI-assisted workflow。" in html
+    assert (
+        "我主要关注 Cloud、DevOps、Full-stack、Python 和 AI-assisted workflow。" in html
+    )
     assert "Read Articles" in html
     assert "About" in html
     assert "START HERE" not in html
     assert "What you&#39;ll find here" in html
-    assert "技术笔记、部署记录、实践文章，以及围绕 Cloud / DevOps / Full-stack 的持续整理。" in html
+    assert (
+        "技术笔记、部署记录、实践文章，以及围绕 Cloud / DevOps / Full-stack 的持续整理。"
+        in html
+    )
     assert "更完整的个人介绍、当前关注、工作方式，以及与求职相关的信息。" in html
     assert html.count("<h2>Current Focus</h2>") == 1
     assert "<h2>当前关注</h2>" not in html
@@ -86,8 +91,13 @@ def test_chinese_homepage_uses_english_current_focus_heading_with_mixed_language
     assert html.count("<h2>Why This Site Exists</h2>") == 1
     assert "<h2>为什么做这个网站</h2>" not in html
     assert '<p class="home-overline">为什么做这个网站</p>' not in html
-    assert "这个网站既是我的技术知识库，也是我整理项目、验证理解和持续输出的地方。" in html
-    assert "我希望它是一份长期可维护、可复用、可迭代的工程记录，而不只是零散文章的集合。" in html
+    assert (
+        "这个网站既是我的技术知识库，也是我整理项目、验证理解和持续输出的地方。" in html
+    )
+    assert (
+        "我希望它是一份长期可维护、可复用、可迭代的工程记录，而不只是零散文章的集合。"
+        in html
+    )
     assert 'class="row align-items-center g-4 g-xl-5 home-hero-row"' in html
     assert html.count('class="col-12 col-lg-6 d-flex home-entry-col"') == 2
     assert html.count('class="col-12 col-md-6 col-xl-4 d-flex home-focus-col"') == 3
@@ -158,9 +168,9 @@ def test_shared_topbar_uses_fixed_brand_and_english_nav_on_chinese_homepage(clie
 
     assert response.status_code == 200
     assert '<a href="/zh/" class="site-nav-brand">hanjie site</a>' in body
-    assert '>Home<' in body
-    assert '>Articles<' in body
-    assert '>About<' in body
+    assert ">Home<" in body
+    assert ">Articles<" in body
+    assert ">About<" in body
     assert "欢迎来到我的个人网站" not in body
     assert "🏡" not in body
 
