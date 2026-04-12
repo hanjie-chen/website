@@ -39,7 +39,7 @@ wait_request_ok() {
 echo "[smoke] Checking /"
 wait_request_ok "/"
 
-echo "[smoke] Checking /articles"
-wait_request_ok "/articles"
+echo "[smoke] Checking /zh/articles"
+wait_request_ok "/zh/articles"
 
 echo "[smoke] All checks passed."

@@ -87,12 +87,16 @@ What it does:
 
 - hits `https://127.0.0.1/` with the production `Host` header
 - checks `/`
-- checks `/articles`
+- checks `/zh/articles`
 - retries briefly to tolerate warm-up jitter
 
 Use this when:
 
 - confirming that the production HTTP path is actually serving traffic
+
+Local development note:
+
+- `compose.dev.yml` exposes nginx HTTPS on `8444`, so run `BASE_URL=https://127.0.0.1:8444 ./scripts/deploy/smoke_check.sh` when validating the dev stack locally
 
 ### `cleanup_old_images.sh <deploy_sha>`
 
