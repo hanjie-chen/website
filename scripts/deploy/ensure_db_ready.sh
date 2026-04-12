@@ -26,7 +26,15 @@ import os
 import sqlite3
 import sys
 
-db_path = "/app/instance/project.db"
+db_uri = os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///project.db")
+
+if not db_uri.startswith("sqlite:///"):
+    sys.exit(4)
+
+db_path = db_uri[len("sqlite:///") :]
+if not os.path.isabs(db_path):
+    db_path = os.path.join("/app/instance", db_path)
+
 if not os.path.exists(db_path):
     sys.exit(2)
 

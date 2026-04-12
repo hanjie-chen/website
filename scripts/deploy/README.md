@@ -56,7 +56,7 @@ Post-deploy schema safety check for the SQLite database.
 What it does:
 
 - waits until `web-app` is at least running
-- checks whether the `article_meta_data` table exists
+- checks whether the `article_meta_data` table exists in the SQLite DB resolved from `SQLALCHEMY_DATABASE_URI`
 - optionally re-runs `init_db.py` if the table is missing
 - waits for `articles-sync` health before repair, because article import depends on synced source content
 
