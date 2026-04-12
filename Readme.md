@@ -10,7 +10,7 @@ Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + C
 
 这个仓库主要负责三件事：
 
-- 提供首页、`/articles`、文章详情页与 `About Me` 页面
+- 提供带语言前缀的公开页面：`/zh/...`、`/en/...`，根路径 `/` 会按语言偏好自动跳转
 - 提供公开只读的文章 metadata API：`GET /api/articles` 与 `GET /api/articles/<id>`
 - 把 Markdown 知识库同步、导入并渲染成可访问的 HTML
 - 通过 CI/CD 将镜像部署到 GCP VM，并由 Cloudflare 暴露到公网
@@ -130,6 +130,7 @@ docker compose -f compose.yml -f compose.dev.yml config
 
 - 更完整的 deploy flow、health checks、cleanup 策略请看 [scripts/deploy/README.md](./scripts/deploy/README.md)
 - 更细的测试文件说明请看 [web-app/README.md](./web-app/README.md)
+- 公开 HTML 页面目前使用 `preferred_language` cookie、浏览器 `Accept-Language` 和默认语言 `zh` 决定 `/` 的跳转落点
 
 ## Infrastructure
 
@@ -188,6 +189,8 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - 生产环境的 origin TLS 由 Nginx 挂载 Cloudflare Origin CA 证书；开发环境可使用自签名证书
 - Cloudflare 目前已对 `/static/*` 启用 edge cache；`/rendered-articles/*.html` 暂未纳入缓存计划
 - `/web-log/` 目前由 Cloudflare Access 在 edge 侧保护，不再依赖 Nginx Basic Auth
+- 公开只读 API `/api/articles*` 目前已添加 Cloudflare rate limiting 保护
+- 当前已落地的 Cloudflare 优化主要包括：`/static/*` edge cache、`/web-log/` Cloudflare Access、`/api/articles*` rate limiting，以及生产环境 Origin CA + `Full (strict)`
 
 ## Roadmap
 
@@ -197,18 +200,6 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 4. uv project best practice migrate
 5. light mode
 6. support rss
-
-### Cloudflare Optimization Plan
-
-按顺序逐步推进，避免聊天上下文丢失：
-
-1. 已完成：为 `/static/*` 配置 Cloudflare Cache Rule 并验证 CSS / JS / font / image 资源命中；`/rendered-articles/*` 仍按资源类型单独评估
-2. 暂缓：当前仅 `/static/*` 进入 Cloudflare edge cache，且依赖 `?v=<mtime>` 解决更新问题；待 HTML 页面或 `rendered-articles` 资源进入缓存后，再补充 `reindex` 后的 cache purge plan
-3. 已完成：`/web-log/` 已接入 Cloudflare Access，并移除了 Nginx Basic Auth
-4. 复查生产 TLS / Origin hardening，记录 Cloudflare Origin CA、`Full (strict)` 与 Authenticated Origin Pulls 的当前状态和后续补强项
-5. 接入 Cloudflare Web Analytics，补齐边缘侧访问观测
-6. 接入 Cloudflare AI Crawl Control，观察并管理 AI crawler 对博客与知识库内容的抓取
-7. 为公开只读 API（`/api/articles*`）设计 Cloudflare WAF custom rules 与 rate limiting 策略
-8. 评估 Cloudflare Email Routing，为站点域名增加自定义邮箱转发
-9. 在新增联系表单、留言、简历下载申请等交互后，接入 Cloudflare Turnstile
-10. 结合现有 `support rss` 目标，评估使用 Workers / Pages 承载 `rss.xml`、`sitemap.xml` 或其他轻量 edge 实验
+7. 如果后续增加联系表单、留言或其他写入型交互，再接入 Cloudflare Turnstile
+8. 中英双语支持 discuss
+9. seo opt

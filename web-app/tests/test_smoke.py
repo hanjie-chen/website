@@ -15,7 +15,10 @@ def test_homepage_renders_english_landing_content(client):
     assert "PERSONAL SITE / KNOWLEDGE BASE" in html
     assert "Read Articles" in html
     assert "What you&#39;ll find here" in html
+    assert "About" in html
+    assert "About Me" not in html
     assert "Current Focus" in html
+    assert "CURRENT FOCUS" not in html
     assert "Why This Site Exists" in html
     assert "Explore the site" not in html
     assert "Open Articles" not in html
@@ -28,10 +31,20 @@ def test_homepage_renders_chinese_landing_content(client):
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "构建、学习、记录。" in html
-    assert "个人网站 / 知识库" in html
-    assert "阅读文章" in html
-    assert "你可以在这里看到什么" in html
+    assert "Build, Learn, Document." in html
+    assert "PERSONAL SITE / KNOWLEDGE BASE" in html
+    assert "Read Articles" in html
+    assert "这里记录我的工程实践、技术笔记，以及正在持续推进的项目。" in html
+    assert "我主要关注 Cloud、DevOps、Full-stack、Python 和 AI-assisted workflow。" in html
+    assert "START HERE" in html
+    assert "What you&#39;ll find here" in html
+    assert "Articles" in html
+    assert "About" in html
+    assert "技术笔记、部署记录、实践文章，以及围绕 Cloud / DevOps / Full-stack 的持续整理。" in html
+    assert "更完整的个人介绍、当前关注、工作方式，以及与求职相关的信息。" in html
+    assert "Current Focus" in html
+    assert "CURRENT FOCUS" not in html
+    assert "围绕 Terraform、GCP、Cloudflare 和 deployment workflow 持续实践。" in html
 
 
 def test_homepage_static_assets_are_versioned(client):

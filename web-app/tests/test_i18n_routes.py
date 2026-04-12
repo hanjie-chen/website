@@ -59,14 +59,28 @@ def test_homepage_accepts_canonical_language_paths(client, path):
     assert response.status_code == 200
 
 
-def test_chinese_homepage_removes_duplicate_focus_overline(client):
+def test_chinese_homepage_uses_english_current_focus_heading_with_mixed_language_copy(
+    client,
+):
     response = client.get("/zh/")
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert html.count("<h2>当前关注</h2>") == 1
+    assert "PERSONAL SITE / KNOWLEDGE BASE" in html
+    assert "Build, Learn, Document." in html
+    assert "这里记录我的工程实践、技术笔记，以及正在持续推进的项目。" in html
+    assert "我主要关注 Cloud、DevOps、Full-stack、Python 和 AI-assisted workflow。" in html
+    assert "Read Articles" in html
+    assert "About" in html
+    assert "START HERE" in html
+    assert "What you&#39;ll find here" in html
+    assert "技术笔记、部署记录、实践文章，以及围绕 Cloud / DevOps / Full-stack 的持续整理。" in html
+    assert "更完整的个人介绍、当前关注、工作方式，以及与求职相关的信息。" in html
+    assert html.count("<h2>Current Focus</h2>") == 1
+    assert "<h2>当前关注</h2>" not in html
     assert '<p class="home-overline">当前关注</p>' not in html
     assert "Cloud / DevOps" in html
+    assert "围绕 Terraform、GCP、Cloudflare 和 deployment workflow 持续实践。" in html
     assert "Full-stack / Python" in html
     assert "AI-assisted workflow" in html
 
@@ -77,6 +91,14 @@ def test_english_homepage_keeps_single_current_focus_heading(client):
 
     assert response.status_code == 200
     assert html.count("<h2>Current Focus</h2>") == 1
+    assert "CURRENT FOCUS" not in html
+    assert "START HERE" in html
+    assert "What you&#39;ll find here" in html
+    assert "Articles" in html
+    assert "Build, Learn, Document." in html
+    assert "Read Articles" in html
+    assert "About" in html
+    assert "About Me" not in html
 
 
 @pytest.mark.parametrize(
