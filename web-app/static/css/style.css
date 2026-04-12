@@ -338,12 +338,6 @@ body {
     }
 }
 
-@media (min-width: 1200px) {
-    .home-hero-title {
-        white-space: nowrap;
-    }
-}
-
 .footer-custom {
     /* 基础设置 */
     /* height: 6vh; */
