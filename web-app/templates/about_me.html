@@ -12,33 +12,8 @@
 
 
 {% block navbar%}
-<!-- Navbar -->
-<nav class="navbar navbar-expand-sm navbar-custom fixed-top">
-    <div class="container-fluid d-flex justify-content-center">
-        <div class="site-nav-shell px-2 px-lg-3">
-            <a href="{{ url_for('about_me', lang=current_lang) }}" class="site-nav-brand">
-                <span class="emoji {% if request.path == url_for('about_me', lang=current_lang) %}shake{% endif %}">👋</span>
-                <span>{{ t("about.nav.brand") }}</span>
-            </a>
-            <ul class="navbar-nav flex-row site-nav-menu">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index', lang=current_lang) }}">
-                        {{ t("nav.home") }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <span class="nav-link">|</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('article_index', lang=current_lang) }}">
-                        {{ t("nav.articles") }}
-                    </a>
-                </li>
-            </ul>
-            {% include "_language_switcher.html" %}
-        </div>
-    </div>
-</nav>
+{% set active_page = "about" %}
+{% include "_site_topbar.html" %}
 {% endblock %}
 
 
@@ -97,7 +72,6 @@
 
         <section class="about-section about-panel">
             <div class="about-section-heading">
-                <p class="about-overline">{{ t("about.who.overline") }}</p>
                 <h2>{{ t("about.who.title") }}</h2>
             </div>
             <div class="about-grid-two">
@@ -114,7 +88,6 @@
 
         <section class="about-section about-panel">
             <div class="about-section-heading">
-                <p class="about-overline">{{ t("about.how.overline") }}</p>
                 <h2>{{ t("about.how.title") }}</h2>
             </div>
             <div class="about-grid-two">
@@ -131,7 +104,6 @@
 
         <section class="about-section about-panel">
             <div class="about-section-heading">
-                <p class="about-overline">{{ t("about.work.overline") }}</p>
                 <h2>{{ t("about.work.title") }}</h2>
             </div>
             <div class="about-skill-grid">
@@ -152,7 +124,6 @@
 
         <section class="about-section about-panel">
             <div class="about-section-heading">
-                <p class="about-overline">{{ t("about.projects.overline") }}</p>
                 <h2>{{ t("about.projects.title") }}</h2>
             </div>
             <article class="about-project-card about-project-card-featured">
@@ -162,16 +133,11 @@
                     {{ t("about.projects.featured.desc") }}
                 </p>
                 <p class="about-project-tags">Flask · Docker Compose · Nginx · Cloudflare · GCP · CI/CD · Terraform</p>
-                <div class="about-project-actions">
-                    <a href="{{ url_for('index', lang=current_lang) }}" class="about-inline-link">{{ t("about.projects.live") }}</a>
-                    <a href="https://github.com/hanjie-chen/website" class="about-inline-link" target="_blank" rel="noreferrer">{{ t("about.projects.source") }}</a>
-                </div>
             </article>
         </section>
 
         <section class="about-section about-panel">
             <div class="about-section-heading">
-                <p class="about-overline">{{ t("about.current.overline") }}</p>
                 <h2>{{ t("about.current.title") }}</h2>
             </div>
             <div class="about-status-grid">
@@ -196,7 +162,6 @@
 
         <section class="about-section about-panel">
             <div class="about-section-heading">
-                <p class="about-overline">{{ t("about.write.overline") }}</p>
                 <h2>{{ t("about.write.title") }}</h2>
             </div>
             <div class="about-essay">
@@ -213,7 +178,6 @@
 
         <section class="about-section about-panel" id="contact">
             <div class="about-section-heading">
-                <p class="about-overline">{{ t("about.contact.overline") }}</p>
                 <h2>{{ t("about.contact.title") }}</h2>
             </div>
             <div class="about-contact-grid">

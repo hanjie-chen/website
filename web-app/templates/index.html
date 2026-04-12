@@ -7,116 +7,124 @@
 
 
 {% block navbar%}
-<!-- Navbar -->
-<nav class="navbar navbar-expand-sm navbar-custom fixed-top">
-    <div class="container-fluid d-flex justify-content-center">
-        <div class="site-nav-shell px-2 px-lg-3">
-            <a href="{{ url_for('index', lang=current_lang) }}" class="site-nav-brand">
-                <span>🏡</span>
-                <span>{{ t("home.nav.brand") }}</span>
-            </a>
-            <ul class="navbar-nav flex-row site-nav-menu">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('article_index', lang=current_lang) }}" class="text-decoration-none">
-                        {{ t("nav.articles") }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <span class="nav-link">|</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('about_me', lang=current_lang) }}">
-                        {{ t("nav.about") }}
-                    </a>
-                </li>
-            </ul>
-            {% include "_language_switcher.html" %}
-        </div>
-    </div>
-</nav>
+{% set active_page = "home" %}
+{% include "_site_topbar.html" %}
 {% endblock %}
 
 <!-- Main Content -->
 {% block main_content%}
 <div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
-    <div class="content-wrapper home-page-shell px-2 px-lg-3">
+    <div class="content-wrapper container-xxl home-page-shell px-2 px-lg-3">
         <section class="home-hero">
-            <div class="home-hero-copy">
-                <p class="home-overline">{{ t("home.hero.overline") }}</p>
-                <h1 class="home-hero-title">{{ t("home.hero.title") }}</h1>
-                <p class="home-hero-lead">
-                    {{ t("home.hero.lead") }}
-                </p>
-                <p class="home-hero-support">
-                    {{ t("home.hero.support") }}
-                </p>
-                <div class="home-hero-actions">
-                    <a href="{{ url_for('article_index', lang=current_lang) }}" class="home-cta home-cta-primary">
-                        {{ t("home.hero.primary_cta") }}
-                    </a>
-                    <a href="{{ url_for('about_me', lang=current_lang) }}" class="home-cta home-cta-secondary">
-                        {{ t("home.hero.secondary_cta") }}
-                    </a>
+            <div class="row align-items-center g-4 g-xl-5 home-hero-row">
+                <div class="col-12 col-lg-8 home-hero-copy-col">
+                    <div class="home-hero-copy">
+                        <p class="home-overline">{{ t("home.hero.overline") }}</p>
+                        <h1 class="home-hero-title">{{ t("home.hero.title") }}</h1>
+                        <p class="home-hero-lead">
+                            {{ t("home.hero.lead") }}
+                        </p>
+                        <p class="home-hero-support">
+                            {{ t("home.hero.support") }}
+                        </p>
+                        <div class="home-hero-actions d-flex flex-wrap gap-3">
+                            <a href="{{ url_for('article_index', lang=current_lang) }}"
+                                class="btn home-cta home-cta-primary">
+                                {{ t("home.hero.primary_cta") }}
+                            </a>
+                            <a href="{{ url_for('about_me', lang=current_lang) }}"
+                                class="btn home-cta home-cta-secondary">
+                                {{ t("home.hero.secondary_cta") }}
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="home-hero-media">
-                <div class="home-avatar-frame">
-                    <img alt="avatar" class="home-avatar"
-                        src="{{ asset_url('images/headavatar/head_avatar_problem.png') }}">
+                <div class="col-12 col-lg-4 d-flex justify-content-lg-end justify-content-start home-hero-media-col">
+                    <div class="home-hero-media">
+                        <div class="home-avatar-frame">
+                            <img alt="avatar" class="home-avatar"
+                                src="{{ asset_url('images/headavatar/head_avatar_problem.png') }}">
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
         <section class="home-section">
-            <div class="home-section-heading">
-                <p class="home-overline">{{ t("home.start.overline") }}</p>
-                <h2>{{ t("home.start.title") }}</h2>
-            </div>
-            <div class="home-entry-grid">
-                <article class="home-entry-card">
-                    <h3>{{ t("home.start.articles_title") }}</h3>
-                    <p>{{ t("home.start.articles_desc") }}</p>
-                </article>
-                <article class="home-entry-card">
-                    <h3>{{ t("home.start.about_title") }}</h3>
-                    <p>{{ t("home.start.about_desc") }}</p>
-                </article>
+            <div class="row g-4 align-items-stretch home-entry-row">
+                <div class="col-12">
+                    <div class="home-section-heading">
+                        {% set start_overline = t("home.start.overline") %}
+                        {% if start_overline %}
+                        <p class="home-overline">{{ start_overline }}</p>
+                        {% endif %}
+                        <h2>{{ t("home.start.title") }}</h2>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 d-flex home-entry-col">
+                    <article class="home-entry-card h-100 w-100">
+                        <h3>{{ t("home.start.articles_title") }}</h3>
+                        <p>{{ t("home.start.articles_desc") }}</p>
+                    </article>
+                </div>
+                <div class="col-12 col-lg-6 d-flex home-entry-col">
+                    <article class="home-entry-card h-100 w-100">
+                        <h3>{{ t("home.start.about_title") }}</h3>
+                        <p>{{ t("home.start.about_desc") }}</p>
+                    </article>
+                </div>
             </div>
         </section>
 
         <section class="home-section">
-            <div class="home-section-heading">
-                <p class="home-overline">{{ t("home.focus.overline") }}</p>
-                <h2>{{ t("home.focus.title") }}</h2>
-            </div>
-            <div class="home-focus-grid">
-                <article class="home-focus-card">
-                    <h3>{{ t("home.focus.cloud_title") }}</h3>
-                    <p>{{ t("home.focus.cloud_desc") }}</p>
-                </article>
-                <article class="home-focus-card">
-                    <h3>{{ t("home.focus.fullstack_title") }}</h3>
-                    <p>{{ t("home.focus.fullstack_desc") }}</p>
-                </article>
-                <article class="home-focus-card">
-                    <h3>{{ t("home.focus.ai_title") }}</h3>
-                    <p>{{ t("home.focus.ai_desc") }}</p>
-                </article>
+            <div class="row g-4 align-items-stretch home-focus-row">
+                <div class="col-12">
+                    <div class="home-section-heading">
+                        <h2>{{ t("home.focus.title") }}</h2>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4 d-flex home-focus-col">
+                    <article class="home-focus-card h-100 w-100">
+                        <h3>{{ t("home.focus.cloud_title") }}</h3>
+                        <p>{{ t("home.focus.cloud_desc") }}</p>
+                    </article>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4 d-flex home-focus-col">
+                    <article class="home-focus-card h-100 w-100">
+                        <h3>{{ t("home.focus.fullstack_title") }}</h3>
+                        <p>{{ t("home.focus.fullstack_desc") }}</p>
+                    </article>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4 d-flex home-focus-col">
+                    <article class="home-focus-card h-100 w-100">
+                        <h3>{{ t("home.focus.ai_title") }}</h3>
+                        <p>{{ t("home.focus.ai_desc") }}</p>
+                    </article>
+                </div>
             </div>
         </section>
 
         <section class="home-section home-note-card">
-            <div class="home-section-heading">
-                <p class="home-overline">{{ t("home.note.overline") }}</p>
-                <h2>{{ t("home.note.title") }}</h2>
-            </div>
-            <div class="home-note-copy">
-                <p>
-                    {{ t("home.note.p1") }}
-                </p>
-                <p>
-                    {{ t("home.note.p2") }}
-                </p>
+            <div class="row g-4 home-note-row">
+                <div class="col-12">
+                    <div class="home-section-heading">
+                        {% set note_overline = t("home.note.overline") %}
+                        {% if note_overline %}
+                        <p class="home-overline">{{ note_overline }}</p>
+                        {% endif %}
+                        <h2>{{ t("home.note.title") }}</h2>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="home-note-copy">
+                        <p>
+                            {{ t("home.note.p1") }}
+                        </p>
+                        <p>
+                            {{ t("home.note.p2") }}
+                        </p>
+                    </div>
+                </div>
             </div>
         </section>
     </div>

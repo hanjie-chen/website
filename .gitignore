@@ -30,3 +30,4 @@ terraform.tfvars
 
 # ignore local ai working docs
 docs/superpowers/
+.superpowers/
