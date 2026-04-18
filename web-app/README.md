@@ -75,12 +75,22 @@ What it does:
 
 - scans the source article tree
 - skips hidden/internal folders such as `__template__`
+- treats an article directory as publishable when it directly contains `images/` or `assets/`, or when it contains `resources/images/`
 - copies article assets into the rendered output directory
 - parses frontmatter and validates required metadata
 - computes a content hash to detect article changes
 - upserts `Article_Meta_Data` rows
 - re-renders HTML when article content changes or rendered output is missing
+- recognizes optional English sidecars at `resources/i18n/<basename>-en.md`
+- writes English rendered HTML (`<id>.en.html`) and English metadata sidecars (`<id>.en.json`) when those sidecars exist
 - removes database rows and rendered files for deleted source articles
+
+Current note:
+
+- the Chinese markdown file remains the canonical metadata source
+- English sidecars currently override only title, brief introduction, author, and body on `en` article/docs pages
+- when an English sidecar omits markdown images, the importer prepends the Chinese article's leading image block so bilingual pages keep the same hero/cover image
+- other metadata, such as rollout date, category, and cover image, still reuses the canonical Chinese article metadata
 
 Start here when you want to change:
 

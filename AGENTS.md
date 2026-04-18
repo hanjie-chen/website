@@ -1,4 +1,4 @@
-# AGENTS
+# Repository Guide
 
 ## Read First
 
@@ -25,6 +25,12 @@ Examples:
 - Python / Flask / template / navigation changes: run `pytest -q` when practical.
 - Shell script changes: run `shellcheck` when practical.
 - README-only changes do not require full test runs, but they must stay accurate.
+
+## Route Changes
+
+- Treat public URL changes as both app changes and operations changes.
+- When a route, language prefix, or public entry path changes, search the repo for old hard-coded paths and update health checks, smoke checks, deploy scripts, monitoring paths, and related docs in the same change.
+- After route changes, prefer verifying both app behavior and deploy behavior. When practical, run the relevant `docker compose ... config`, healthcheck-related scripts, and smoke-check scripts in addition to tests.
 
 ## Workflow Fit
 

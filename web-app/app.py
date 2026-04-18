@@ -7,6 +7,8 @@ from flask import (
     send_from_directory,
     url_for,
 )
+import json
+from types import SimpleNamespace
 from urllib.parse import quote
 from models import db, Article_Meta_Data
 from import_articles_scripts import import_articles
@@ -123,6 +125,61 @@ def _fetch_api_articles():
     )
 
 
+def _article_render_dir(article: Article_Meta_Data):
+    return os.path.join(Rendered_Articles, article.category.replace(os.sep, "-"))
+
+
+def _article_html_path(article: Article_Meta_Data, lang: str):
+    render_dir = _article_render_dir(article)
+    if lang == "en":
+        localized_path = os.path.join(render_dir, f"{article.id}.en.html")
+        if os.path.exists(localized_path):
+            return localized_path
+    return os.path.join(render_dir, f"{article.id}.html")
+
+
+def _article_translation_meta_path(article: Article_Meta_Data, lang: str):
+    if lang != "en":
+        return None
+    return os.path.join(_article_render_dir(article), f"{article.id}.en.json")
+
+
+def _load_article_translation(article: Article_Meta_Data, lang: str):
+    meta_path = _article_translation_meta_path(article, lang)
+    if not meta_path or not os.path.exists(meta_path):
+        return None
+
+    try:
+        with open(meta_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _article_view_model(article: Article_Meta_Data, lang: str):
+    if lang != "en":
+        return article
+
+    translation = _load_article_translation(article, lang)
+    if not translation:
+        return article
+
+    return SimpleNamespace(
+        id=article.id,
+        title=translation.get("title") or article.title,
+        author=translation.get("author") or article.author,
+        instructor=article.instructor,
+        cover_image_url=article.cover_image_url,
+        rollout_date=article.rollout_date,
+        ultimate_modified_date=article.ultimate_modified_date,
+        brief_introduction=translation.get("brief_introduction")
+        or article.brief_introduction,
+        category=article.category,
+        file_path=article.file_path,
+        content_hash=article.content_hash,
+    )
+
+
 def _serialize_article_summary(article: Article_Meta_Data):
     return {
         "id": article.id,
@@ -227,7 +284,9 @@ def set_language(lang):
 @app.route("/<lang>/articles")
 def article_index(lang):
     current_lang = _require_supported_language(lang)
-    articles = _fetch_all_articles()
+    articles = [
+        _article_view_model(article, current_lang) for article in _fetch_all_articles()
+    ]
     docs_context = build_docs_context(articles, current_category="", lang=current_lang)
     return render_template("article_index.html", **docs_context)
 
@@ -235,7 +294,9 @@ def article_index(lang):
 @app.route("/<lang>/articles/category/<path:category_path>")
 def article_category(lang, category_path):
     current_lang = _require_supported_language(lang)
-    articles = _fetch_all_articles()
+    articles = [
+        _article_view_model(article, current_lang) for article in _fetch_all_articles()
+    ]
     docs_context = build_docs_context(
         articles, current_category=category_path, lang=current_lang
     )
@@ -285,18 +346,15 @@ def page_not_found(error_info):  # 接受异常对象作为参数
 @app.route("/<lang>/articles/<int:article_id>")
 def view_article(lang, article_id):
     current_lang = _require_supported_language(lang)
-    article = db.session.execute(
+    canonical_article = db.session.execute(
         db.select(Article_Meta_Data).where(Article_Meta_Data.id == article_id)
     ).scalar()
 
-    if not article:
+    if not canonical_article:
         abort(404)
 
-    # 转换category中的/为-以匹配文件系统路径
-    category_path = article.category.replace(os.sep, "-")
-
-    # 真正的 html_path
-    html_path = f"{Rendered_Articles}{os.sep}{category_path}{os.sep}{article_id}.html"
+    article = _article_view_model(canonical_article, current_lang)
+    html_path = _article_html_path(canonical_article, current_lang)
 
     try:
         with open(html_path, "r", encoding="utf-8") as f:
@@ -306,7 +364,9 @@ def view_article(lang, article_id):
 
     article_content, toc_items = _build_article_toc(article_content)
     shell_context = build_article_shell_context(
-        _fetch_all_articles(), article, lang=current_lang
+        [_article_view_model(item, current_lang) for item in _fetch_all_articles()],
+        article,
+        lang=current_lang,
     )
 
     # 返回模板，使用相对路径

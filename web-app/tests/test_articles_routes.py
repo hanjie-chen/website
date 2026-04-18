@@ -1,4 +1,5 @@
 from datetime import date
+import json
 from pathlib import Path
 
 import app as app_module
@@ -26,6 +27,27 @@ def _insert_article(
     db.session.add(article)
     db.session.commit()
     return article
+
+
+def _write_english_sidecar(article, html_body="<h1>English Content</h1>"):
+    category_path = article.category.replace("/", "-")
+    html_dir = Path(app_module.Rendered_Articles) / category_path
+    html_dir.mkdir(parents=True, exist_ok=True)
+    (html_dir / f"{article.id}.en.html").write_text(html_body, encoding="utf-8")
+    (html_dir / f"{article.id}.en.json").write_text(
+        json.dumps(
+            {
+                "lang": "en",
+                "title": f"{article.title} EN",
+                "brief_introduction": "English intro",
+                "author": "Hanjie Chen",
+                "source_blob": "abc123",
+                "content_hash": "b" * 64,
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
 
 
 def test_articles_index_returns_200(client):
@@ -57,6 +79,24 @@ def test_articles_index_uses_shared_english_topbar_and_marks_articles_active(cli
     )
     assert '<a class="nav-link site-nav-link" href="/zh/about">About</a>' in body
     assert body.count("site-nav-link is-active") == 1
+
+
+def test_english_articles_index_uses_sidecar_title_and_brief(client, app):
+    with app.app_context():
+        article = _insert_article(
+            title="Cloudflare 指南",
+            category="tests/cloudflare",
+            file_path="tests/cloudflare/guide.md",
+        )
+        _write_english_sidecar(article)
+
+    response = client.get("/en/articles")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Cloudflare 指南 EN" in body
+    assert "English intro" in body
+    assert "Cloudflare 指南</h3>" not in body
 
 
 def test_legacy_articles_index_route_returns_404(client):
@@ -233,6 +273,31 @@ def test_view_article_returns_200_for_existing_article(client, app):
     assert "Test Content" in body
     assert 'href="/en/articles/category/tests"' in body
     assert 'href="/en/articles/category/tests/category"' in body
+
+
+def test_english_view_article_uses_sidecar_title_author_and_body(client, app):
+    with app.app_context():
+        article = _insert_article(
+            title="中文标题",
+            category="tests/english",
+            file_path="tests/english/guide.md",
+        )
+        category_path = article.category.replace("/", "-")
+        html_dir = Path(app_module.Rendered_Articles) / category_path
+        html_dir.mkdir(parents=True, exist_ok=True)
+        (html_dir / f"{article.id}.html").write_text(
+            "<h1>中文内容</h1>", encoding="utf-8"
+        )
+        _write_english_sidecar(article, html_body="<h1>English Sidecar Body</h1>")
+
+    response = client.get(f"/en/articles/{article.id}")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "<title>中文标题 EN</title>" in body
+    assert "Hanjie Chen" in body
+    assert "English Sidecar Body" in body
+    assert "中文内容" not in body
 
 
 def test_view_article_uses_chinese_shell_labels(client, app):

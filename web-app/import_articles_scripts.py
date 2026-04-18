@@ -7,21 +7,31 @@ Articles import pipeline:
 5) Remove DB records and HTML for deleted source files.
 """
 
+import hashlib
+import json
 import os
 import re
-import frontmatter
-import hashlib
 import shutil
 from datetime import date
+
+import frontmatter
 from flask_sqlalchemy import SQLAlchemy
+
 from config import Rendered_Articles, IS_DEV
-from models import Article_Meta_Data
 from markdown_render_scripts import render_markdown_to_html
+from models import Article_Meta_Data
 
 # consider use python logging package to instead of print information
 
 # regular expression pre-compile
 brief_intro_pattern = re.compile(r"```.*?BriefIntroduction:\s*(.*?)```", re.DOTALL)
+markdown_image_pattern = re.compile(r"!\[[^\]]*\]\([^)]+\)")
+leading_markdown_images_pattern = re.compile(
+    r"^\s*((?:!\[[^\]]*\]\([^)]+\)\s*(?:\n\s*)*)+)", re.DOTALL
+)
+ENGLISH_AUTHOR_MAP = {
+    "陈翰杰": "Hanjie Chen",
+}
 
 
 def _is_hidden_item(item_name: str):
@@ -47,6 +57,24 @@ def divide_files_and_folders(path: str):
     return files, folders
 
 
+def find_article_assets_folder(path: str):
+    """return the publishable assets folder for an article directory"""
+    _files, folders = divide_files_and_folders(path)
+
+    if "images" in folders:
+        return "images"
+    if "assets" in folders:
+        return "assets"
+    if "resources" in folders:
+        _resource_files, resource_folders = divide_files_and_folders(
+            os.path.join(path, "resources")
+        )
+        if "images" in resource_folders:
+            return os.path.join("resources", "images")
+
+    return None
+
+
 def get_dst_path(current_dir: str, root_dir: str):
     """get the path of rendered file"""
     relative_path = os.path.relpath(current_dir, root_dir)
@@ -68,12 +96,9 @@ def _read_markdown(md_path: str):
     return content, content_hash
 
 
-def _parse_article(md_path: str):
+def _parse_markdown_document(md_path: str, required_fields: list[str]):
     """
-    validate a md file whether read to lanch on the webiste
-    extract ymal-metadata, brief introduction, content_part which need to render
-    if validate pass, return brief_intro_text, metadata, content_part, content_hash
-    if validate failed, return None
+    validate a markdown file and extract metadata, brief introduction and body
     """
     single_article, content_hash = _read_markdown(md_path)
     if not single_article:
@@ -101,7 +126,6 @@ def _parse_article(md_path: str):
         return None
     brief_intro_text = brief_intro_match.group(1).strip()
 
-    required_fields = ["Title", "Author", "CoverImage", "RolloutDate"]
     for field in required_fields:
         if not real_metadata.get(field):
             print(
@@ -110,6 +134,110 @@ def _parse_article(md_path: str):
             return None
 
     return brief_intro_text, real_metadata, content_part, content_hash
+
+
+def _parse_article(md_path: str):
+    return _parse_markdown_document(
+        md_path, required_fields=["Title", "Author", "CoverImage", "RolloutDate"]
+    )
+
+
+def _parse_translation_sidecar(md_path: str):
+    return _parse_markdown_document(md_path, required_fields=["Title"])
+
+
+def find_translation_sidecar(
+    current_dir: str, md_filename: str, lang: str = "en"
+) -> str | None:
+    basename, _ext = os.path.splitext(md_filename)
+    translation_path = os.path.join(
+        current_dir, "resources", "i18n", f"{basename}-{lang}.md"
+    )
+    if os.path.exists(translation_path):
+        return translation_path
+    return None
+
+
+def _translation_author(source_author: str, translation_metadata: dict):
+    return translation_metadata.get("Author") or ENGLISH_AUTHOR_MAP.get(
+        source_author, source_author
+    )
+
+
+def _prepend_leading_source_images(
+    translation_content: str, source_content: str
+) -> str:
+    """Keep the English sidecar lightweight by inheriting the source lead image.
+
+    Sidecars are allowed to omit repeated resource markdown. When the English
+    body has no markdown images of its own, preserve the source article's
+    leading image block so the bilingual article pages keep the same cover/hero
+    image.
+    """
+    if markdown_image_pattern.search(translation_content):
+        return translation_content
+
+    match = leading_markdown_images_pattern.match(source_content)
+    if not match:
+        return translation_content
+
+    leading_images = match.group(1).strip()
+    if not leading_images:
+        return translation_content
+
+    return f"{leading_images}\n\n{translation_content.lstrip()}"
+
+
+def _remove_translation_artifacts(article_id: int, output_path: str, lang: str = "en"):
+    artifact_paths = [
+        os.path.join(output_path, f"{article_id}.{lang}.html"),
+        os.path.join(output_path, f"{article_id}.{lang}.json"),
+    ]
+    for artifact_path in artifact_paths:
+        if os.path.exists(artifact_path):
+            os.remove(artifact_path)
+
+
+def _sync_translation_sidecar(
+    md_filename: str,
+    current_dir: str,
+    output_path: str,
+    url_base_path: str,
+    article_id: int,
+    source_author: str,
+    source_content_part: str,
+):
+    translation_path = find_translation_sidecar(current_dir, md_filename, lang="en")
+    if not translation_path:
+        _remove_translation_artifacts(article_id, output_path, lang="en")
+        return
+
+    parsed = _parse_translation_sidecar(translation_path)
+    if not parsed:
+        _remove_translation_artifacts(article_id, output_path, lang="en")
+        return
+
+    brief_intro_text, metadata, content_part, content_hash = parsed
+    content_part = _prepend_leading_source_images(content_part, source_content_part)
+    if not render_markdown_to_html(
+        content_part, f"{article_id}.en", output_path, url_base_path
+    ):
+        print(f"English sidecar render failed for {translation_path}")
+        _remove_translation_artifacts(article_id, output_path, lang="en")
+        return
+
+    payload = {
+        "lang": "en",
+        "title": metadata.get("Title"),
+        "brief_introduction": brief_intro_text,
+        "author": _translation_author(source_author, metadata),
+        "source_blob": metadata.get("SourceBlob"),
+        "content_hash": content_hash,
+    }
+
+    meta_path = os.path.join(output_path, f"{article_id}.en.json")
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False)
 
 
 def _article_category(rel_path: str):
@@ -155,6 +283,15 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
         if exist_check.content_hash == content_hash:
             html_output_file = os.path.join(output_path, f"{exist_check.id}.html")
             if os.path.exists(html_output_file):
+                _sync_translation_sidecar(
+                    md_filename,
+                    current_dir,
+                    output_path,
+                    url_base_path,
+                    exist_check.id,
+                    exist_check.author,
+                    content_part,
+                )
                 print(
                     f"Article {exist_check.category}/{exist_check.title} unchanged, skipped"
                 )
@@ -165,6 +302,15 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
             if render_markdown_to_html(
                 content_part, exist_check.id, output_path, url_base_path
             ):
+                _sync_translation_sidecar(
+                    md_filename,
+                    current_dir,
+                    output_path,
+                    url_base_path,
+                    exist_check.id,
+                    exist_check.author,
+                    content_part,
+                )
                 print(
                     f"Article {exist_check.category}/{exist_check.title} unchanged but html missing, re-rendered"
                 )
@@ -191,6 +337,15 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
                     content_part, html_filename, output_path, url_base_path
                 ):
                     raise RuntimeError("render failed")
+                _sync_translation_sidecar(
+                    md_filename,
+                    current_dir,
+                    output_path,
+                    url_base_path,
+                    exist_check.id,
+                    exist_check.author,
+                    content_part,
+                )
             print(f"Article {exist_check.category}/{exist_check.title} updated")
         except Exception as e:
             print(f"Update failed for {exist_check.category}/{exist_check.title}: {e}")
@@ -220,6 +375,15 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
                 content_part, html_filename, output_path, url_base_path
             ):
                 raise RuntimeError("render failed")
+            _sync_translation_sidecar(
+                md_filename,
+                current_dir,
+                output_path,
+                url_base_path,
+                article_metadata.id,
+                article_metadata.author,
+                content_part,
+            )
     except Exception as e:
         print(
             f"Add failed for {article_metadata.category}/{article_metadata.title}: {e}"
@@ -246,12 +410,7 @@ def _scan_articles(
     # A directory only becomes a publishable article folder if it also owns
     # an assets directory. Root-level helper markdown files such as README.md
     # are therefore ignored unless they live in a real article folder.
-    if "images" in folders:
-        assets_folder = "images"
-    elif "assets" in folders:
-        assets_folder = "assets"
-    else:
-        assets_folder = None
+    assets_folder = find_article_assets_folder(current_dir)
 
     if assets_folder:
         _copy_assets(current_dir, root_dir, assets_folder)
@@ -290,6 +449,9 @@ def _sync_deleted_articles(db: SQLAlchemy, seen_file_paths: set):
             )
             if os.path.exists(html_path):
                 os.remove(html_path)
+            _remove_translation_artifacts(
+                article.id, os.path.join(Rendered_Articles, category_path), lang="en"
+            )
             db.session.delete(article)
 
             remaining_in_category = db.session.execute(
