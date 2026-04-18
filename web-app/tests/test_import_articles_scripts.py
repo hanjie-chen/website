@@ -202,3 +202,87 @@ English body
         in english_html
     )
     assert "<h1>Getting Started with GCP Terraform Setup</h1>" in english_html
+
+
+def test_import_articles_english_sidecar_inherits_leading_html_image_when_missing(
+    app, tmp_path, monkeypatch
+):
+    root_dir = tmp_path / "tests"
+    article_dir = root_dir / "ai" / "coding-agents" / "practice"
+    (article_dir / "resources" / "images").mkdir(parents=True)
+    (article_dir / "resources" / "images" / "agents-readme.jpg").write_text(
+        "fake image", encoding="utf-8"
+    )
+    (article_dir / "resources" / "i18n").mkdir(parents=True)
+
+    (article_dir / "context-engineering.md").write_text(
+        """---
+Title: AGENTS.md & README.md 使用指南
+Author: 陈翰杰
+Instructor: GPT-5
+CoverImage: ./resources/images/agents-readme.jpg
+RolloutDate: 2026-03-29
+---
+
+```
+BriefIntroduction:
+一些关于 AI agent 辅助编程的个人经验
+```
+
+<!-- split -->
+
+<img src="./resources/images/agents-readme.jpg" alt="cover" style="zoom: 67%;" />
+
+# Understand the project
+
+中文正文
+""",
+        encoding="utf-8",
+    )
+    (article_dir / "resources" / "i18n" / "context-engineering-en.md").write_text(
+        """---
+Title: A Guide to Using AGENTS.md and README.md
+SourceBlob: abc123
+---
+
+```
+BriefIntroduction: Some personal experience with AI agent-assisted programming
+```
+
+<!-- split -->
+
+# Understand the project
+
+English body
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "import_articles_scripts.Rendered_Articles",
+        app_module.app.config["RENDERED_ARTICLES_FOLDER"],
+    )
+    monkeypatch.setattr(
+        "app.Rendered_Articles", app_module.app.config["RENDERED_ARTICLES_FOLDER"]
+    )
+
+    with app.app_context():
+        import_articles(str(root_dir), db)
+        article = db.session.execute(
+            db.select(Article_Meta_Data).where(
+                Article_Meta_Data.file_path
+                == "ai/coding-agents/practice/context-engineering.md"
+            )
+        ).scalar_one()
+
+    rendered_dir = (
+        Path(app_module.app.config["RENDERED_ARTICLES_FOLDER"])
+        / "ai-coding-agents-practice"
+    )
+    english_html = (rendered_dir / f"{article.id}.en.html").read_text(encoding="utf-8")
+
+    assert (
+        'src="/rendered-articles/ai-coding-agents-practice/resources/images/agents-readme.jpg"'
+        in english_html
+    )
+    assert "<h1>Understand the project</h1>" in english_html

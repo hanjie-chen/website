@@ -26,8 +26,10 @@ from models import Article_Meta_Data
 # regular expression pre-compile
 brief_intro_pattern = re.compile(r"```.*?BriefIntroduction:\s*(.*?)```", re.DOTALL)
 markdown_image_pattern = re.compile(r"!\[[^\]]*\]\([^)]+\)")
-leading_markdown_images_pattern = re.compile(
-    r"^\s*((?:!\[[^\]]*\]\([^)]+\)\s*(?:\n\s*)*)+)", re.DOTALL
+html_image_pattern = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
+leading_image_block_pattern = re.compile(
+    r"^\s*((?:(?:!\[[^\]]*\]\([^)]+\))|(?:<img\b[^>]*>))\s*(?:\n\s*)*)+",
+    re.DOTALL | re.IGNORECASE,
 )
 ENGLISH_AUTHOR_MAP = {
     "陈翰杰": "Hanjie Chen",
@@ -174,10 +176,12 @@ def _prepend_leading_source_images(
     leading image block so the bilingual article pages keep the same cover/hero
     image.
     """
-    if markdown_image_pattern.search(translation_content):
+    if markdown_image_pattern.search(translation_content) or html_image_pattern.search(
+        translation_content
+    ):
         return translation_content
 
-    match = leading_markdown_images_pattern.match(source_content)
+    match = leading_image_block_pattern.match(source_content)
     if not match:
         return translation_content
 
