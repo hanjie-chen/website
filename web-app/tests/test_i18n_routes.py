@@ -295,6 +295,24 @@ def test_set_language_redirects_and_persists_cookie(client):
     assert "preferred_language=zh" in response.headers["Set-Cookie"]
 
 
+def test_set_language_rejects_external_redirect_targets(client):
+    response = client.get(
+        "/set-language/en?next=https://evil.example/phish",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/en/"
+    assert "preferred_language=en" in response.headers["Set-Cookie"]
+
+
+def test_set_language_rejects_protocol_relative_redirect_targets(client):
+    response = client.get("/set-language/en?next=//evil.example/phish")
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/en/"
+
+
 def test_localized_404_page_uses_english_copy(client):
     response = client.get("/en/missing-page")
     html = response.get_data(as_text=True)

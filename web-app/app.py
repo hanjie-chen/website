@@ -9,7 +9,7 @@ from flask import (
 )
 import json
 from types import SimpleNamespace
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit, urlunsplit
 from models import db, Article_Meta_Data
 from import_articles_scripts import import_articles
 import os
@@ -217,6 +217,24 @@ def _asset_url(filename: str) -> str:
     return url_for("static", filename=filename, v=version)
 
 
+def _safe_redirect_target(next_path: str | None, fallback_path: str) -> str:
+    if not next_path:
+        return fallback_path
+
+    candidate = next_path.strip()
+    if not candidate:
+        return fallback_path
+
+    parsed = urlsplit(candidate)
+    if parsed.scheme or parsed.netloc:
+        return fallback_path
+
+    if not parsed.path.startswith("/") or parsed.path.startswith("//"):
+        return fallback_path
+
+    return urlunsplit(("", "", parsed.path, parsed.query, parsed.fragment))
+
+
 @app.context_processor
 def inject_template_helpers():
     current_lang = None
@@ -270,7 +288,8 @@ def index(lang):
 @app.route("/set-language/<lang>")
 def set_language(lang):
     current_lang = _require_supported_language(lang)
-    next_path = request.args.get("next") or url_for("index", lang=current_lang)
+    fallback_path = url_for("index", lang=current_lang)
+    next_path = _safe_redirect_target(request.args.get("next"), fallback_path)
     response = redirect(next_path, code=302)
     response.set_cookie(
         LANG_COOKIE_NAME,

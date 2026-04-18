@@ -51,19 +51,22 @@ Use this when:
 
 ### `ensure_db_ready.sh <deploy_sha>`
 
-Post-deploy schema safety check for the SQLite database.
+Post-deploy DB safety and consistency check for the SQLite database.
 
 What it does:
 
+- waits for `articles-sync` health so the source article mirror is stable
 - waits until `web-app` is at least running
 - checks whether the `article_meta_data` table exists in the SQLite DB resolved from `SQLALCHEMY_DATABASE_URI`
-- optionally re-runs `init_db.py` if the table is missing
-- waits for `articles-sync` health before repair, because article import depends on synced source content
+- compares the current DB row count with the number of importable source articles under the synced Markdown tree
+- optionally re-runs `init_db.py` if the DB file is missing, the table is missing, or the DB article count does not match the importable source count
+- refuses destructive repair when the synced source count resolves to zero, so an empty or broken source mirror does not wipe a previously populated DB
 
 Use this when:
 
 - a deploy has completed but the app may still be missing required DB state
 - you want a safe recovery step before strict health and smoke validation
+- you want a post-deploy safeguard against partial or stale article imports surviving across releases
 
 ### `wait_services_healthy.sh [services...]`
 

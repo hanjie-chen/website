@@ -32,10 +32,12 @@ What it does:
   - `/<lang>/articles/category/<path>`
   - `/<lang>/articles/<int:article_id>`
   - `/<lang>/about`
+  - `/set-language/<lang>`
 - serves the public read-only JSON APIs:
   - `GET /api/articles`
   - `GET /api/articles/<int:article_id>`
 - exposes the internal `POST /internal/reindex` endpoint used by `articles-sync`
+- validates the language-switch `next=` target so `/set-language/...` only redirects to same-site absolute paths
 - builds the article TOC for the right-hand page navigation
 - injects shared template helpers for `asset_url(...)`, `t(...)`, language switching, and dynamic `html lang`
 
