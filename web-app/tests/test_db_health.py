@@ -43,7 +43,9 @@ def _init_article_table(db_path, rows):
         """
     )
     for file_path in rows:
-        cur.execute("INSERT INTO article_meta_data (file_path) VALUES (?)", (file_path,))
+        cur.execute(
+            "INSERT INTO article_meta_data (file_path) VALUES (?)", (file_path,)
+        )
     conn.commit()
     conn.close()
 
