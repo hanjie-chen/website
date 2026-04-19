@@ -4,7 +4,7 @@
 
 Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + Cloudflare
 
-文章内容来自独立的知识库仓库 [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过定时同步、增量导入与静态渲染自动发布到站点。
+文章内容来自独立的知识库仓库 [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过 push-driven 内容同步、增量导入与静态渲染自动发布到站点，并保留低频定时同步作为兜底。
 
 ## Overview
 
@@ -20,7 +20,8 @@ Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + C
 network traffic
 
 - 线上流量：`Client -> Cloudflare -> GCP VM -> Nginx(ModSecurity) -> Flask`
-- 内容更新：`articles-sync(cron) -> POST /internal/reindex -> import/render pipeline`
+- 内容更新：`knowledge-base push -> website content-sync workflow -> articles-sync/update-articles.sh -> POST /internal/reindex -> import/render pipeline`
+- 兜底同步：`articles-sync(daily cron) -> update-articles.sh`
 - 持久化（Docker volumes）：
   - `source_md_articles`：Markdown 源文与图片
   - `rendered_html_articles`：渲染后的 HTML 与拷贝后的静态资源

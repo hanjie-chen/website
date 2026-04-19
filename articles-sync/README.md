@@ -9,7 +9,8 @@ The service is responsible for keeping the Markdown source repository up to date
 `articles-sync` covers three responsibilities:
 
 - bootstrap the shared article source directory on first start
-- periodically sync the latest branch state from the upstream Git repository
+- sync the latest branch state from the upstream Git repository when triggered on demand
+- provide a low-frequency scheduled sync as a fallback path
 - trigger the web app reindex endpoint only when the repository HEAD changes
 
 The local checkout is intentionally shallow. The service only keeps the latest branch state needed for rendering and import, not the full Git history.
@@ -80,18 +81,30 @@ When the container starts for the first time:
 1. `init.sh` checks whether `/articles/src` is empty.
 2. If empty, the upstream article repository is shallow-cloned into the shared volume.
 3. If not empty, the service performs an immediate sync with `update-articles.sh`.
-4. A recurring cron job is installed.
+4. A recurring cron job is installed as a fallback path.
 5. `crond` stays in the foreground so the container remains alive.
+
+### Triggered Sync
+
+The primary production sync path is now event-driven:
+
+1. `knowledge-base` pushes changes to `main`.
+2. A `knowledge-base` GitHub Actions workflow decides whether those changed files may affect published content.
+3. If yes, it triggers the `website` repository's content-sync workflow.
+4. That workflow SSHes to production and runs `/usr/local/bin/update-articles.sh` inside `articles-sync`.
+5. `update-articles.sh` fetches the latest repository state and only triggers reindex when `HEAD` actually changed.
+
+This keeps content updates close to source pushes without exposing a new public webhook on the site itself.
 
 ### Scheduled Sync
 
 The default cron entry configured by `init.sh` is:
 
 ```cron
-0 */4 * * * /usr/local/bin/cron-heartbeat-sync.sh >> /proc/1/fd/1 2>&1
+0 3 * * * /usr/local/bin/cron-heartbeat-sync.sh >> /proc/1/fd/1 2>&1
 ```
 
-This means the container performs one scheduled sync every 4 hours and writes cron output to container stdout.
+This means the container performs one scheduled sync per day at 03:00 UTC and writes cron output to container stdout.
 
 The schedule can be overridden with `CRON_SCHEDULE`.
 
@@ -133,7 +146,7 @@ This keeps disk usage low, avoids carrying full history, and makes the sync resi
 - `SOURCE_ARTICLES_DIRECTORY`
   - shared directory used by both `articles-sync` and `web-app`
 - `CRON_SCHEDULE`
-  - cron expression used by `crond`; default is `0 */4 * * *`
+  - cron expression used by `crond`; default is `0 3 * * *`
 - `TZ`
   - optional container timezone for cron and log timestamps; `compose.yml` sets this service to `UTC`
 
@@ -149,6 +162,7 @@ This keeps disk usage low, avoids carrying full history, and makes the sync resi
 - Git operations run as `appuser`, not as root.
 - Cron is installed for root, but the actual sync command switches to `appuser`.
 - The service treats `/articles/src` as a disposable mirror of the latest branch state.
+- The primary production sync path is GitHub Actions driven; cron remains as a low-frequency fallback in case the dispatch path fails.
 - Sync and cron log lines include the timezone offset and timezone name to make commit-time comparisons easier.
 - The Compose health check for `articles-sync` only verifies:
   - `/articles/src/.git` exists

@@ -1,0 +1,56 @@
+name: Content Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_repo:
+        description: Source repository that requested the sync
+        required: false
+        type: string
+      source_sha:
+        description: Source repository commit SHA
+        required: false
+        type: string
+      source_before:
+        description: Previous source repository commit SHA
+        required: false
+        type: string
+      trigger_reason:
+        description: Human-readable reason for the sync
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  sync-content:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Describe request
+        run: |
+          echo "source_repo=${{ inputs.source_repo || 'unknown' }}"
+          echo "source_sha=${{ inputs.source_sha || 'unknown' }}"
+          echo "source_before=${{ inputs.source_before || 'unknown' }}"
+          echo "trigger_reason=${{ inputs.trigger_reason || 'unspecified' }}"
+
+      - name: Sync content over SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/plain/projects/website
+            git fetch --all --prune
+            git checkout main
+            git pull --ff-only origin main
+            docker compose exec -T articles-sync sh -lc 'su-exec appuser /usr/local/bin/update-articles.sh'
+            ./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity
+            ./scripts/deploy/smoke_check.sh
