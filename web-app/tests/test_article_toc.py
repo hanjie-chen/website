@@ -1,10 +1,10 @@
-import app as app_module
+import article_views as article_views_module
 
 
 def test_build_article_toc_assigns_ids_and_extracts_outline():
     html = "<h1>Intro</h1><p>Text</p><h2>Setup</h2><h2>Setup</h2><h3>中文 标题</h3>"
 
-    updated_html, toc_items = app_module._build_article_toc(html)
+    updated_html, toc_items = article_views_module.build_article_toc(html)
 
     assert 'id="intro"' in updated_html
     assert 'id="setup"' in updated_html
@@ -38,7 +38,7 @@ def test_build_article_toc_assigns_ids_and_extracts_outline():
 def test_build_article_toc_keeps_orphan_subheadings_visible():
     html = "<h2>Setup</h2><h3>Commands</h3>"
 
-    _, toc_items = app_module._build_article_toc(html)
+    _, toc_items = article_views_module.build_article_toc(html)
 
     assert toc_items == [
         {

@@ -69,6 +69,23 @@ Start here when you want to change:
 - fixed template copy translations
 - path switching logic between language namespaces
 
+### `article_views.py`
+
+Article presentation helpers.
+
+What it does:
+
+- resolves the rendered HTML path for an article, including optional English sidecars
+- loads translated sidecar metadata (`<id>.en.json`) when present
+- builds a localized article view model for docs pages and article detail pages
+- generates the article heading outline / TOC used by the right-hand article navigation
+
+Start here when you want to change:
+
+- article page TOC generation
+- how English sidecars override canonical article metadata at render time
+- how article list/detail routes choose rendered HTML files
+
 ### `import_articles_scripts.py`
 
 Article import pipeline.

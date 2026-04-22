@@ -1,3 +1,6 @@
+import os
+from urllib.parse import quote, urlsplit, urlunsplit
+
 from flask import (
     Flask,
     abort,
@@ -7,14 +10,13 @@ from flask import (
     send_from_directory,
     url_for,
 )
-import json
-from types import SimpleNamespace
-from urllib.parse import quote, urlsplit, urlunsplit
-from models import db, Article_Meta_Data
-from import_articles_scripts import import_articles
-import os
-import re
-from bs4 import BeautifulSoup
+
+from article_views import (
+    article_html_path,
+    article_view_model,
+    build_article_toc,
+    localized_articles,
+)
 from i18n import (
     DEFAULT_LANGUAGE,
     LANG_COOKIE_NAME,
@@ -25,7 +27,9 @@ from i18n import (
     switch_language_path,
     translate,
 )
-from navigation import build_docs_context, build_article_shell_context
+from import_articles_scripts import import_articles
+from models import Article_Meta_Data, db
+from navigation import build_article_shell_context, build_docs_context
 
 from config import (
     Articles_Directory,
@@ -35,7 +39,7 @@ from config import (
     REIMPORT_ARTICLES_TOKEN,
 )
 
-
+# Flask route layer for the public site and the internal reindex endpoint.
 app = Flask(__name__)
 app.json.ensure_ascii = False
 
@@ -57,62 +61,6 @@ app.add_url_rule(
 db.init_app(app)
 
 
-def _slugify_heading(text: str) -> str:
-    slug = re.sub(r"[^\w\s-]", "", text, flags=re.UNICODE).strip().lower()
-    slug = re.sub(r"[-\s]+", "-", slug, flags=re.UNICODE)
-    return slug or "section"
-
-
-def _build_article_toc(article_content: str):
-    soup = BeautifulSoup(article_content, "html.parser")
-    toc_items = []
-    slug_counts = {}
-    current_h1 = None
-    current_h2 = None
-
-    for heading in soup.find_all(["h1", "h2", "h3"]):
-        heading_text = heading.get_text(" ", strip=True)
-        if not heading_text:
-            continue
-
-        base_slug = _slugify_heading(heading_text)
-        slug_counts[base_slug] = slug_counts.get(base_slug, 0) + 1
-        heading_id = (
-            base_slug
-            if slug_counts[base_slug] == 1
-            else f"{base_slug}-{slug_counts[base_slug]}"
-        )
-
-        heading["id"] = heading_id
-        toc_item = {
-            "id": heading_id,
-            "text": heading_text,
-            "level": int(heading.name[1]),
-            "children": [],
-        }
-
-        # Build a shallow page outline: h1 owns following h2 items, and h2 owns h3.
-        if toc_item["level"] == 1:
-            toc_items.append(toc_item)
-            current_h1 = toc_item
-            current_h2 = None
-        elif toc_item["level"] == 2:
-            if current_h1 is not None:
-                current_h1["children"].append(toc_item)
-            else:
-                toc_items.append(toc_item)
-            current_h2 = toc_item
-        else:
-            if current_h2 is not None:
-                current_h2["children"].append(toc_item)
-            elif current_h1 is not None:
-                current_h1["children"].append(toc_item)
-            else:
-                toc_items.append(toc_item)
-
-    return str(soup), toc_items
-
-
 def _fetch_all_articles():
     return db.session.execute(db.select(Article_Meta_Data)).scalars().all()
 
@@ -125,59 +73,8 @@ def _fetch_api_articles():
     )
 
 
-def _article_render_dir(article: Article_Meta_Data):
-    return os.path.join(Rendered_Articles, article.category.replace(os.sep, "-"))
-
-
-def _article_html_path(article: Article_Meta_Data, lang: str):
-    render_dir = _article_render_dir(article)
-    if lang == "en":
-        localized_path = os.path.join(render_dir, f"{article.id}.en.html")
-        if os.path.exists(localized_path):
-            return localized_path
-    return os.path.join(render_dir, f"{article.id}.html")
-
-
-def _article_translation_meta_path(article: Article_Meta_Data, lang: str):
-    if lang != "en":
-        return None
-    return os.path.join(_article_render_dir(article), f"{article.id}.en.json")
-
-
-def _load_article_translation(article: Article_Meta_Data, lang: str):
-    meta_path = _article_translation_meta_path(article, lang)
-    if not meta_path or not os.path.exists(meta_path):
-        return None
-
-    try:
-        with open(meta_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return None
-
-
-def _article_view_model(article: Article_Meta_Data, lang: str):
-    if lang != "en":
-        return article
-
-    translation = _load_article_translation(article, lang)
-    if not translation:
-        return article
-
-    return SimpleNamespace(
-        id=article.id,
-        title=translation.get("title") or article.title,
-        author=translation.get("author") or article.author,
-        instructor=article.instructor,
-        cover_image_url=article.cover_image_url,
-        rollout_date=article.rollout_date,
-        ultimate_modified_date=article.ultimate_modified_date,
-        brief_introduction=translation.get("brief_introduction")
-        or article.brief_introduction,
-        category=article.category,
-        file_path=article.file_path,
-        content_hash=article.content_hash,
-    )
+def _localized_all_articles(lang: str):
+    return localized_articles(Rendered_Articles, _fetch_all_articles(), lang)
 
 
 def _serialize_article_summary(article: Article_Meta_Data):
@@ -237,6 +134,8 @@ def _safe_redirect_target(next_path: str | None, fallback_path: str) -> str:
 
 @app.context_processor
 def inject_template_helpers():
+    # Keep template logic shallow: routes decide the language namespace, and
+    # templates consume shared helpers for translated UI copy and asset URLs.
     current_lang = None
     if request.view_args:
         current_lang = request.view_args.get("lang")
@@ -303,9 +202,7 @@ def set_language(lang):
 @app.route("/<lang>/articles")
 def article_index(lang):
     current_lang = _require_supported_language(lang)
-    articles = [
-        _article_view_model(article, current_lang) for article in _fetch_all_articles()
-    ]
+    articles = _localized_all_articles(current_lang)
     docs_context = build_docs_context(articles, current_category="", lang=current_lang)
     return render_template("article_index.html", **docs_context)
 
@@ -313,9 +210,7 @@ def article_index(lang):
 @app.route("/<lang>/articles/category/<path:category_path>")
 def article_category(lang, category_path):
     current_lang = _require_supported_language(lang)
-    articles = [
-        _article_view_model(article, current_lang) for article in _fetch_all_articles()
-    ]
+    articles = _localized_all_articles(current_lang)
     docs_context = build_docs_context(
         articles, current_category=category_path, lang=current_lang
     )
@@ -372,8 +267,8 @@ def view_article(lang, article_id):
     if not canonical_article:
         abort(404)
 
-    article = _article_view_model(canonical_article, current_lang)
-    html_path = _article_html_path(canonical_article, current_lang)
+    article = article_view_model(Rendered_Articles, canonical_article, current_lang)
+    html_path = article_html_path(Rendered_Articles, canonical_article, current_lang)
 
     try:
         with open(html_path, "r", encoding="utf-8") as f:
@@ -381,9 +276,9 @@ def view_article(lang, article_id):
     except FileNotFoundError:
         abort(404)
 
-    article_content, toc_items = _build_article_toc(article_content)
+    article_content, toc_items = build_article_toc(article_content)
     shell_context = build_article_shell_context(
-        [_article_view_model(item, current_lang) for item in _fetch_all_articles()],
+        _localized_all_articles(current_lang),
         article,
         lang=current_lang,
     )
@@ -431,6 +326,8 @@ if IS_DEV:
 
 @app.route("/internal/reindex", methods=["POST"])
 def reindex_articles():
+    # Only the sync pipeline should hit this endpoint; public callers should
+    # not be able to force a re-import of the article source tree.
     if not REIMPORT_ARTICLES_TOKEN:
         abort(404)
 
