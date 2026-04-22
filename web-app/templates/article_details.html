@@ -79,4 +79,19 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade image-preview-modal" tabindex="-1" aria-hidden="true" data-image-preview-modal>
+    <div class="modal-dialog modal-dialog-centered image-preview-dialog">
+        <div class="modal-content image-preview-content">
+            <button type="button" class="btn-close btn-close-white image-preview-close" data-bs-dismiss="modal"
+                aria-label="{{ t('article.image_preview.close') }}"></button>
+            <img class="image-preview-full" src="" alt="" data-image-preview-target>
+            <p class="image-preview-caption" data-image-preview-caption hidden></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="{{ asset_url('article-image-preview.js') }}"></script>
 {% endblock %}

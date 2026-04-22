@@ -351,6 +351,31 @@ def test_view_article_renders_nested_toc_markup(client, app):
     assert "article-toc-subtree" in body
 
 
+def test_view_article_includes_image_preview_modal_and_script(client, app):
+    with app.app_context():
+        article = _insert_article(
+            title="Image Preview Article",
+            category="tests/images",
+            file_path="tests/images/preview.md",
+        )
+        category_path = article.category.replace("/", "-")
+        html_dir = Path(app_module.Rendered_Articles) / category_path
+        html_dir.mkdir(parents=True, exist_ok=True)
+        (html_dir / f"{article.id}.html").write_text(
+            '<p><img src="/rendered-articles/tests-images/resources/images/cover.png" alt="架构图"></p>',
+            encoding="utf-8",
+        )
+
+    response = client.get(f"/zh/articles/{article.id}")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'data-image-preview-modal' in body
+    assert 'data-image-preview-target' in body
+    assert "/static/article-image-preview.js?v=" in body
+    assert 'aria-label="关闭图片预览"' in body
+
+
 def test_view_article_left_nav_lists_same_category_articles(client, app):
     with app.app_context():
         article = _insert_article(
