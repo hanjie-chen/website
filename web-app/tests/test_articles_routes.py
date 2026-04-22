@@ -370,8 +370,8 @@ def test_view_article_includes_image_preview_modal_and_script(client, app):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert 'data-image-preview-modal' in body
-    assert 'data-image-preview-target' in body
+    assert "data-image-preview-modal" in body
+    assert "data-image-preview-target" in body
     assert "/static/article-image-preview.js?v=" in body
     assert 'aria-label="关闭图片预览"' in body
 
