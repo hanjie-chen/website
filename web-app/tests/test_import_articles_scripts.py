@@ -286,3 +286,95 @@ English body
         in english_html
     )
     assert "<h1>Understand the project</h1>" in english_html
+
+
+def test_import_articles_english_sidecar_keeps_source_cover_when_body_has_later_images(
+    app, tmp_path, monkeypatch
+):
+    root_dir = tmp_path / "tests"
+    article_dir = root_dir / "devops" / "linux-learn" / "services" / "ssh"
+    (article_dir / "resources" / "images").mkdir(parents=True)
+    (article_dir / "resources" / "images" / "ssh.png").write_text(
+        "fake image", encoding="utf-8"
+    )
+    (article_dir / "resources" / "images" / "gcp-vm-ssh-1.png").write_text(
+        "fake image", encoding="utf-8"
+    )
+    (article_dir / "resources" / "i18n").mkdir(parents=True)
+
+    (article_dir / "client-guide.md").write_text(
+        """---
+Title: SSh 客户端完全使用指南
+Author: 陈翰杰
+Instructor: gemini
+CoverImage: ./resources/images/ssh.png
+RolloutDate: 2026-02-21
+---
+
+```
+BriefIntroduction:
+中文简介
+```
+
+<!-- split -->
+
+![cover image](./resources/images/ssh.png)
+
+# Authentication
+
+中文正文
+""",
+        encoding="utf-8",
+    )
+    (article_dir / "resources" / "i18n" / "client-guide-en.md").write_text(
+        """---
+Title: Complete Guide to Using an SSH Client
+SourceBlob: abc123
+---
+
+```
+BriefIntroduction: SSH configuration on the client side
+```
+
+<!-- split -->
+
+# Authentication
+
+English body
+
+![later screenshot](./resources/images/gcp-vm-ssh-1.png)
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "import_articles_scripts.Rendered_Articles",
+        app_module.app.config["RENDERED_ARTICLES_FOLDER"],
+    )
+    monkeypatch.setattr(
+        "app.Rendered_Articles", app_module.app.config["RENDERED_ARTICLES_FOLDER"]
+    )
+
+    with app.app_context():
+        import_articles(str(root_dir), db)
+        article = db.session.execute(
+            db.select(Article_Meta_Data).where(
+                Article_Meta_Data.file_path
+                == "devops/linux-learn/services/ssh/client-guide.md"
+            )
+        ).scalar_one()
+
+    rendered_dir = (
+        Path(app_module.app.config["RENDERED_ARTICLES_FOLDER"])
+        / "devops-linux-learn-services-ssh"
+    )
+    english_html = (rendered_dir / f"{article.id}.en.html").read_text(encoding="utf-8")
+
+    assert (
+        'src="/rendered-articles/devops-linux-learn-services-ssh/resources/images/ssh.png"'
+        in english_html
+    )
+    assert (
+        'src="/rendered-articles/devops-linux-learn-services-ssh/resources/images/gcp-vm-ssh-1.png"'
+        in english_html
+    )

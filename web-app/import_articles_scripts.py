@@ -176,9 +176,7 @@ def _prepend_leading_source_images(
     leading image block so the bilingual article pages keep the same cover/hero
     image.
     """
-    if markdown_image_pattern.search(translation_content) or html_image_pattern.search(
-        translation_content
-    ):
+    if leading_image_block_pattern.match(translation_content):
         return translation_content
 
     match = leading_image_block_pattern.match(source_content)
