@@ -9,8 +9,12 @@ APP_DIR = os.path.abspath(os.path.join(TESTS_DIR, ".."))
 if APP_DIR not in sys.path:
     sys.path.insert(0, APP_DIR)
 
+# Keep pytest away from the persistent development database. The app module reads
+# this environment variable during import, before Flask-SQLAlchemy creates an engine.
+os.environ["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/site_test.sqlite"
+
 import app as app_module  # noqa: E402
-from models import Article_Meta_Data, db  # noqa: E402
+from models import db  # noqa: E402
 
 
 @pytest.fixture()
@@ -30,20 +34,16 @@ def app(tmp_path):
     app_module.Rendered_Articles = str(test_rendered_path)
 
     with app_module.app.app_context():
-        # Ensure table metadata exists for tests.
+        # Reset the isolated test database for each test case.
+        db.session.remove()
+        db.drop_all()
         db.create_all()
 
     yield app_module.app
 
     with app_module.app.app_context():
-        # Remove only test rows (file_path starts with tests/) to stay safe.
-        db.session.execute(
-            db.delete(Article_Meta_Data).where(
-                Article_Meta_Data.file_path.like("tests/%")
-            )
-        )
-        db.session.commit()
         db.session.remove()
+        db.drop_all()
 
     app_module.Rendered_Articles = original_rendered
     app_module.app.config["RENDERED_ARTICLES_FOLDER"] = original_rendered_folder
