@@ -360,6 +360,11 @@ body {
 
 /* Responsive design */
 @media (max-width: 768px) {
+    .navbar-custom.fixed-top {
+        position: sticky;
+        top: 0;
+    }
+
     .navbar-custom {
         height: auto;
         padding: 0.5rem 0;
@@ -392,6 +397,7 @@ body {
     .main-content {
         height: auto;
         min-height: 88vh;
+        padding-top: 0.75rem;
     }
 
     .card {
