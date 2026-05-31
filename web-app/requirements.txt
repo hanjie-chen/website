@@ -65,11 +65,11 @@ pyyaml==6.0.3
     # via
     #   pymdown-extensions
     #   python-frontmatter
-ruff==0.15.14
+ruff==0.15.15
     # via -r requirements.in
 soupsieve==2.8.3
     # via beautifulsoup4
-sqlalchemy==2.0.49
+sqlalchemy==2.0.50
     # via
     #   -r requirements.in
     #   flask-sqlalchemy
