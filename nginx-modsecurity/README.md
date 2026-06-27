@@ -23,7 +23,7 @@ It is the component that decides:
 
 ## Main Behavior
 
-The current routing behavior is defined in [conf.d/default.conf](/home/plain/personal-project/website/nginx-modsecurity/conf.d/default.conf).
+The current routing behavior is defined in [conf.d/default.conf](conf.d/default.conf).
 
 ### `/`
 
@@ -94,13 +94,13 @@ Private key file mounted into the container.
 
 Start in:
 
-- [conf.d/default.conf](/home/plain/personal-project/website/nginx-modsecurity/conf.d/default.conf)
+- [conf.d/default.conf](conf.d/default.conf)
 
 ### Change Dozzle access behavior
 
 Check:
 
-- [conf.d/default.conf](/home/plain/personal-project/website/nginx-modsecurity/conf.d/default.conf)
+- [conf.d/default.conf](conf.d/default.conf)
 
 Also consider the matching Cloudflare Access application for `/web-log/*`, because the effective production protection now lives at the edge layer.
 
@@ -108,8 +108,8 @@ Also consider the matching Cloudflare Access application for `/web-log/*`, becau
 
 Update:
 
-- [ssl/hanjie-chen.com.crt](/home/plain/personal-project/website/nginx-modsecurity/ssl/hanjie-chen.com.crt)
-- [ssl/hanjie-chen.com.key](/home/plain/personal-project/website/nginx-modsecurity/ssl/hanjie-chen.com.key)
+- [ssl/hanjie-chen.com.crt](ssl/hanjie-chen.com.crt)
+- [ssl/hanjie-chen.com.key](ssl/hanjie-chen.com.key)
 
 ## Troubleshooting
 
@@ -149,6 +149,6 @@ Check:
 
 ## Related Files
 
-- [Readme.md](/home/plain/personal-project/website/Readme.md)
-- [scripts/deploy/README.md](/home/plain/personal-project/website/scripts/deploy/README.md)
-- [compose.yml](/home/plain/personal-project/website/compose.yml)
+- [Readme.md](../Readme.md)
+- [scripts/deploy/README.md](../scripts/deploy/README.md)
+- [compose.yml](../compose.yml)
