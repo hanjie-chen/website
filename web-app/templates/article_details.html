@@ -24,6 +24,10 @@
 <title>{{ article.title }}</title>
 {% endblock %}
 
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ asset_url('vendor/katex/katex.min.css') }}">
+{% endblock %}
+
 
 {% block navbar%}
 {% set active_page = "articles" %}
@@ -94,4 +98,7 @@
 
 {% block script %}
 <script src="{{ asset_url('article-image-preview.js') }}"></script>
+<script src="{{ asset_url('vendor/katex/katex.min.js') }}"></script>
+<script src="{{ asset_url('vendor/katex/contrib/auto-render.min.js') }}"></script>
+<script src="{{ asset_url('math-render.js') }}"></script>
 {% endblock %}

@@ -376,6 +376,31 @@ def test_view_article_includes_image_preview_modal_and_script(client, app):
     assert 'aria-label="关闭图片预览"' in body
 
 
+def test_view_article_includes_katex_assets(client, app):
+    with app.app_context():
+        article = _insert_article(
+            title="Math Article",
+            category="tests/math",
+            file_path="tests/math/article.md",
+        )
+        category_path = article.category.replace("/", "-")
+        html_dir = Path(app_module.Rendered_Articles) / category_path
+        html_dir.mkdir(parents=True, exist_ok=True)
+        (html_dir / f"{article.id}.html").write_text(
+            '<p>尺寸：140cm <span class="arithmatex">\\(\\times\\)</span> 80cm</p>',
+            encoding="utf-8",
+        )
+
+    response = client.get(f"/zh/articles/{article.id}")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "/static/vendor/katex/katex.min.css?v=" in body
+    assert "/static/vendor/katex/katex.min.js?v=" in body
+    assert "/static/vendor/katex/contrib/auto-render.min.js?v=" in body
+    assert "/static/math-render.js?v=" in body
+
+
 def test_view_article_left_nav_lists_same_category_articles(client, app):
     with app.app_context():
         article = _insert_article(

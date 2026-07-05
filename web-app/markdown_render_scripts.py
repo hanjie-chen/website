@@ -23,6 +23,7 @@ def render_markdown_to_html(
         "sane_lists",
         "codehilite",
         "pymdownx.emoji",
+        "pymdownx.arithmatex",
         Gfm_Admonition_Extension(),
         Image_Processor_Extension(base_url=url_base_path),
     ]
@@ -33,6 +34,13 @@ def render_markdown_to_html(
             "emoji_index": pymdownx.emoji.gemoji,
             "emoji_generator": pymdownx.emoji.to_alt,
             "alt": "unicode",
+        },
+        "pymdownx.arithmatex": {
+            "generic": True,
+            "tex_inline_wrap": ["\\(", "\\)"],
+            "tex_block_wrap": ["\\[", "\\]"],
+            "inline_syntax": ["dollar", "round"],
+            "block_syntax": ["dollar", "square"],
         },
     }
 

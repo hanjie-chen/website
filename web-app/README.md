@@ -126,7 +126,16 @@ What it does:
 
 - converts Markdown article bodies to HTML
 - applies custom Markdown extensions
+- converts LaTeX math delimiters into KaTeX-compatible placeholders
 - writes the rendered HTML into the per-article output directory
+
+Math rendering notes:
+
+- inline math supports `$...$` and `\(...\)`
+- block math supports `$$...$$` and `\[...\]`
+- Markdown rendering uses `pymdownx.arithmatex` with generic output, so article HTML contains `arithmatex` placeholders
+- the article detail template loads local KaTeX assets and `static/math-render.js` to typeset those placeholders in the browser
+- existing rendered HTML files are skipped when an article content hash is unchanged, so old articles need a re-render or reindex path when renderer-only behavior changes
 
 Start here when you want to change:
 
@@ -215,8 +224,12 @@ Commonly touched files:
   - right-side TOC active/expand behavior
 - `code-copy.js`
   - copy button for code blocks
+- `math-render.js`
+  - initializes KaTeX auto-render for article body math delimiters
 - `search.js`
   - search-related frontend behavior
+- `vendor/katex/`
+  - vendored KaTeX 0.17.0 browser assets, fonts, and license used by article math rendering
 
 There is also `StaticOverivew.md`, which can be helpful when mapping static assets at a lower level.
 

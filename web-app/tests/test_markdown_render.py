@@ -34,3 +34,29 @@ def test_fenced_code_keeps_raw_emoji_shortcode_text(tmp_path):
 
     assert ":x:" in html
     assert "❌" not in html
+
+
+def test_latex_delimiters_render_as_math_placeholders(tmp_path):
+    html = _render(
+        "\n".join(
+            [
+                r"Inline dollar math: $\times$",
+                "",
+                r"Inline paren math: \(x^2\)",
+                "",
+                r"$$",
+                r"\sum_{i=1}^{n} i",
+                r"$$",
+                "",
+                r"\[\int_0^1 x\,dx\]",
+            ]
+        ),
+        tmp_path,
+    )
+
+    assert '<span class="arithmatex">\\(\\times\\)</span>' in html
+    assert '<span class="arithmatex">\\(x^2\\)</span>' in html
+    assert '<div class="arithmatex">\\[' in html
+    assert "\\sum_{i=1}^{n} i" in html
+    assert "\\]</div>" in html
+    assert '<div class="arithmatex">\\[\\int_0^1 x\\,dx\\]</div>' in html
