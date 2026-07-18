@@ -7,10 +7,8 @@
 
 ## Verification Defaults
 
-- Do not assume the host Python environment has the project dependencies installed.
-- For `web-app` changes, prefer the containerized `web-app` environment first.
-- Default Python verification commands should use `docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app ...` unless the user explicitly asks for host-based commands.
-- Prefer the smallest relevant verification target before running the full suite.
+- Use the containerized `web-app` environment; do not assume host Python dependencies are installed.
+- Start with the smallest relevant target, then run the applicable Ruff check, Ruff format check, and pytest commands documented in `README.md`.
 
 ## Documentation Fit
 

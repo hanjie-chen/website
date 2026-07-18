@@ -149,6 +149,6 @@ Check:
 
 ## Related Files
 
-- [Readme.md](../Readme.md)
+- [README.md](../README.md)
 - [scripts/deploy/README.md](../scripts/deploy/README.md)
 - [compose.yml](../compose.yml)

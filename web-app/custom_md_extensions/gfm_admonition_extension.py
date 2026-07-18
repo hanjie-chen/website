@@ -2,7 +2,7 @@
 # I do a little improved and plan to give a PR after a while 2025-02-07
 
 # future plan: submit a PR
-# I need to improve the Readme.md to specified how to use it, and how to define the css style
+# I need to improve the README.md to specified how to use it, and how to define the css style
 
 import re
 from typing import List, Optional

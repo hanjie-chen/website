@@ -28,6 +28,5 @@ terraform.tfstate.*
 terraform.tfvars
 *.tfplan
 
-# ignore local ai working docs
-docs/superpowers/
+# ignore local superpowers files
 .superpowers/
