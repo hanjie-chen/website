@@ -4,13 +4,11 @@
 
 Start with the root `README.md`. Before planning or making non-trivial changes in a subsystem, read its nearest `README.md` and any `AGENTS.md` files on the path from the repository root to the target files.
 
-## Working Rules
+## Documentation
 
-- Keep the root `README.md` concise. Put subsystem details in the nearest subsystem `README.md`, and only keep repo-level overview, entry points, and security/operations summaries in the root README.
-- If you change subsystem behavior, update that subsystem's `README.md` in the same change.
-- If you add, remove, or rename files that are documented, update the relevant `README.md` immediately.
-- If a change affects high-level repo behavior, also update the root `README.md`.
-- `README.md` is the repo entry point. Subdirectory `README.md` files are the source of truth for subsystem behavior and operational details.
+- Keep the root `README.md` as a concise repository entry point for repo-level overview and security/operations summaries; use subsystem `README.md` files as the source of truth for subsystem details.
+- Write the root `README.md` in Chinese, using English technical terms when clearer; write `AGENTS.md` and subsystem `README.md` files in English by default.
+- In the same change, update the relevant subsystem `README.md` when its behavior or documented files change, and update the root `README.md` when repo-level behavior changes.
 
 ## Verification
 

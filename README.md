@@ -200,7 +200,6 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 3. 从 full-stack 的角度来看还欠缺什么
 4. uv project best practice migrate
 5. light mode
-6. support rss
+6. support website rss 订阅
 7. 如果后续增加联系表单、留言或其他写入型交互，再接入 Cloudflare Turnstile
-8. 中英双语支持 discuss
-9. seo opt
+8. seo 优化

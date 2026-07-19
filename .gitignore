@@ -1,32 +1,23 @@
-# ignore python compile file
+# Python tool artifacts
 __pycache__/
 .pytest_cache/
 .ruff_cache/
-
-# ignore pytest coverage artifacts
 .coverage
 
-# ignore the generated html file
+# Generated content and local runtime data
 rendered-articles/
-
-# ignore instance folder
 instance/
-
-# igonre the docker bind mount folder
 articles-data-test/
-
-# igonre the logs which host on the 
 logs/
+
+# Local secrets and certificates
 .env
 nginx-modsecurity/.htpasswd
 nginx-modsecurity/ssl/
 
-# ignore tf related file
+# Terraform local artifacts and sensitive variables
 .terraform/
 terraform.tfstate
 terraform.tfstate.*
 terraform.tfvars
 *.tfplan
-
-# ignore local superpowers files
-.superpowers/
