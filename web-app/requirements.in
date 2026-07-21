@@ -10,6 +10,6 @@ pygments
 # used to html paser
 beautifulsoup4
 gunicorn
-pytest>=9.0.3,<10
+pytest>=9.1.1,<10
 pytest-cov
 ruff
