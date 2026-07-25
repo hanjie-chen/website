@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 SUPPORTED_LANGUAGES = ("zh", "en")
 DEFAULT_LANGUAGE = "zh"
 LANG_COOKIE_NAME = "preferred_language"
@@ -253,7 +251,7 @@ TRANSLATIONS = {
 }
 
 
-def normalize_language(value: Optional[str]) -> Optional[str]:
+def normalize_language(value: str | None) -> str | None:
     if not value:
         return None
 
@@ -265,11 +263,11 @@ def normalize_language(value: Optional[str]) -> Optional[str]:
     return None
 
 
-def get_language_from_cookie(raw_cookie: Optional[str]) -> Optional[str]:
+def get_language_from_cookie(raw_cookie: str | None) -> str | None:
     return normalize_language(raw_cookie)
 
 
-def get_language_from_header(raw_header: Optional[str]) -> Optional[str]:
+def get_language_from_header(raw_header: str | None) -> str | None:
     if not raw_header:
         return None
 
@@ -303,7 +301,7 @@ def get_language_from_header(raw_header: Optional[str]) -> Optional[str]:
 
 
 def resolve_preferred_language(
-    cookie_value: Optional[str], accept_language_header: Optional[str]
+    cookie_value: str | None, accept_language_header: str | None
 ) -> str:
     cookie_language = get_language_from_cookie(cookie_value)
     if cookie_language:
@@ -316,12 +314,12 @@ def resolve_preferred_language(
     return DEFAULT_LANGUAGE
 
 
-def html_lang_code(lang: Optional[str]) -> str:
+def html_lang_code(lang: str | None) -> str:
     normalized = normalize_language(lang) or DEFAULT_LANGUAGE
     return HTML_LANG.get(normalized, HTML_LANG[DEFAULT_LANGUAGE])
 
 
-def get_language_from_path(path: Optional[str]) -> Optional[str]:
+def get_language_from_path(path: str | None) -> str | None:
     if not path:
         return None
 
@@ -355,7 +353,7 @@ def switch_language_path(path: str, target_lang: str) -> str:
     return public_path(target_lang)
 
 
-def translate(lang: Optional[str], key: str, fallback: Optional[str] = None) -> str:
+def translate(lang: str | None, key: str, fallback: str | None = None) -> str:
     normalized = normalize_language(lang) or DEFAULT_LANGUAGE
     return TRANSLATIONS.get(normalized, {}).get(
         key, fallback if fallback is not None else key

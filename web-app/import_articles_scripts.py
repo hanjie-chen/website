@@ -12,12 +12,13 @@ import json
 import os
 import re
 import shutil
-from datetime import date
+from datetime import UTC, datetime
 
 import frontmatter
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError
 
-from config import Rendered_Articles, IS_DEV
+from config import IS_DEV, Rendered_Articles
 from markdown_render_scripts import render_markdown_to_html
 from models import Article_Meta_Data
 
@@ -90,7 +91,7 @@ def _read_markdown(md_path: str):
     try:
         with open(md_path, "r", encoding="utf-8") as f:
             content = f.read()
-    except Exception as e:
+    except (OSError, UnicodeError) as e:
         print(f"Error reading file {md_path}: {e}. Skipped.")
         return None, None
 
@@ -270,7 +271,7 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
     print(f"file {md_path} pass validate, ready to launch")
 
     file_stat = os.stat(md_path)
-    file_last_modified_time = date.fromtimestamp(file_stat.st_mtime)
+    file_last_modified_time = datetime.fromtimestamp(file_stat.st_mtime, tz=UTC).date()
 
     rel_path = os.path.relpath(md_path, root_dir)
     article_category = _article_category(rel_path)
@@ -349,7 +350,7 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
                     content_part,
                 )
             print(f"Article {exist_check.category}/{exist_check.title} updated")
-        except Exception as e:
+        except (OSError, UnicodeError, RuntimeError, SQLAlchemyError) as e:
             print(f"Update failed for {exist_check.category}/{exist_check.title}: {e}")
         return
 
@@ -386,7 +387,7 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
                 article_metadata.author,
                 content_part,
             )
-    except Exception as e:
+    except (OSError, UnicodeError, RuntimeError, SQLAlchemyError) as e:
         print(
             f"Add failed for {article_metadata.category}/{article_metadata.title}: {e}"
         )

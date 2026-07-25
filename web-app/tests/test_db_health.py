@@ -2,7 +2,6 @@ import sqlite3
 
 from db_health import assess_article_db
 
-
 VALID_ARTICLE = """---
 Title: Example Article
 Author: Tester

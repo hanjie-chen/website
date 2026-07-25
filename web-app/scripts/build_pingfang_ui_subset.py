@@ -19,7 +19,6 @@ import re
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES_DIR = ROOT / "templates"
 OUTPUT_FILE = ROOT / "static" / "font" / "PingFangSC" / "PingFang-SC-UI-subset.txt"
@@ -27,7 +26,7 @@ OUTPUT_FILE = ROOT / "static" / "font" / "PingFangSC" / "PingFang-SC-UI-subset.t
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from i18n import TRANSLATIONS  # noqa: E402
+from i18n import TRANSLATIONS
 
 # Keep a small punctuation reserve so fixed UI copy can evolve without instantly
 # falling back to the full font for common Chinese punctuation.

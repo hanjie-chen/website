@@ -10,14 +10,16 @@ from navigation import (
     is_hidden_category_path,
 )
 
+TEST_DATE = date(2026, 1, 1)
+
 
 def _article(category, title):
     return SimpleNamespace(
         id=1,
         title=title,
         author="tester",
-        rollout_date=date.today(),
-        ultimate_modified_date=date.today(),
+        rollout_date=TEST_DATE,
+        ultimate_modified_date=TEST_DATE,
         brief_introduction="intro",
         category=category,
     )

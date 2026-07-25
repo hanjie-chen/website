@@ -17,6 +17,13 @@ from article_views import (
     build_article_toc,
     localized_articles,
 )
+from config import (
+    IS_DEV,
+    REIMPORT_ARTICLES_TOKEN,
+    SQLALCHEMY_DATABASE_URI,
+    Articles_Directory,
+    Rendered_Articles,
+)
 from i18n import (
     DEFAULT_LANGUAGE,
     LANG_COOKIE_NAME,
@@ -30,14 +37,6 @@ from i18n import (
 from import_articles_scripts import import_articles
 from models import Article_Meta_Data, db
 from navigation import build_article_shell_context, build_docs_context
-
-from config import (
-    Articles_Directory,
-    Rendered_Articles,
-    IS_DEV,
-    SQLALCHEMY_DATABASE_URI,
-    REIMPORT_ARTICLES_TOKEN,
-)
 
 # Flask route layer for the public site and the internal reindex endpoint.
 app = Flask(__name__)

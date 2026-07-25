@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Iterable
 
 from i18n import SUPPORTED_LANGUAGES, public_path
-
 
 SPECIAL_LABELS = {
     "api": "API",
@@ -50,7 +49,7 @@ class CategoryNode:
     segment: str
     label: str
     depth: int
-    children: list["CategoryNode"] = field(default_factory=list)
+    children: list[CategoryNode] = field(default_factory=list)
     articles: list = field(default_factory=list)
     active: bool = False
     expanded: bool = False
@@ -85,7 +84,7 @@ def _require_canonical_language(lang: str) -> str:
     return lang
 
 
-def build_breadcrumbs(category_path: str, article=None, lang: str = None):
+def build_breadcrumbs(category_path: str, article=None, lang: str | None = None):
     lang = _require_canonical_language(lang)
     breadcrumbs = [{"label": "Articles", "url": public_path(lang, "articles")}]
     parts = split_category_path(category_path)
@@ -200,7 +199,7 @@ def build_category_tree(
 
 
 def build_docs_context(
-    articles: Iterable, current_category: str = "", lang: str = None
+    articles: Iterable, current_category: str = "", lang: str | None = None
 ):
     lang = _require_canonical_language(lang)
     articles = list(articles)
@@ -220,7 +219,7 @@ def build_docs_context(
     }
 
 
-def build_article_shell_context(articles: Iterable, article, lang: str = None):
+def build_article_shell_context(articles: Iterable, article, lang: str | None = None):
     lang = _require_canonical_language(lang)
     articles = list(articles)
     nav_root, lookup = build_category_tree(

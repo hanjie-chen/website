@@ -13,8 +13,8 @@ if APP_DIR not in sys.path:
 # this environment variable during import, before Flask-SQLAlchemy creates an engine.
 os.environ["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/site_test.sqlite"
 
-import app as app_module  # noqa: E402
-from models import db  # noqa: E402
+import app as app_module
+from models import db
 
 
 @pytest.fixture()

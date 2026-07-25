@@ -158,7 +158,7 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 主要职责：
 
 - 校验 Compose 配置
-- 运行 `ruff format --check .`
+- 运行 Ruff lint 与 `ruff format --check .`
 - 运行 `pytest`
 - 对固定的 Nginx/ModSecurity 与 Dozzle 镜像执行 Trivy 扫描
 - 实际启动候选第三方镜像并执行 Nginx config、health 与 smoke checks

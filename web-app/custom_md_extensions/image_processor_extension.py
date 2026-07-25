@@ -2,6 +2,7 @@
 # further consider: for relative like ./ all use this extensino to deal with
 
 from urllib.parse import urljoin
+
 from bs4 import BeautifulSoup
 from markdown.extensions import Extension
 from markdown.postprocessors import Postprocessor

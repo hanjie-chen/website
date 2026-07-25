@@ -6,10 +6,10 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from app import app  # noqa: E402
-from models import db  # noqa: E402
-from import_articles_scripts import import_articles  # noqa: E402
-from config import Articles_Directory  # noqa: E402
+from app import app
+from config import Articles_Directory
+from import_articles_scripts import import_articles
+from models import db
 
 
 def main():

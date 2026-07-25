@@ -5,13 +5,12 @@
 # I need to improve the README.md to specified how to use it, and how to define the css style
 
 import re
-from typing import List, Optional
+from xml.etree.ElementTree import Element, SubElement
 
+from markdown.blockparser import BlockParser
+from markdown.blockprocessors import BlockProcessor
 from markdown.core import Markdown
 from markdown.extensions import Extension
-from markdown.blockprocessors import BlockProcessor
-from markdown.blockparser import BlockParser
-from xml.etree.ElementTree import Element, SubElement
 
 
 class Gfm_Admonition_Processor(BlockProcessor):
@@ -33,7 +32,7 @@ class Gfm_Admonition_Processor(BlockProcessor):
         match = self.PATTERN.match(block)
         return match is not None
 
-    def run(self, parent: Element, blocks: List[str]) -> Optional[bool]:
+    def run(self, parent: Element, blocks: list[str]) -> bool | None:
         if not blocks:
             return False
         match = self.PATTERN.match(blocks[0])

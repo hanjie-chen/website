@@ -1,5 +1,5 @@
-from datetime import date
 import json
+from datetime import date
 
 from article_views import article_html_path, article_view_model
 from models import Article_Meta_Data

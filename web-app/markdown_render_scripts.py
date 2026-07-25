@@ -1,6 +1,8 @@
-import markdown
 import os
+
+import markdown
 import pymdownx.emoji
+
 from custom_md_extensions import Gfm_Admonition_Extension, Image_Processor_Extension
 
 
@@ -57,16 +59,14 @@ def render_markdown_to_html(
     {html_content}
     """
 
-    # Ensure destination folder exists
-    os.makedirs(destination_folder, exist_ok=True)
-
-    # Write the HTML file
-    output_path = os.path.join(destination_folder, f"{filename}.html")
     try:
+        # Ensure destination folder exists and write the HTML file.
+        os.makedirs(destination_folder, exist_ok=True)
+        output_path = os.path.join(destination_folder, f"{filename}.html")
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(html_template)
         print(f"Successfully rendered HTML to {destination_folder}")
         return True
-    except Exception as e:
+    except (OSError, UnicodeError) as e:
         print(f"Error writing HTML file: {e}")
         return False

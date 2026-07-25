@@ -3,8 +3,11 @@ import os
 import sqlite3
 from contextlib import redirect_stdout
 
-from import_articles_scripts import divide_files_and_folders, find_article_assets_folder
-from import_articles_scripts import _parse_article
+from import_articles_scripts import (
+    _parse_article,
+    divide_files_and_folders,
+    find_article_assets_folder,
+)
 
 
 def _iter_expected_article_paths(current_dir: str, root_dir: str):

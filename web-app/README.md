@@ -387,6 +387,12 @@ docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app r
 docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app ruff format --check .
 ```
 
+Ruff policy:
+
+- `ruff.toml` declares Python 3.12 as the lint target.
+- The project intentionally follows Ruff's stable default rule set instead of freezing an older hand-picked subset.
+- When a Ruff update enables new stable rules, review and fix the findings as part of that dependency update.
+
 ## Font Notes
 
 The site uses a layered font loading strategy:

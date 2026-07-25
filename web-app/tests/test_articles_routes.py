@@ -1,9 +1,11 @@
-from datetime import date
 import json
+from datetime import date
 from pathlib import Path
 
 import app as app_module
 from models import Article_Meta_Data, db
+
+TEST_DATE = date(2026, 1, 1)
 
 
 def _insert_article(
@@ -17,8 +19,8 @@ def _insert_article(
         author="tester",
         instructor="mentor",
         cover_image_url="/rendered-articles/test/images/cover.png",
-        rollout_date=date.today(),
-        ultimate_modified_date=date.today(),
+        rollout_date=TEST_DATE,
+        ultimate_modified_date=TEST_DATE,
         brief_introduction="test intro",
         category=category,
         file_path=file_path,

@@ -38,19 +38,14 @@ def test_fenced_code_keeps_raw_emoji_shortcode_text(tmp_path):
 
 def test_latex_delimiters_render_as_math_placeholders(tmp_path):
     html = _render(
-        "\n".join(
-            [
-                r"Inline dollar math: $\times$",
-                "",
-                r"Inline paren math: \(x^2\)",
-                "",
-                r"$$",
-                r"\sum_{i=1}^{n} i",
-                r"$$",
-                "",
-                r"\[\int_0^1 x\,dx\]",
-            ]
-        ),
+        r"Inline dollar math: $\times$"
+        "\n\n"
+        r"Inline paren math: \(x^2\)"
+        "\n\n"
+        "$$\n"
+        r"\sum_{i=1}^{n} i"
+        "\n$$\n\n"
+        r"\[\int_0^1 x\,dx\]",
         tmp_path,
     )
 

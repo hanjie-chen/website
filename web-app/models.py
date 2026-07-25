@@ -1,8 +1,8 @@
 from datetime import date
-from typing import Optional
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
-from sqlalchemy import String, Date, Text, Integer
+
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Date, Integer, String, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
@@ -26,7 +26,7 @@ class Article_Meta_Data(db.Model):
     author: Mapped[str] = mapped_column(String(50))
 
     # 文章指导者 存在Optional 默认nullable=True
-    instructor: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    instructor: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # 文章封面链接 真实image存储地址 由于特别设计，所以可以由category+相对路径转换而来
     # 例如 PythonLearn/PythonPackage/Flask/images/cover-image.png 其 cover_image_url = "redered-articles/PythonLearn-PythonPackage-Flask/images/cover-image.png"
