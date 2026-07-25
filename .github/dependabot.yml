@@ -42,3 +42,16 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+      timezone: "Asia/Singapore"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "containers"
+    commit-message:
+      prefix: "deps(containers)"

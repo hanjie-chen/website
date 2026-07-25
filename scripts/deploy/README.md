@@ -11,6 +11,7 @@ The deploy scripts cover four main areas:
 - first-time environment initialization
 - routine production deploys by immutable image tag
 - health and smoke verification after deploy
+- third-party image-reference verification and rollback
 - cleanup of old first-party images on the production host
 
 ## Script Overview
@@ -41,9 +42,12 @@ Regular production deploy by immutable image tag.
 What it does:
 
 - exports `WEB_APP_IMAGE_TAG` and `ARTICLES_SYNC_IMAGE_TAG`
-- pulls first-party application images for the given SHA
+- records the currently running Nginx and Dozzle image references for rollback
+- explicitly pulls first-party SHA images and third-party pinned-digest images
 - applies Compose changes with `docker compose up -d --remove-orphans`
 - reloads `nginx-modsecurity` so upstream resolution stays fresh
+- runs DB readiness, service health, smoke, and image-reference checks
+- restores the previous Nginx and Dozzle images if post-deploy validation fails
 
 Use this when:
 
@@ -101,6 +105,19 @@ Local development note:
 
 - `compose.dev.yml` exposes nginx HTTPS on `8444`, so run `BASE_URL=https://127.0.0.1:8444 ./scripts/deploy/smoke_check.sh` when validating the dev stack locally
 
+### `verify_image_refs.sh [services...]`
+
+Compares each running container's original image reference with the exact image
+reference resolved from `compose.yml`.
+
+It defaults to:
+
+- `nginx-modsecurity`
+- `dozzle`
+
+Use this after deploys and for scheduled drift checks. A tag or digest mismatch
+returns a non-zero status.
+
 ### `cleanup_old_images.sh <deploy_sha>`
 
 Post-deploy cleanup for first-party images on the production VM.
@@ -150,15 +167,24 @@ This is the routine deployment path used by CD:
 
 ```bash
 ./scripts/deploy/prod_deploy.sh <deploy_sha>
-./scripts/deploy/ensure_db_ready.sh <deploy_sha>
-./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity
-./scripts/deploy/smoke_check.sh
 ./scripts/deploy/cleanup_old_images.sh <deploy_sha>
 ```
 
 GitHub Actions runs this sequence remotely over SSH from `.github/workflows/cd.yml`.
+`prod_deploy.sh` owns DB readiness, health, smoke, image-reference verification,
+and automatic third-party rollback as one deployment transaction.
 
 ### Rollback-Oriented Notes
+
+Before applying Compose changes, `prod_deploy.sh` records the running Nginx and
+Dozzle image references. If Compose apply or any post-deploy validation fails,
+it recreates those stateless services from the previous references, waits for
+health, and reruns smoke checks. The deployment still exits non-zero so the
+failure remains visible.
+
+This automatic rollback intentionally covers only the stateless third-party
+edge/log services. It does not attempt to reverse application or database
+changes.
 
 `cleanup_old_images.sh` keeps a limited rollback buffer by default. If you need to be more aggressive about disk usage, set:
 
@@ -175,9 +201,12 @@ This reduces retained old images but removes the on-host rollback cache.
 ```bash
 DEPLOY_SHA=<commit_sha>
 ./scripts/deploy/prod_deploy.sh "${DEPLOY_SHA}"
-./scripts/deploy/ensure_db_ready.sh "${DEPLOY_SHA}"
-./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity
-./scripts/deploy/smoke_check.sh
+```
+
+### Verify Production Image References
+
+```bash
+./scripts/deploy/verify_image_refs.sh nginx-modsecurity dozzle
 ```
 
 ### Run Only Health Waits
@@ -212,6 +241,7 @@ KEEP_PREVIOUS_RELEASES=0 ./scripts/deploy/cleanup_old_images.sh <deploy_sha>
 - `prod_deploy.sh` requires a deploy SHA
 - `ensure_db_ready.sh` accepts the deploy SHA so Compose resolves the same image tags
 - `cleanup_old_images.sh` requires the active deploy SHA
+- `verify_image_refs.sh` defaults to `nginx-modsecurity dozzle`
 
 ### Key Environment Variables
 

@@ -32,7 +32,4 @@ jobs:
             git pull --ff-only origin main
             DEPLOY_SHA="${{ github.event.workflow_run.head_sha }}"
             ./scripts/deploy/prod_deploy.sh "${DEPLOY_SHA}"
-            ./scripts/deploy/ensure_db_ready.sh "${DEPLOY_SHA}"
-            ./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity
-            ./scripts/deploy/smoke_check.sh
             ./scripts/deploy/cleanup_old_images.sh "${DEPLOY_SHA}"

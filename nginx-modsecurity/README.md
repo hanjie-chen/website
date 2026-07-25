@@ -88,6 +88,27 @@ Private key file mounted into the container.
 - Production currently uses Cloudflare Origin CA material at the mounted TLS paths.
 - Development can use self-signed TLS material at the same paths.
 
+## Image Lifecycle
+
+Production does not follow the mutable `nginx-alpine` rolling tag. The Compose
+service uses an OWASP CRS stable tag together with its immutable multi-platform
+digest.
+
+Container image updates follow this path:
+
+1. Dependabot proposes a tag/digest update in a pull request.
+2. CI scans the candidate with Trivy, validates `nginx -t`, starts the candidate
+   runtime, and runs health and smoke checks.
+3. After merge, CD explicitly pulls the pinned reference and recreates the
+   changed service.
+4. CD verifies that the running image reference exactly matches `compose.yml`.
+5. A failed post-deploy validation restores the previously running Nginx and
+   Dozzle image references.
+
+The scheduled container-security workflow rescans the pinned image every day.
+Temporary risk acceptances live in `.trivyignore.yaml` and must include a reason
+and an expiry date.
+
 ## Common Changes
 
 ### Change public proxy behavior
