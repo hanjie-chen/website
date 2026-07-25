@@ -4,6 +4,9 @@ import os
 Articles_Directory = os.environ.get("SOURCE_ARTICLES_DIRECTORY", "/articles/src")
 # Rendered articles html directory, for develop env is /app/rendered-articles, for prod env is /rendered-articles
 Rendered_Articles = os.environ.get("RENDERED_ARTICLES_DIRECTORY", "/articles/rendered")
+Daily_Briefs_Directory = os.environ.get(
+    "DAILY_BRIEF_DATA_DIRECTORY", "/daily-briefs/data"
+)
 
 # sqlite database uri (allow override for safe testing)
 SQLALCHEMY_DATABASE_URI = os.environ.get(
@@ -12,6 +15,7 @@ SQLALCHEMY_DATABASE_URI = os.environ.get(
 
 # token for internal reimport endpoint
 REIMPORT_ARTICLES_TOKEN = os.environ.get("REIMPORT_ARTICLES_TOKEN", "")
+DAILY_BRIEF_PUBLISH_TOKEN = os.environ.get("DAILY_BRIEF_PUBLISH_TOKEN", "")
 
 
 # app environment

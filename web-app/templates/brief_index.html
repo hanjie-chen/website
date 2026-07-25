@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}<title>{{ t("briefs.page.title") }}</title>{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ asset_url('css/briefs.css') }}">
+{% endblock %}
+
+{% block navbar %}
+{% set active_page = "briefs" %}
+{% include "_site_topbar.html" %}
+{% endblock %}
+
+{% block main_content %}
+<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
+    <div class="content-wrapper briefs-page-shell px-2 px-lg-3">
+        <section class="briefs-panel briefs-hero">
+            <p class="briefs-overline">DAILY BRIEF</p>
+            <h1>{{ t("briefs.page.heading") }}</h1>
+            <p class="briefs-lead">{{ t("briefs.page.description") }}</p>
+            {% if current_lang == "en" %}
+            <p class="briefs-language-note">{{ t("briefs.language_note") }}</p>
+            {% endif %}
+        </section>
+
+        {% if latest_brief %}
+        <section class="briefs-panel">
+            <div class="briefs-section-heading">
+                <h2>{{ t("briefs.latest.title") }}</h2>
+            </div>
+            <a class="brief-latest-card" href="{{ url_for('brief_detail', lang=current_lang, brief_date=latest_brief.date) }}">
+                <span class="brief-date">{{ latest_brief.date }}</span>
+                <span class="brief-count">
+                    {{ latest_brief["sections"]["ai"]["items"]|length + latest_brief["sections"]["non_ai_hot"]["items"]|length }} {{ t("briefs.items") }}
+                </span>
+                <span class="brief-open">{{ t("briefs.open") }}</span>
+            </a>
+        </section>
+
+        <section class="briefs-panel">
+            <div class="briefs-section-heading">
+                <h2>{{ t("briefs.archive.title") }}</h2>
+                <span>{{ briefs|length }} {{ t("briefs.editions") }}</span>
+            </div>
+            <div class="brief-archive-list">
+                {% for brief in briefs %}
+                <a class="brief-archive-row" href="{{ url_for('brief_detail', lang=current_lang, brief_date=brief.date) }}">
+                    <span class="brief-date">{{ brief.date }}</span>
+                    <span class="brief-count">
+                        {{ brief["sections"]["ai"]["items"]|length }} AI · {{ brief["sections"]["non_ai_hot"]["items"]|length }} Non-AI
+                    </span>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% else %}
+        <section class="briefs-panel briefs-empty-state">
+            <h2>{{ t("briefs.empty.title") }}</h2>
+            <p>{{ t("briefs.empty.description") }}</p>
+        </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

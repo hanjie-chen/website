@@ -13,6 +13,9 @@
                     <a class="nav-link site-nav-link{% if active_page == 'articles' %} is-active{% endif %}" href="{{ url_for('article_index', lang=current_lang) }}">{{ t("nav.articles") }}</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link site-nav-link{% if active_page == 'briefs' %} is-active{% endif %}" href="{{ url_for('brief_index', lang=current_lang) }}">{{ t("nav.briefs") }}</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link site-nav-link{% if active_page == 'about' %} is-active{% endif %}" href="{{ url_for('about_me', lang=current_lang) }}">{{ t("nav.about") }}</a>
                 </li>
             </ul>

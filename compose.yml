@@ -42,6 +42,7 @@ services:
     volumes:
       - rendered_html_articles:/articles/rendered
       - source_md_articles:/articles/src:ro
+      - daily_brief_data:/daily-briefs/data
       # Persist Flask instance folder so sqlite DB survives container recreation.
       - webapp_instance:/app/instance
     environment:
@@ -50,6 +51,8 @@ services:
       - FLASK_APP=app.py
       - APP_ENV=production
       - REIMPORT_ARTICLES_TOKEN=${REIMPORT_ARTICLES_TOKEN}
+      - DAILY_BRIEF_DATA_DIRECTORY=/daily-briefs/data
+      - DAILY_BRIEF_PUBLISH_TOKEN=${DAILY_BRIEF_PUBLISH_TOKEN:-}
     healthcheck:
       test:
         [
@@ -84,6 +87,7 @@ services:
       retries: 3
     volumes:
       - ./nginx-modsecurity/conf.d/default.conf:/etc/nginx/templates/conf.d/default.conf.template
+      - ./nginx-modsecurity/modsecurity/briefs-exclusions.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:ro
       # TLS cert/key mount for nginx.
       # Development can use self-signed files in ./nginx-modsecurity/ssl.
       # Production mounts origin cert material at the same in-container path
@@ -119,3 +123,4 @@ volumes:
   source_md_articles: # source markdown files volume
   rendered_html_articles: # the html files volme which rendered form source markdown file
   webapp_instance: # sqlite DB (Flask instance folder) volume
+  daily_brief_data: # validated Daily Brief JSON files

@@ -26,12 +26,16 @@ def app(tmp_path):
     # Save original runtime settings and restore them after each test.
     original_rendered = app_module.Rendered_Articles
     original_rendered_folder = app_module.app.config.get("RENDERED_ARTICLES_FOLDER")
+    original_briefs = app_module.Daily_Briefs_Directory
+    briefs_path = tmp_path / "daily-briefs"
+    briefs_path.mkdir(parents=True, exist_ok=True)
 
     app_module.app.config.update(
         TESTING=True,
         RENDERED_ARTICLES_FOLDER=str(test_rendered_path),
     )
     app_module.Rendered_Articles = str(test_rendered_path)
+    app_module.Daily_Briefs_Directory = str(briefs_path)
 
     with app_module.app.app_context():
         # Reset the isolated test database for each test case.
@@ -46,6 +50,7 @@ def app(tmp_path):
         db.drop_all()
 
     app_module.Rendered_Articles = original_rendered
+    app_module.Daily_Briefs_Directory = original_briefs
     app_module.app.config["RENDERED_ARTICLES_FOLDER"] = original_rendered_folder
 
 

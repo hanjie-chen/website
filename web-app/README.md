@@ -1,14 +1,15 @@
 # Web App
 
-This directory contains the Flask application, article import pipeline, page templates, frontend assets, and tests for the website.
+This directory contains the Flask application, Daily Brief publishing and storage layer, article import pipeline, page templates, frontend assets, and tests for the website.
 
 If `articles-sync` is responsible for keeping the Markdown source up to date, `web-app` is responsible for turning that source into rendered HTML, database records, and the end-user pages served by the site.
 
 ## Purpose
 
-The `web-app` subsystem covers four major areas:
+The `web-app` subsystem covers these major areas:
 
-- serving the homepage, article pages, docs-style category pages, and the About page
+- serving the homepage, Daily Brief archive/detail pages, article pages, docs-style category pages, and the About page
+- validating authenticated Daily Brief payloads and storing them in a dedicated persistent directory
 - exposing read-only article metadata APIs for public consumption
 - importing Markdown articles into the SQLite metadata database
 - rendering article Markdown into static HTML files under the rendered article directory
@@ -31,12 +32,14 @@ What it does:
   - `/<lang>/articles`
   - `/<lang>/articles/category/<path>`
   - `/<lang>/articles/<int:article_id>`
+  - `/<lang>/briefs`
+  - `/<lang>/briefs/<YYYY-MM-DD>`
   - `/<lang>/about`
   - `/set-language/<lang>`
 - serves the public read-only JSON APIs:
   - `GET /api/articles`
   - `GET /api/articles/<int:article_id>`
-- exposes the internal `POST /internal/reindex` endpoint used by `articles-sync`
+- exposes `POST /internal/reindex` for article sync and authenticated `POST /internal/briefs` for Daily Brief publishing
 - validates the language-switch `next=` target so `/set-language/...` only redirects to same-site absolute paths
 - builds the article TOC for the right-hand page navigation
 - injects shared template helpers for `asset_url(...)`, `t(...)`, language switching, and dynamic `html lang`
@@ -48,7 +51,23 @@ Start here when you want to change:
 - API response shape for article metadata
 - article page rendering context
 - the internal reindex trigger
+- Daily Brief route and publishing behavior
 - homepage or About page view wiring
+
+### `daily_briefs.py`
+
+Daily Brief schema, validation, storage, and read helpers.
+
+What it does:
+
+- accepts only schema version 1 with fixed `ai` and `non_ai_hot` sections
+- validates dates, timezone-aware generation timestamps, string bounds, item limits, HTTP(S) links, and non-negative statistics
+- requires every `hn_item_id` to match its Hacker News discussion URL
+- writes canonical per-date JSON with an atomic replace
+- treats same-date publishing as an idempotent create, unchanged write, or update
+- skips and logs corrupt persisted files instead of breaking the full archive
+
+Daily Brief files live outside SQLite because the existing article database can be rebuilt from source. Production mounts the dedicated `daily_brief_data` volume at `/daily-briefs/data`.
 
 ### `i18n.py`
 
@@ -179,6 +198,15 @@ Important implication:
 - the public article page needs both
 - the public article APIs currently expose metadata only, not rendered article HTML
 
+Daily Brief publishing follows a separate flow:
+
+1. The local `daily-brief` generator writes a schema-versioned public JSON file.
+2. Its publisher sends the file to `POST /internal/briefs` with `X-DAILY-BRIEF-TOKEN`.
+3. `daily_briefs.py` validates and atomically stores the normalized payload by date.
+4. The homepage, archive, and detail routes read the newest valid files from the dedicated volume.
+
+The endpoint is hidden with a 404 when `DAILY_BRIEF_PUBLISH_TOKEN` is unset. `DAILY_BRIEF_DATA_DIRECTORY` overrides the default `/daily-briefs/data` storage path.
+
 ## Directory Map
 
 ### `templates/`
@@ -197,6 +225,8 @@ Most important files:
   - docs-style category and article index page
 - `article_details.html`
   - article detail page with left section nav and right TOC
+- `brief_index.html` and `brief_detail.html`
+  - Daily Brief archive and per-date reading pages
 - `_docs_tree.html`
   - recursive partial for the left docs sidebar tree
 - `404.html`
@@ -216,6 +246,8 @@ Commonly touched files:
   - docs index layout and docs shell styling
 - `css/article-details.css`
   - article page layout, TOC card styling, and article-body presentation rules
+- `css/briefs.css`
+  - Daily Brief archive and item-card presentation
 - `css/title.css`
   - heading presentation inside rendered Markdown
 - `css/blockquote.css`
@@ -310,6 +342,8 @@ Important test files:
   - import pipeline edge cases
 - `test_internal_reindex.py`
   - auth behavior for the internal reindex endpoint
+- `test_daily_briefs.py`
+  - Daily Brief schema, authenticated publishing, storage isolation, route, language, and escaping behavior
 - `test_markdown_render.py`
   - rendering helper behavior
 - `test_image_processor_extension.py`
@@ -323,6 +357,14 @@ Look at:
 
 - `templates/index.html`
 - `static/css/style.css`
+
+### Change Daily Brief publishing or pages
+
+Look at:
+
+- `daily_briefs.py` and `app.py`
+- `templates/brief_index.html` and `templates/brief_detail.html`
+- `static/css/briefs.css`
 
 ### Change the About page
 

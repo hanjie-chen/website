@@ -42,4 +42,36 @@ wait_request_ok "/"
 echo "[smoke] Checking /zh/articles"
 wait_request_ok "/zh/articles"
 
+echo "[smoke] Checking /zh/briefs"
+wait_request_ok "/zh/briefs"
+
+if [[ -n "${BRIEF_WAF_TEST_TOKEN:-}" ]]; then
+  echo "[smoke] Checking Daily Brief JSON through ModSecurity"
+  # shellcheck disable=SC2016
+  brief_status="$(curl -ksS -o /dev/null -w '%{http_code}' \
+    "${BASE_URL}/internal/briefs" \
+    -H "Host: ${HOST_HEADER}" \
+    -H "Content-Type: application/json" \
+    -H "X-DAILY-BRIEF-TOKEN: ${BRIEF_WAF_TEST_TOKEN}" \
+    --data-binary '{"schema_version":1,"date":"2026-07-25","generated_at":"2026-07-25T08:00:00+08:00","timezone":"Asia/Singapore","sections":{"ai":{"note":"special: `code` <tag> \"quotes\" 中文。","items":[{"hn_item_id":"49038433","title":"Claude <script> test","summary":"支持 `code`、引号、<尖括号> 与中文标点。","why":"keywords: Claude","source_url":"https://example.com/story","discussion_url":"https://news.ycombinator.com/item?id=49038433","points":1,"comments":2}]},"non_ai_hot":{"note":"","items":[]}}}' \
+    2>/dev/null)"
+  if [[ "${brief_status}" != "200" && "${brief_status}" != "201" ]]; then
+    echo "[smoke] Daily Brief WAF false-positive probe returned HTTP ${brief_status}." >&2
+    exit 1
+  fi
+
+  echo "[smoke] Confirming non-excluded WAF rules remain active"
+  sqli_status="$(curl -ksS -o /dev/null -w '%{http_code}' \
+    "${BASE_URL}/internal/briefs" \
+    -H "Host: ${HOST_HEADER}" \
+    -H "Content-Type: application/json" \
+    -H "X-DAILY-BRIEF-TOKEN: ${BRIEF_WAF_TEST_TOKEN}" \
+    --data-binary '{"note":"1 OR 1=1 UNION SELECT password FROM users"}' \
+    2>/dev/null)"
+  if [[ "${sqli_status}" != "403" ]]; then
+    echo "[smoke] SQL injection probe returned HTTP ${sqli_status}; expected WAF 403." >&2
+    exit 1
+  fi
+fi
+
 echo "[smoke] All checks passed."

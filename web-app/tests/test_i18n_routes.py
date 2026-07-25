@@ -99,7 +99,7 @@ def test_chinese_homepage_uses_english_current_focus_heading_with_mixed_language
         in html
     )
     assert 'class="row align-items-center g-4 g-xl-5 home-hero-row"' in html
-    assert html.count('class="col-12 col-lg-6 d-flex home-entry-col"') == 2
+    assert html.count('class="col-12 col-lg-4 d-flex home-entry-col"') == 3
     assert html.count('class="col-12 col-md-6 col-xl-4 d-flex home-focus-col"') == 3
     assert 'class="row g-4 home-note-row"' in html
     assert html.count('class="col-12"') >= 2
@@ -149,6 +149,7 @@ def test_homepage_links_stay_in_current_language_namespace(client):
     assert response.status_code == 200
     assert 'href="/en/"' in body
     assert 'href="/en/articles"' in body
+    assert 'href="/en/briefs"' in body
     assert 'href="/en/about"' in body
 
 
@@ -160,6 +161,7 @@ def test_about_page_links_stay_in_current_language_namespace(client):
     assert 'href="/en/about"' in body
     assert 'href="/en/"' in body
     assert 'href="/en/articles"' in body
+    assert 'href="/en/briefs"' in body
 
 
 def test_shared_topbar_uses_fixed_brand_and_english_nav_on_chinese_homepage(client):
@@ -170,6 +172,7 @@ def test_shared_topbar_uses_fixed_brand_and_english_nav_on_chinese_homepage(clie
     assert '<a href="/zh/" class="site-nav-brand">hanjie site</a>' in body
     assert ">Home<" in body
     assert ">Articles<" in body
+    assert ">Brief<" in body
     assert ">About<" in body
     assert "欢迎来到我的个人网站" not in body
     assert "🏡" not in body

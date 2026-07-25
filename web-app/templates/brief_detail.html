@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}<title>Daily Brief - {{ brief.date }}</title>{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ asset_url('css/briefs.css') }}">
+{% endblock %}
+
+{% block navbar %}
+{% set active_page = "briefs" %}
+{% include "_site_topbar.html" %}
+{% endblock %}
+
+{% block main_content %}
+<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
+    <article class="content-wrapper briefs-page-shell brief-detail-shell px-2 px-lg-3">
+        <header class="briefs-panel briefs-hero">
+            <a class="brief-back-link" href="{{ url_for('brief_index', lang=current_lang) }}">← {{ t("briefs.back") }}</a>
+            <p class="briefs-overline">DAILY BRIEF</p>
+            <h1>{{ brief.date }}</h1>
+            <p class="briefs-lead">{{ t("briefs.detail.description") }}</p>
+            {% if current_lang == "en" %}
+            <p class="briefs-language-note">{{ t("briefs.language_note") }}</p>
+            {% endif %}
+        </header>
+
+        {% for section_name in ["ai", "non_ai_hot"] %}
+        {% set section = brief["sections"][section_name] %}
+        <section class="briefs-panel brief-section">
+            <div class="briefs-section-heading">
+                <h2>{{ t("briefs.section." ~ section_name) }}</h2>
+                <span>{{ section["items"]|length }} {{ t("briefs.items") }}</span>
+            </div>
+            {% if section.note %}
+            <p class="brief-section-note">{{ section.note }}</p>
+            {% endif %}
+            {% if section["items"] %}
+            <div class="brief-item-list">
+                {% for item in section["items"] %}
+                <article class="brief-item-card">
+                    <div class="brief-item-heading">
+                        <h3>{{ item.title }}</h3>
+                        <span class="brief-hn-id">HN #{{ item.hn_item_id }}</span>
+                    </div>
+                    <p class="brief-summary">{{ item.summary }}</p>
+                    <p class="brief-why"><span>{{ t("briefs.why") }}</span> {{ item.why }}</p>
+                    <div class="brief-item-footer">
+                        <span>{{ item.points }} points · {{ item.comments }} comments</span>
+                        <div class="brief-item-links">
+                            <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ t("briefs.source") }}</a>
+                            <a href="{{ item.discussion_url }}" target="_blank" rel="noopener noreferrer">{{ t("briefs.discussion") }}</a>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="brief-section-empty">{{ t("briefs.section.empty") }}</p>
+            {% endif %}
+        </section>
+        {% endfor %}
+    </article>
+</div>
+{% endblock %}

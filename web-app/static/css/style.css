@@ -310,6 +310,24 @@ body {
     line-height: 1.72;
 }
 
+.home-brief-entry {
+    display: flex;
+    flex-direction: column;
+}
+
+.home-entry-link {
+    display: inline-flex;
+    width: fit-content;
+    margin-top: auto;
+    padding-top: 1rem;
+    color: #79b8ff;
+    text-decoration: none;
+}
+
+.home-entry-link:hover {
+    color: #a6d1ff;
+}
+
 .home-note-copy {
     max-width: 56rem;
     display: grid;
@@ -335,6 +353,30 @@ body {
 
     .home-note-copy {
         max-width: 42rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .site-nav-shell {
+        gap: 0.45rem;
+    }
+
+    .site-nav-identity {
+        gap: 0.45rem;
+    }
+
+    .site-nav-menu {
+        gap: 0.05rem;
+    }
+
+    .site-nav-link {
+        padding: 0.35rem 0.45rem !important;
+        font-size: 0.84rem;
+    }
+
+    .site-language-option {
+        min-width: 1.8rem;
+        padding-inline: 0.45rem;
     }
 }
 
