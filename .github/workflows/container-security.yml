@@ -1,0 +1,156 @@
+name: Container Security
+
+on:
+  schedule:
+    # 03:45 Asia/Singapore every day.
+    - cron: "45 19 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: container-security
+  cancel-in-progress: false
+
+jobs:
+  scan-pinned-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Resolve pinned third-party images
+        id: third_party_images
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t images < <(docker compose -f compose.yml config --images)
+          for image in "${images[@]}"; do
+            case "${image}" in
+              owasp/modsecurity-crs:*) echo "nginx=${image}" >> "${GITHUB_OUTPUT}" ;;
+              amir20/dozzle:*) echo "dozzle=${image}" >> "${GITHUB_OUTPUT}" ;;
+            esac
+          done
+
+      # Pin the setup action to the verified immutable v0.2.6 release commit.
+      - name: Set up Trivy
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        with:
+          cache: true
+          version: v0.72.0
+
+      - name: Scan pinned images
+        env:
+          NGINX_IMAGE: ${{ steps.third_party_images.outputs.nginx }}
+          DOZZLE_IMAGE: ${{ steps.third_party_images.outputs.dozzle }}
+          TRIVY_NO_PROGRESS: "true"
+        run: |
+          set -euo pipefail
+          mkdir -p trivy-reports
+          trivy image --scanners vuln --format json \
+            --ignorefile .trivyignore.yaml \
+            --skip-version-check \
+            --output trivy-reports/nginx.json "${NGINX_IMAGE}"
+          trivy image --scanners vuln --format json \
+            --ignorefile .trivyignore.yaml \
+            --skip-version-check \
+            --output trivy-reports/dozzle.json "${DOZZLE_IMAGE}"
+
+      - name: Build actionable vulnerability report
+        id: findings
+        run: |
+          set -euo pipefail
+          jq -s '
+            [
+              .[]
+              | .Results[]?
+              | .Target as $target
+              | .Vulnerabilities[]?
+              | select(
+                  (.Severity == "HIGH" or .Severity == "CRITICAL")
+                  and ((.FixedVersion // "") != "")
+                )
+              | {
+                  target: $target,
+                  id: .VulnerabilityID,
+                  severity: .Severity,
+                  package: .PkgName,
+                  installed: .InstalledVersion,
+                  fixed: .FixedVersion
+                }
+            ]
+            | unique_by([.target, .id, .package])
+          ' trivy-reports/*.json > trivy-reports/actionable.json
+
+          count="$(jq 'length' trivy-reports/actionable.json)"
+          echo "count=${count}" >> "${GITHUB_OUTPUT}"
+
+          {
+            echo "The daily scan found **${count}** fixed HIGH/CRITICAL vulnerabilities in the pinned production images."
+            echo
+            echo "| Severity | CVE | Package | Installed | Fixed | Target |"
+            echo "| --- | --- | --- | --- | --- | --- |"
+            jq -r '.[:50][] | "| \(.severity) | `\(.id)` | `\(.package)` | `\(.installed)` | `\(.fixed)` | `\(.target)` |"' \
+              trivy-reports/actionable.json
+            echo
+            echo "Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            if (( count > 50 )); then
+              echo
+              echo "Only the first 50 findings are shown. See the workflow logs for the full report."
+            fi
+          } > trivy-reports/issue.md
+
+      - name: Create, update, or close the security issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FINDING_COUNT: ${{ steps.findings.outputs.count }}
+          ISSUE_TITLE: "[security] Fixed HIGH/CRITICAL container vulnerabilities"
+        run: |
+          set -euo pipefail
+          issue_number="$(
+            gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+              --json number,title \
+              --jq ".[] | select(.title == \"${ISSUE_TITLE}\") | .number" \
+              | head -n 1
+          )"
+
+          if (( FINDING_COUNT > 0 )); then
+            gh label create security --repo "${GITHUB_REPOSITORY}" \
+              --color B60205 --description "Security maintenance" --force
+            if [[ -n "${issue_number}" ]]; then
+              gh issue edit "${issue_number}" --repo "${GITHUB_REPOSITORY}" \
+                --body-file trivy-reports/issue.md
+            else
+              gh issue create --repo "${GITHUB_REPOSITORY}" \
+                --title "${ISSUE_TITLE}" --label security \
+                --body-file trivy-reports/issue.md
+            fi
+          elif [[ -n "${issue_number}" ]]; then
+            gh issue comment "${issue_number}" --repo "${GITHUB_REPOSITORY}" \
+              --body "The latest scheduled scan found no fixed HIGH/CRITICAL vulnerabilities. Closing this issue."
+            gh issue close "${issue_number}" --repo "${GITHUB_REPOSITORY}"
+          fi
+
+      - name: Fail on actionable vulnerabilities
+        if: steps.findings.outputs.count != '0'
+        run: exit 1
+
+  verify-production-image-refs:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Verify running third-party image references
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/plain/projects/website
+            ./scripts/deploy/verify_image_refs.sh nginx-modsecurity dozzle

@@ -160,6 +160,8 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - 校验 Compose 配置
 - 运行 `ruff format --check .`
 - 运行 `pytest`
+- 对固定的 Nginx/ModSecurity 与 Dozzle 镜像执行 Trivy 扫描
+- 实际启动候选第三方镜像并执行 Nginx config、health 与 smoke checks
 - 在 `main` 分支 push 时构建并推送 GHCR 镜像
 
 ### CD
@@ -170,7 +172,10 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 
 - 在 CI 成功后 SSH 到目标主机
 - 按 `workflow_run.head_sha` 拉取并部署对应镜像
+- 显式拉取 Compose 中固定 tag + digest 的第三方镜像
 - 执行数据库检查、服务健康检查与 smoke check
+- 校验生产容器实际 image reference 与 Git 声明一致
+- Nginx/Dozzle 更新失败时恢复上一组运行镜像
 - 清理当前项目不再需要的历史镜像，减少 GCP VM 磁盘占用
 
 说明：
@@ -187,6 +192,9 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - 内部重建接口：`POST /internal/reindex`
 - 鉴权头：`X-REIMPORT-ARTICLES-TOKEN`
 - `nginx-modsecurity` 默认开启 WAF
+- Nginx/ModSecurity 与 Dozzle 使用 stable tag + immutable digest；Dependabot 每日检查 Docker Compose 镜像更新并通过 PR 提交变化
+- `.github/workflows/container-security.yml` 每日重扫固定镜像；存在未豁免且已有修复的 HIGH/CRITICAL finding 时维护 GitHub security issue
+- `.trivyignore.yaml` 只接受带原因与到期日的临时风险例外，到期后扫描会重新阻断
 - 生产环境的 origin TLS 由 Nginx 挂载 Cloudflare Origin CA 证书；开发环境可使用自签名证书
 - Cloudflare 目前已对 `/static/*` 启用 edge cache；`/rendered-articles/*.html` 暂未纳入缓存计划
 - `/web-log/` 目前由 Cloudflare Access 在 edge 侧保护，不再依赖 Nginx Basic Auth
@@ -196,10 +204,9 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 ## Roadmap
 
 1. sqlite database 可视化，方便 debug
-2. trivy 的 ci 扫描
-3. 从 full-stack 的角度来看还欠缺什么
-4. uv project best practice migrate
-5. light mode
-6. support website rss 订阅
-7. 如果后续增加联系表单、留言或其他写入型交互，再接入 Cloudflare Turnstile
-8. seo 优化
+2. 从 full-stack 的角度来看还欠缺什么
+3. uv project best practice migrate
+4. light mode
+5. support website rss 订阅
+6. 如果后续增加联系表单、留言或其他写入型交互，再接入 Cloudflare Turnstile
+7. seo 优化

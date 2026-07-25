@@ -72,6 +72,72 @@ jobs:
           --cov-report=term-missing
           --cov-fail-under=30
 
+      - name: Resolve pinned third-party images
+        id: third_party_images
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t images < <(docker compose -f compose.yml config --images)
+          for image in "${images[@]}"; do
+            case "${image}" in
+              owasp/modsecurity-crs:*) echo "nginx=${image}" >> "${GITHUB_OUTPUT}" ;;
+              amir20/dozzle:*) echo "dozzle=${image}" >> "${GITHUB_OUTPUT}" ;;
+            esac
+          done
+
+      # Pin the setup action to the verified immutable v0.2.6 release commit.
+      - name: Set up Trivy
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        with:
+          cache: true
+          version: v0.72.0
+
+      - name: Scan pinned third-party images
+        env:
+          NGINX_IMAGE: ${{ steps.third_party_images.outputs.nginx }}
+          DOZZLE_IMAGE: ${{ steps.third_party_images.outputs.dozzle }}
+          TRIVY_NO_PROGRESS: "true"
+        run: |
+          set -euo pipefail
+          for image in "${NGINX_IMAGE}" "${DOZZLE_IMAGE}"; do
+            trivy image \
+              --scanners vuln \
+              --severity HIGH,CRITICAL \
+              --ignore-unfixed \
+              --ignorefile .trivyignore.yaml \
+              --skip-version-check \
+              --exit-code 1 \
+              "${image}"
+          done
+
+      - name: Generate temporary TLS fixture
+        run: |
+          mkdir -p nginx-modsecurity/ssl
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout nginx-modsecurity/ssl/hanjie-chen.com.key \
+            -out nginx-modsecurity/ssl/hanjie-chen.com.crt \
+            -subj "/CN=hanjie-chen.com"
+
+      - name: Validate candidate nginx configuration
+        run: >
+          docker compose -f compose.yml -f compose.dev.yml
+          run --rm --no-deps -T nginx-modsecurity nginx -t
+
+      - name: Validate candidate runtime and smoke checks
+        run: |
+          set -euo pipefail
+          docker compose -f compose.yml -f compose.dev.yml \
+            run --rm --no-deps -T web-app python scripts/init_db.py
+          docker compose -f compose.yml -f compose.dev.yml \
+            up -d --no-deps web-app dozzle nginx-modsecurity
+          COMPOSE_FILE=compose.yml:compose.dev.yml \
+            ./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity dozzle
+          BASE_URL=https://127.0.0.1:8444 ./scripts/deploy/smoke_check.sh
+
+      - name: Stop candidate runtime
+        if: always()
+        run: docker compose -f compose.yml -f compose.dev.yml down --remove-orphans
+
       # GHCR（ghcr.io）集成：
       # - 仅在 push 事件执行（PR 只做检查，不推镜像）
       # - 镜像命名：ghcr.io/<owner>/<repo>-<service>:<tag>
