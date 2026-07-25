@@ -16,6 +16,11 @@ Start with the root `README.md`. Before planning or making non-trivial changes i
 - Shell script changes: run `shellcheck -x scripts/deploy/*.sh articles-sync/*.sh` when practical.
 - Compose changes: validate both configurations with `docker compose -f compose.yml config --quiet` and `docker compose -f compose.yml -f compose.dev.yml config --quiet`.
 
+## Git and Release Workflow
+
+- Use a branch and PR for non-trivial or production-sensitive changes; push directly to `main` only for low-risk changes or when explicitly requested.
+- Before pushing, state the target branch and PR intent. The user merges by default unless they explicitly delegate it after CI passes.
+
 ## Route Changes
 
 - When changing a public route or language prefix, search for the old path and update affected tests, health checks, smoke checks, deployment scripts, monitoring, and documentation in the same change.
