@@ -8,7 +8,7 @@ container security automation.
 
 | Workflow | Trigger | Purpose |
 | --- | --- | --- |
-| [`ci.yml`](ci.yml) | Pushes and pull requests targeting `main` | Validates Compose and shell scripts, runs application checks, scans pinned third-party images, tests the candidate runtime, and publishes first-party images on a push. |
+| [`ci.yml`](ci.yml) | Pushes and pull requests targeting `main` | Validates Compose and shell scripts, runs application checks, scans pinned third-party images, tests the candidate runtime and Daily Brief WAF exclusions, and publishes first-party images on a push. |
 | [`cd.yml`](cd.yml) | Successful `CI` completion on `main` | Deploys the exact successful commit to production, validates the deployment, and cleans up old images. |
 | [`container-security.yml`](container-security.yml) | Daily at 03:45 Asia/Singapore, or manually | Rescans pinned NGINX/ModSecurity and Dozzle images, manages the actionable-vulnerability issue, and verifies production image references. |
 | [`content-sync.yml`](content-sync.yml) | Manual or external `workflow_dispatch` | Pulls the current `main` branch on production, synchronizes article content, and runs health and smoke checks. |

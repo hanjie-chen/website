@@ -1,3 +1,4 @@
+import hmac
 import os
 from urllib.parse import quote, urlsplit, urlunsplit
 
@@ -18,12 +19,15 @@ from article_views import (
     localized_articles,
 )
 from config import (
+    DAILY_BRIEF_PUBLISH_TOKEN,
     IS_DEV,
     REIMPORT_ARTICLES_TOKEN,
     SQLALCHEMY_DATABASE_URI,
     Articles_Directory,
+    Daily_Briefs_Directory,
     Rendered_Articles,
 )
+from daily_briefs import BriefValidationError, list_briefs, load_brief, store_brief
 from i18n import (
     DEFAULT_LANGUAGE,
     LANG_COOKIE_NAME,
@@ -44,6 +48,7 @@ app.json.ensure_ascii = False
 
 # configure the database uri
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
+app.config["MAX_CONTENT_LENGTH"] = 128 * 1024
 # Register rendered_articles as additional static folder
 app.config["RENDERED_ARTICLES_FOLDER"] = Rendered_Articles
 
@@ -180,7 +185,12 @@ def index_without_trailing_slash(lang):
 @app.route("/<lang>/")
 def index(lang):
     current_lang = _require_supported_language(lang)
-    return render_template("index.html", current_lang=current_lang)
+    briefs = list_briefs(Daily_Briefs_Directory)
+    return render_template(
+        "index.html",
+        current_lang=current_lang,
+        latest_brief=briefs[0] if briefs else None,
+    )
 
 
 @app.route("/set-language/<lang>")
@@ -224,6 +234,31 @@ def article_category(lang, category_path):
 def about_me(lang):
     current_lang = _require_supported_language(lang)
     return render_template("about_me.html", current_lang=current_lang)
+
+
+@app.route("/<lang>/briefs")
+def brief_index(lang):
+    current_lang = _require_supported_language(lang)
+    briefs = list_briefs(Daily_Briefs_Directory)
+    return render_template(
+        "brief_index.html",
+        current_lang=current_lang,
+        briefs=briefs,
+        latest_brief=briefs[0] if briefs else None,
+    )
+
+
+@app.route("/<lang>/briefs/<brief_date>")
+def brief_detail(lang, brief_date):
+    current_lang = _require_supported_language(lang)
+    brief = load_brief(Daily_Briefs_Directory, brief_date)
+    if brief is None:
+        abort(404)
+    return render_template(
+        "brief_detail.html",
+        current_lang=current_lang,
+        brief=brief,
+    )
 
 
 @app.route("/api/articles")
@@ -337,3 +372,26 @@ def reindex_articles():
     with app.app_context():
         import_articles(Articles_Directory, db)
     return {"status": "ok"}
+
+
+@app.route("/internal/briefs", methods=["POST"])
+def publish_brief():
+    if not DAILY_BRIEF_PUBLISH_TOKEN:
+        abort(404)
+
+    request_token = request.headers.get("X-DAILY-BRIEF-TOKEN", "")
+    if not hmac.compare_digest(request_token, DAILY_BRIEF_PUBLISH_TOKEN):
+        abort(403)
+    if not request.is_json:
+        return {"error": "Content-Type must be application/json"}, 415
+
+    payload = request.get_json(silent=True)
+    if payload is None:
+        return {"error": "request body must contain valid JSON"}, 400
+    try:
+        status, normalized = store_brief(Daily_Briefs_Directory, payload)
+    except BriefValidationError as exc:
+        return {"error": str(exc)}, 400
+
+    response_code = 201 if status == "created" else 200
+    return {"status": status, "date": normalized["date"]}, response_code

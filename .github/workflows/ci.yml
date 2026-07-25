@@ -128,6 +128,9 @@ jobs:
           run --rm --no-deps -T nginx-modsecurity nginx -t
 
       - name: Validate candidate runtime and smoke checks
+        env:
+          DAILY_BRIEF_PUBLISH_TOKEN: ci-daily-brief-token
+          BRIEF_WAF_TEST_TOKEN: ci-daily-brief-token
         run: |
           set -euo pipefail
           docker compose -f compose.yml -f compose.dev.yml \

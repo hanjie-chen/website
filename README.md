@@ -1,16 +1,21 @@
-# Personal Website
+# Personal Dashboard
 
-个人网站与知识库发布系统，核心技术栈
+`hanjie-chen.com` 是一个从个人博客持续演进的公开个人信息中枢，用来聚合 Daily Brief、技术知识库、个人项目与介绍。核心技术栈：
 
 Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + Cloudflare
 
-文章内容来自独立的知识库仓库 [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过 push-driven 内容同步、增量导入与静态渲染自动发布到站点，并保留低频定时同步作为兜底。
+文章内容来自独立的知识库仓库 [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过 push-driven 内容同步、增量导入与静态渲染自动发布到站点，并保留低频定时同步作为兜底。Daily Brief 由独立生成器每天产出，通过认证发布接口进入站点的日期归档。
+
+## Product Direction
+
+这个项目正在从单一的个人博客演进为公开的 Personal Dashboard。当前阶段先用真实模块推动信息架构变化：Daily Brief 是博客之外的第一个模块，首页开始承担每日信息、知识库和个人入口的聚合作用；完整 dashboard UI 会根据实际使用反馈继续迭代，而不是预先为尚不存在的功能设计。
 
 ## Overview
 
-这个仓库主要负责三件事：
+这个仓库主要负责以下能力：
 
 - 提供带语言前缀的公开页面：`/zh/...`、`/en/...`，根路径 `/` 会按语言偏好自动跳转
+- 提供 Daily Brief 首页入口、按日期归档与每日详情页；简报正文当前仅提供中文
 - 提供公开只读的文章 metadata API：`GET /api/articles` 与 `GET /api/articles/<id>`
 - 把 Markdown 知识库同步、导入并渲染成可访问的 HTML
 - 通过 CI/CD 将镜像部署到 GCP VM，并由 Cloudflare 暴露到公网
@@ -21,17 +26,19 @@ network traffic
 
 - 线上流量：`Client -> Cloudflare -> GCP VM -> Nginx(ModSecurity) -> Flask`
 - 内容更新：`knowledge-base push -> website content-sync workflow -> articles-sync/update-articles.sh -> POST /internal/reindex -> import/render pipeline`
+- 简报发布：`daily-brief cron -> structured JSON -> POST /internal/briefs -> validated JSON volume -> Flask pages`
 - 兜底同步：`articles-sync(daily cron) -> update-articles.sh`
 - 持久化（Docker volumes）：
   - `source_md_articles`：Markdown 源文与图片
   - `rendered_html_articles`：渲染后的 HTML 与拷贝后的静态资源
   - `webapp_instance`：SQLite 数据文件
+  - `daily_brief_data`：通过严格校验的按日期 Daily Brief JSON
 
 项目运行时的职责分工：
 
 - web-app
 
-  Flask 应用本体，负责页面路由、文章导入、Markdown 渲染、TOC 与 docs-style navigation
+  Flask 应用本体，负责页面路由、Daily Brief 校验与归档、文章导入、Markdown 渲染、TOC 与 docs-style navigation
 
 - articles-sync
 
@@ -191,6 +198,9 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
   - `GET /api/articles/<id>`
 - 内部重建接口：`POST /internal/reindex`
 - 鉴权头：`X-REIMPORT-ARTICLES-TOKEN`
+- Daily Brief 发布接口：`POST /internal/briefs`，使用独立的 `X-DAILY-BRIEF-TOKEN`；未配置 token 时接口返回 404
+- Daily Brief payload 限制为 128 KiB，写入前会校验固定 schema、条目数量、URL 与 HN item ID 一致性
+- `/internal/briefs` 继续启用 WAF；仅对会误杀技术摘要中字面量 `<script>` 的三个 CRS XSS rule 做 endpoint-scoped 排除
 - `nginx-modsecurity` 默认开启 WAF
 - Nginx/ModSecurity 与 Dozzle 使用 stable tag + immutable digest；Dependabot 每日检查 Docker Compose 镜像更新并通过 PR 提交变化
 - `.github/workflows/container-security.yml` 每日重扫固定镜像；存在未豁免且已有修复的 HIGH/CRITICAL finding 时维护 GitHub security issue
@@ -203,8 +213,8 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 
 ## Roadmap
 
-1. sqlite database 可视化，方便 debug
-2. 从 full-stack 的角度来看还欠缺什么
+1. 根据 Daily Brief 的真实使用反馈继续演进 dashboard 首页与统一 UI
+2. sqlite database 可视化，方便 debug
 3. uv project best practice migrate
 4. light mode
 5. support website rss 订阅

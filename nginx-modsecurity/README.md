@@ -9,6 +9,7 @@ At a high level, this subsystem is responsible for:
 - serving rendered article assets directly from Nginx
 - exposing the Dozzle log UI behind Cloudflare Access
 - keeping ModSecurity enabled for the public site while relaxing it for the internal log panel path
+- applying narrow CRS false-positive exclusions to authenticated Daily Brief JSON ingestion
 
 ## Purpose
 
@@ -34,6 +35,13 @@ The current routing behavior is defined in [conf.d/default.conf](conf.d/default.
 
 - served directly from the rendered article directory through `alias`
 - bypasses Flask for article body HTML assets and copied images
+
+### `/internal/briefs`
+
+- remains behind ModSecurity and is proxied to Flask like the rest of the public site
+- requires the application-level `X-DAILY-BRIEF-TOKEN`
+- loads `modsecurity/briefs-exclusions.conf`, which removes only CRS rules `941100`, `941110`, and `941160` for this exact path
+- those three XSS rules are false positives for legitimate summaries that discuss literal `<script>` examples; all other CRS rules remain active, and Flask strictly validates and later escapes every stored field
 
 ### `/web-log/`
 
@@ -70,6 +78,10 @@ Primary Nginx server config for:
 - static article asset serving
 - Dozzle path protection
 
+### `modsecurity/briefs-exclusions.conf`
+
+Pre-CRS exclusion rules for confirmed Daily Brief JSON false positives. Keep exclusions scoped to an exact endpoint and specific rule IDs; do not disable ModSecurity for `/internal/briefs`.
+
 ### `ssl/hanjie-chen.com.crt`
 
 Certificate file mounted into the container.
@@ -84,6 +96,7 @@ Private key file mounted into the container.
 
 - WAF stays enabled for the public site by default.
 - `/web-log/` is the only intentionally relaxed path in the current config.
+- `/internal/briefs` keeps WAF processing enabled with only three endpoint-scoped XSS false-positive exclusions.
 - Even though WAF is disabled on `/web-log/`, that endpoint is currently protected by Cloudflare Access.
 - Production currently uses Cloudflare Origin CA material at the mounted TLS paths.
 - Development can use self-signed TLS material at the same paths.
