@@ -50,7 +50,7 @@ jobs:
       # - scan locked Python dependencies from requirements.txt
       # - use official PyPA action
       - name: Set up Python for pip-audit
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -87,7 +87,7 @@ jobs:
 
       # Pin the setup action to the verified immutable v0.2.6 release commit.
       - name: Set up Trivy
-        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
         with:
           cache: true
           version: v0.72.0
