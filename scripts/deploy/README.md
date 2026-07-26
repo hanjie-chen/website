@@ -23,7 +23,6 @@ Initial bootstrap flow for a fresh production host.
 What it does:
 
 - starts `articles-sync` first
-- ensures the bind-mounted Daily Brief WAF exclusion file is readable by the unprivileged Nginx container
 - waits until article source sync is healthy
 - runs `scripts/init_db.py` in a one-off `web-app` container
 - starts the full stack
@@ -43,7 +42,6 @@ Regular production deploy by immutable image tag.
 What it does:
 
 - exports `WEB_APP_IMAGE_TAG` and `ARTICLES_SYNC_IMAGE_TAG`
-- ensures the bind-mounted Daily Brief WAF exclusion file is readable by the unprivileged Nginx container
 - records the currently running Nginx and Dozzle image references for rollback
 - explicitly pulls first-party SHA images and third-party pinned-digest images
 - applies Compose changes with `docker compose up -d --remove-orphans`
@@ -97,6 +95,8 @@ What it does:
 - hits `https://127.0.0.1/` with the production `Host` header
 - checks `/`
 - checks `/zh/articles`
+- checks `/zh/briefs`
+- when `BRIEF_INGEST_TEST_TOKEN` is set, verifies that technical prose reaches the WAF-bypassed ingestion endpoint, the Nginx 128 KiB body limit returns `413`, and WAF SQLi blocking remains active on a normal public route
 - retries briefly to tolerate warm-up jitter
 
 Use this when:
@@ -253,6 +253,7 @@ KEEP_PREVIOUS_RELEASES=0 ./scripts/deploy/cleanup_old_images.sh <deploy_sha>
 - `CORE_SERVICES_READY_TIMEOUT`
 - `WAIT_HEALTH_TIMEOUT_SECONDS`
 - `SMOKE_TIMEOUT_SECONDS`
+- `BRIEF_INGEST_TEST_TOKEN` (optional; enables authenticated Daily Brief edge-policy probes)
 - `KEEP_PREVIOUS_RELEASES`
 
 ### Assumptions

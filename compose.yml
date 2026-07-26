@@ -87,7 +87,6 @@ services:
       retries: 3
     volumes:
       - ./nginx-modsecurity/conf.d/default.conf:/etc/nginx/templates/conf.d/default.conf.template
-      - ./nginx-modsecurity/modsecurity/briefs-exclusions.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:ro
       # TLS cert/key mount for nginx.
       # Development can use self-signed files in ./nginx-modsecurity/ssl.
       # Production mounts origin cert material at the same in-container path

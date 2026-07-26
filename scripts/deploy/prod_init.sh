@@ -10,16 +10,6 @@ ARTICLES_SYNC_READY_TIMEOUT="${ARTICLES_SYNC_READY_TIMEOUT:-600}"
 # Wait timeout for core services to become healthy after full startup.
 CORE_SERVICES_READY_TIMEOUT="${CORE_SERVICES_READY_TIMEOUT:-180}"
 
-# This non-secret rule file is bind-mounted into an unprivileged Nginx
-# container. Ensure the container user can read it regardless of the checkout
-# umask or permissions retained by an older deployment.
-BRIEF_EXCLUSIONS_FILE="nginx-modsecurity/modsecurity/briefs-exclusions.conf"
-if [[ ! -f "${BRIEF_EXCLUSIONS_FILE}" ]]; then
-  echo "[init] Missing ${BRIEF_EXCLUSIONS_FILE}." >&2
-  exit 1
-fi
-chmod 0644 "${BRIEF_EXCLUSIONS_FILE}"
-
 # 1) Start articles-sync first so markdown source is prepared in shared volume.
 echo "[init] Starting articles-sync (to sync markdown source)..."
 docker compose -f compose.yml up -d articles-sync

@@ -13,16 +13,6 @@ echo "[deploy] Using image tag: ${DEPLOY_SHA}"
 export WEB_APP_IMAGE_TAG="${DEPLOY_SHA}"
 export ARTICLES_SYNC_IMAGE_TAG="${DEPLOY_SHA}"
 
-# This non-secret rule file is bind-mounted into an unprivileged Nginx
-# container. Ensure the container user can read it regardless of the checkout
-# umask or permissions retained by an older deployment.
-BRIEF_EXCLUSIONS_FILE="nginx-modsecurity/modsecurity/briefs-exclusions.conf"
-if [[ ! -f "${BRIEF_EXCLUSIONS_FILE}" ]]; then
-  echo "[deploy] Missing ${BRIEF_EXCLUSIONS_FILE}." >&2
-  exit 1
-fi
-chmod 0644 "${BRIEF_EXCLUSIONS_FILE}"
-
 running_image_ref() {
   local service="$1"
   local container_id

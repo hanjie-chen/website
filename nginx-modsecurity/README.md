@@ -8,8 +8,7 @@ At a high level, this subsystem is responsible for:
 - proxying public traffic to the Flask app
 - serving rendered article assets directly from Nginx
 - exposing the Dozzle log UI behind Cloudflare Access
-- keeping ModSecurity enabled for the public site while relaxing it for the internal log panel path
-- applying narrow CRS false-positive exclusions to authenticated Daily Brief JSON ingestion
+- keeping ModSecurity enabled for the public site while relaxing it only for exact paths with stronger application-specific controls
 
 ## Purpose
 
@@ -38,11 +37,14 @@ The current routing behavior is defined in [conf.d/default.conf](conf.d/default.
 
 ### `/internal/briefs`
 
-- remains behind ModSecurity and is proxied to Flask like the rest of the public site
+- uses an exact-match Nginx location and is proxied to Flask with ModSecurity disabled only for this endpoint
+- rejects bodies larger than 128 KiB at Nginx before they reach Flask
 - requires the application-level `X-DAILY-BRIEF-TOKEN`
-- loads `modsecurity/briefs-exclusions.conf`, which removes only CRS rules `941100`, `941110`, and `941160` for this exact path
-- excludes the seven schema-v1 `summary` JSON targets from CRS `942100`; the SQLi rule remains active for every other target and endpoint
-- those three XSS rules are false positives for legitimate summaries that discuss literal `<script>` examples; all other CRS rules remain active, and Flask strictly validates and later escapes every stored field
+- accepts technical prose as opaque text instead of applying generic SQLi/XSS signatures to the JSON body
+- relies on the application trust boundary: constant-time token comparison, exact schema and field limits, safe date-derived storage paths, HTTP(S)-only URLs, and Jinja escaping
+- does not execute the submitted text, interpolate it into SQL or shell commands, or fetch submitted URLs server-side
+
+This exception is based on data flow, not on the word `internal`: the endpoint is still Internet-reachable. A leaked token would be an authorization incident that a generic WAF could not prevent, so keep the token random, secret, and independently rotatable.
 
 ### Audit logging
 
@@ -86,12 +88,6 @@ Primary Nginx server config for:
 - static article asset serving
 - Dozzle path protection
 
-### `modsecurity/briefs-exclusions.conf`
-
-Pre-CRS runtime exclusions for confirmed Daily Brief JSON false positives. The XSS exclusions are scoped to the exact endpoint. CRS `942100` is narrower still: it ignores only the fixed schema-v1 summary target names under that endpoint. Keep unrelated targets and rules active; do not disable ModSecurity for `/internal/briefs`.
-
-This bind-mounted file is non-secret and must be readable by the unprivileged Nginx user. `prod_init.sh` and `prod_deploy.sh` enforce mode `0644` before starting Compose so a restrictive checkout umask cannot silently prevent CRS from loading the exclusions.
-
 ### `ssl/hanjie-chen.com.crt`
 
 Certificate file mounted into the container.
@@ -105,8 +101,8 @@ Private key file mounted into the container.
 ## Security Notes
 
 - WAF stays enabled for the public site by default.
-- `/web-log/` is the only intentionally relaxed path in the current config.
-- `/internal/briefs` keeps WAF processing enabled with three endpoint-scoped XSS false-positive exclusions plus a target-scoped `942100` exclusion for the seven allowed summary fields.
+- `/web-log/` and the exact `/internal/briefs` location are the only intentionally relaxed paths in the current config.
+- `/internal/briefs` compensates for its WAF bypass with an Nginx 128 KiB limit plus application-level authentication, strict validation, safe storage, and output escaping. The WAF remains active on every other route.
 - audit logs omit full request headers and bodies to keep internal tokens out of the container log stream and minimize unpublished-content exposure; individual rule messages may still include a matched fragment.
 - Even though WAF is disabled on `/web-log/`, that endpoint is currently protected by Cloudflare Access.
 - Production currently uses Cloudflare Origin CA material at the mounted TLS paths.
@@ -174,13 +170,13 @@ Common causes:
 
 ### Daily Brief publishing returns `403`
 
-Inspect the metadata-only audit record and the Nginx error log together:
+Because ModSecurity is disabled only on the exact ingestion location, a `403` from this endpoint is the Flask token check rather than a CRS anomaly block. Confirm that the publisher and website use the same token, then inspect the application and proxy logs:
 
 ```bash
-docker compose logs --tail=200 nginx-modsecurity
+docker compose logs --tail=200 web-app nginx-modsecurity
 ```
 
-The final `949110` entry only reports that the anomaly threshold was exceeded. The audit JSON record contains the contributing CRS rule IDs without recording the full request token or body; a rule message can still include its matched fragment.
+Do not print the token itself. A payload larger than 128 KiB returns `413`; invalid JSON or schema returns `400` after successful authentication.
 
 ### Public site returns `502`
 
