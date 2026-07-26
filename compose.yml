@@ -87,7 +87,6 @@ services:
       retries: 3
     volumes:
       - ./nginx-modsecurity/conf.d/default.conf:/etc/nginx/templates/conf.d/default.conf.template
-      - ./nginx-modsecurity/modsecurity/briefs-exclusions.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:ro
       # TLS cert/key mount for nginx.
       # Development can use self-signed files in ./nginx-modsecurity/ssl.
       # Production mounts origin cert material at the same in-container path
@@ -97,7 +96,12 @@ services:
     depends_on:
       - web-app
     environment:
-      - MODSEC_AUDIT_LOG=/var/log/nginx/modsec-audit.log
+      # The unprivileged nginx worker cannot create files under
+      # /var/log/nginx. Send metadata-only audit records through the
+      # container log stream instead; omit full request headers and bodies so
+      # internal endpoint tokens are not copied into audit records.
+      - MODSEC_AUDIT_LOG=/proc/self/fd/2
+      - MODSEC_AUDIT_LOG_PARTS=AHZ
     restart: unless-stopped
     logging: *default-logging
   # logs ui

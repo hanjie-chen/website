@@ -95,6 +95,8 @@ What it does:
 - hits `https://127.0.0.1/` with the production `Host` header
 - checks `/`
 - checks `/zh/articles`
+- checks `/zh/briefs`
+- when `BRIEF_INGEST_TEST_TOKEN` is set, verifies that technical prose reaches the WAF-bypassed ingestion endpoint, the Nginx 128 KiB body limit returns `413`, and WAF SQLi blocking remains active on a normal public route
 - retries briefly to tolerate warm-up jitter
 
 Use this when:
@@ -251,6 +253,7 @@ KEEP_PREVIOUS_RELEASES=0 ./scripts/deploy/cleanup_old_images.sh <deploy_sha>
 - `CORE_SERVICES_READY_TIMEOUT`
 - `WAIT_HEALTH_TIMEOUT_SECONDS`
 - `SMOKE_TIMEOUT_SECONDS`
+- `BRIEF_INGEST_TEST_TOKEN` (optional; enables authenticated Daily Brief edge-policy probes)
 - `KEEP_PREVIOUS_RELEASES`
 
 ### Assumptions
