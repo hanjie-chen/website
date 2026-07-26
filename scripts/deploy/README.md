@@ -23,6 +23,7 @@ Initial bootstrap flow for a fresh production host.
 What it does:
 
 - starts `articles-sync` first
+- ensures the bind-mounted Daily Brief WAF exclusion file is readable by the unprivileged Nginx container
 - waits until article source sync is healthy
 - runs `scripts/init_db.py` in a one-off `web-app` container
 - starts the full stack
@@ -42,6 +43,7 @@ Regular production deploy by immutable image tag.
 What it does:
 
 - exports `WEB_APP_IMAGE_TAG` and `ARTICLES_SYNC_IMAGE_TAG`
+- ensures the bind-mounted Daily Brief WAF exclusion file is readable by the unprivileged Nginx container
 - records the currently running Nginx and Dozzle image references for rollback
 - explicitly pulls first-party SHA images and third-party pinned-digest images
 - applies Compose changes with `docker compose up -d --remove-orphans`

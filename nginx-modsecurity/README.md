@@ -41,7 +41,15 @@ The current routing behavior is defined in [conf.d/default.conf](conf.d/default.
 - remains behind ModSecurity and is proxied to Flask like the rest of the public site
 - requires the application-level `X-DAILY-BRIEF-TOKEN`
 - loads `modsecurity/briefs-exclusions.conf`, which removes only CRS rules `941100`, `941110`, and `941160` for this exact path
+- excludes the seven schema-v1 `summary` JSON targets from CRS `942100`; the SQLi rule remains active for every other target and endpoint
 - those three XSS rules are false positives for legitimate summaries that discuss literal `<script>` examples; all other CRS rules remain active, and Flask strictly validates and later escapes every stored field
+
+### Audit logging
+
+- ModSecurity writes metadata-only JSON audit records to `/proc/self/fd/2`, so they are available through Docker logs and Dozzle
+- audit parts are limited to `AHZ`; full request headers and bodies are intentionally omitted so `X-DAILY-BRIEF-TOKEN` is not copied into audit records and brief-content exposure is minimized
+- rule messages can still contain the small matched fragment needed to explain a block; treat the log stream as security-sensitive operational data
+- Compose log rotation limits each container to five 1 MiB files
 
 ### `/web-log/`
 
@@ -80,7 +88,9 @@ Primary Nginx server config for:
 
 ### `modsecurity/briefs-exclusions.conf`
 
-Pre-CRS exclusion rules for confirmed Daily Brief JSON false positives. Keep exclusions scoped to an exact endpoint and specific rule IDs; do not disable ModSecurity for `/internal/briefs`.
+Pre-CRS runtime exclusions for confirmed Daily Brief JSON false positives. The XSS exclusions are scoped to the exact endpoint. CRS `942100` is narrower still: it ignores only the fixed schema-v1 summary target names under that endpoint. Keep unrelated targets and rules active; do not disable ModSecurity for `/internal/briefs`.
+
+This bind-mounted file is non-secret and must be readable by the unprivileged Nginx user. `prod_init.sh` and `prod_deploy.sh` enforce mode `0644` before starting Compose so a restrictive checkout umask cannot silently prevent CRS from loading the exclusions.
 
 ### `ssl/hanjie-chen.com.crt`
 
@@ -96,7 +106,8 @@ Private key file mounted into the container.
 
 - WAF stays enabled for the public site by default.
 - `/web-log/` is the only intentionally relaxed path in the current config.
-- `/internal/briefs` keeps WAF processing enabled with only three endpoint-scoped XSS false-positive exclusions.
+- `/internal/briefs` keeps WAF processing enabled with three endpoint-scoped XSS false-positive exclusions plus a target-scoped `942100` exclusion for the seven allowed summary fields.
+- audit logs omit full request headers and bodies to keep internal tokens out of the container log stream and minimize unpublished-content exposure; individual rule messages may still include a matched fragment.
 - Even though WAF is disabled on `/web-log/`, that endpoint is currently protected by Cloudflare Access.
 - Production currently uses Cloudflare Origin CA material at the mounted TLS paths.
 - Development can use self-signed TLS material at the same paths.
@@ -160,6 +171,16 @@ Common causes:
 - invalid Nginx config syntax
 - missing upstream service
 - missing or unreadable certificate/key files
+
+### Daily Brief publishing returns `403`
+
+Inspect the metadata-only audit record and the Nginx error log together:
+
+```bash
+docker compose logs --tail=200 nginx-modsecurity
+```
+
+The final `949110` entry only reports that the anomaly threshold was exceeded. The audit JSON record contains the contributing CRS rule IDs without recording the full request token or body; a rule message can still include its matched fragment.
 
 ### Public site returns `502`
 

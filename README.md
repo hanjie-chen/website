@@ -200,7 +200,8 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - 鉴权头：`X-REIMPORT-ARTICLES-TOKEN`
 - Daily Brief 发布接口：`POST /internal/briefs`，使用独立的 `X-DAILY-BRIEF-TOKEN`；未配置 token 时接口返回 404
 - Daily Brief payload 限制为 128 KiB，写入前会校验固定 schema、条目数量、URL 与 HN item ID 一致性
-- `/internal/briefs` 继续启用 WAF；仅对会误杀技术摘要中字面量 `<script>` 的三个 CRS XSS rule 做 endpoint-scoped 排除
+- `/internal/briefs` 继续启用 WAF；对会误杀技术摘要中字面量 `<script>` 的三个 CRS XSS rule 做 endpoint-scoped 排除，并仅将 schema v1 的七个 `summary` target 从 CRS `942100` 检查中排除
+- ModSecurity audit log 以不含完整 request header/body 的 `AHZ` 记录进入容器日志，既能定位原始 rule ID，也避免发布 token 被整体写入 audit record；具体 rule message 仍可能包含必要的命中片段
 - `nginx-modsecurity` 默认开启 WAF
 - Nginx/ModSecurity 与 Dozzle 使用 stable tag + immutable digest；Dependabot 每日检查 Docker Compose 镜像更新并通过 PR 提交变化
 - `.github/workflows/container-security.yml` 每日重扫固定镜像；存在未豁免且已有修复的 HIGH/CRITICAL finding 时维护 GitHub security issue

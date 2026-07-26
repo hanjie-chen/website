@@ -97,7 +97,12 @@ services:
     depends_on:
       - web-app
     environment:
-      - MODSEC_AUDIT_LOG=/var/log/nginx/modsec-audit.log
+      # The unprivileged nginx worker cannot create files under
+      # /var/log/nginx. Send metadata-only audit records through the
+      # container log stream instead; omit full request headers and bodies so
+      # internal endpoint tokens are not copied into audit records.
+      - MODSEC_AUDIT_LOG=/proc/self/fd/2
+      - MODSEC_AUDIT_LOG_PARTS=AHZ
     restart: unless-stopped
     logging: *default-logging
   # logs ui

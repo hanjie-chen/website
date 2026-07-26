@@ -53,7 +53,7 @@ if [[ -n "${BRIEF_WAF_TEST_TOKEN:-}" ]]; then
     -H "Host: ${HOST_HEADER}" \
     -H "Content-Type: application/json" \
     -H "X-DAILY-BRIEF-TOKEN: ${BRIEF_WAF_TEST_TOKEN}" \
-    --data-binary '{"schema_version":1,"date":"2026-07-25","generated_at":"2026-07-25T08:00:00+08:00","timezone":"Asia/Singapore","sections":{"ai":{"note":"special: `code` <tag> \"quotes\" 中文。","items":[{"hn_item_id":"49038433","title":"Claude <script> test","summary":"支持 `code`、引号、<尖括号> 与中文标点。","why":"keywords: Claude","source_url":"https://example.com/story","discussion_url":"https://news.ycombinator.com/item?id=49038433","points":1,"comments":2}]},"non_ai_hot":{"note":"","items":[]}}}' \
+    --data-binary '{"schema_version":1,"date":"2026-07-25","generated_at":"2026-07-25T08:00:00+08:00","timezone":"Asia/Singapore","sections":{"ai":{"note":"special: `code` <tag> \"quotes\" 中文。","items":[{"hn_item_id":"49038433","title":"Claude <script> test","summary":"Yorishiro 是一个开源的 macOS 终端项目，为 Claude Code 和 Codex 配备动漫风格的 3D 角色，并通过灯光、表情和特效呈现代理的关注、等待批准、报错及 Git 推送成功等状态。它还提供自引用 MCP 和支持热重载的扩展机制，使代理能够控制角色、场景、界面与特效。","why":"keywords: Claude","source_url":"https://example.com/story","discussion_url":"https://news.ycombinator.com/item?id=49038433","points":1,"comments":2}]},"non_ai_hot":{"note":"","items":[]}}}' \
     2>/dev/null)"
   if [[ "${brief_status}" != "200" && "${brief_status}" != "201" ]]; then
     echo "[smoke] Daily Brief WAF false-positive probe returned HTTP ${brief_status}." >&2
