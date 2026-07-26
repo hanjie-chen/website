@@ -1,7 +1,6 @@
 # Python tool artifacts
 __pycache__/
 .pytest_cache/
-.ruff_cache/
 .coverage
 
 # Generated content and local runtime data
@@ -18,6 +17,4 @@ nginx-modsecurity/ssl/
 # Terraform local artifacts and sensitive variables
 .terraform/
 terraform.tfstate
-terraform.tfstate.*
 terraform.tfvars
-*.tfplan
