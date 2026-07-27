@@ -13,12 +13,19 @@
 
 {% block main_content %}
 <div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
+    {% set ai_count = brief["sections"]["ai"]["items"]|length %}
+    {% set non_ai_count = brief["sections"]["non_ai_hot"]["items"]|length %}
     <article class="content-wrapper briefs-page-shell brief-detail-shell px-2 px-lg-3">
-        <header class="briefs-panel briefs-hero">
+        <header class="briefs-hero">
             <a class="brief-back-link" href="{{ url_for('brief_index', lang=current_lang) }}">← {{ t("briefs.back") }}</a>
-            <p class="briefs-overline">DAILY BRIEF</p>
-            <h1>{{ brief.date }}</h1>
+            <p class="briefs-overline">DAILY BRIEF / {{ brief.date }}</p>
+            <h1><time datetime="{{ brief.date }}">{{ brief.date }}</time></h1>
             <p class="briefs-lead">{{ t("briefs.detail.description") }}</p>
+            <ul class="briefs-facts" aria-label="{{ t('briefs.detail.summary') }}">
+                <li><strong>{{ ai_count + non_ai_count }}</strong>{{ t("briefs.items") }}</li>
+                <li><strong>{{ ai_count }}</strong>{{ t("briefs.detail.ai_items") }}</li>
+                <li><strong>{{ non_ai_count }}</strong>{{ t("briefs.detail.non_ai_items") }}</li>
+            </ul>
             {% if current_lang == "en" %}
             <p class="briefs-language-note">{{ t("briefs.language_note") }}</p>
             {% endif %}
@@ -26,10 +33,11 @@
 
         {% for section_name in ["ai", "non_ai_hot"] %}
         {% set section = brief["sections"][section_name] %}
-        <section class="briefs-panel brief-section">
+        <section class="brief-section" aria-labelledby="brief-section-{{ section_name }}">
             <div class="briefs-section-heading">
-                <h2>{{ t("briefs.section." ~ section_name) }}</h2>
-                <span>{{ section["items"]|length }} {{ t("briefs.items") }}</span>
+                <span class="brief-section-index">0{{ loop.index }}</span>
+                <h2 id="brief-section-{{ section_name }}">{{ t("briefs.section." ~ section_name) }}</h2>
+                <span class="brief-count">{{ section["items"]|length }} {{ t("briefs.items") }}</span>
             </div>
             {% if section.note %}
             <p class="brief-section-note">{{ section.note }}</p>
@@ -38,17 +46,23 @@
             <div class="brief-item-list">
                 {% for item in section["items"] %}
                 <article class="brief-item-card">
-                    <div class="brief-item-heading">
-                        <h3>{{ item.title }}</h3>
+                    <span class="brief-item-number" aria-hidden="true">{{ "%02d"|format(loop.index) }}</span>
+                    <div class="brief-item-content">
+                        <h3 class="m-0">
+                            <a class="brief-story-title" href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+                        </h3>
                         <span class="brief-hn-id">HN #{{ item.hn_item_id }}</span>
-                    </div>
-                    <p class="brief-summary">{{ item.summary }}</p>
-                    <p class="brief-why"><span>{{ t("briefs.why") }}</span> {{ item.why }}</p>
-                    <div class="brief-item-footer">
-                        <span>{{ item.points }} points · {{ item.comments }} comments</span>
-                        <div class="brief-item-links">
-                            <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ t("briefs.source") }}</a>
-                            <a href="{{ item.discussion_url }}" target="_blank" rel="noopener noreferrer">{{ t("briefs.discussion") }}</a>
+                        <p class="brief-summary">{{ item.summary }}</p>
+                        <p class="brief-why"><span>{{ t("briefs.why") }}</span> {{ item.why }}</p>
+                        <div class="brief-item-footer">
+                            <div class="brief-item-stats">
+                                <span>{{ item.points }} {{ t("briefs.points") }}</span>
+                                <span>{{ item.comments }} {{ t("briefs.comments") }}</span>
+                            </div>
+                            <div class="brief-item-links">
+                                <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ t("briefs.source") }} ↗</a>
+                                <a href="{{ item.discussion_url }}" target="_blank" rel="noopener noreferrer">{{ t("briefs.discussion") }} ↗</a>
+                            </div>
                         </div>
                     </div>
                 </article>

@@ -161,6 +161,10 @@ def test_brief_routes_render_archive_detail_language_notice_and_escaped_content(
     detail_html = detail.get_data(as_text=True)
     assert detail.status_code == 200
     assert "HN #49038433" in detail_html
+    assert 'class="brief-story-title" href="https://example.com/story"' in detail_html
+    assert "1,213" not in detail_html
+    assert "1213 points" in detail_html
+    assert "660 条评论" in detail_html
     assert "&lt;script&gt;alert" in detail_html
     assert "<script>alert" not in detail_html
     assert 'rel="noopener noreferrer"' in detail_html
