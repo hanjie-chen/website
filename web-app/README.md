@@ -247,7 +247,7 @@ Commonly touched files:
 - `css/article-details.css`
   - article page layout, TOC card styling, and article-body presentation rules
 - `css/briefs.css`
-  - Daily Brief editorial reading layout, archive rows, story hierarchy, and responsive presentation
+  - Daily Brief content-first reading layout, single archive list, story hierarchy, and responsive presentation
 - `css/title.css`
   - heading presentation inside rendered Markdown
 - `css/blockquote.css`

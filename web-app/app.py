@@ -244,7 +244,6 @@ def brief_index(lang):
         "brief_index.html",
         current_lang=current_lang,
         briefs=briefs,
-        latest_brief=briefs[0] if briefs else None,
     )
 
 

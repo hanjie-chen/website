@@ -1,5 +1,7 @@
 import json
 
+from bs4 import BeautifulSoup
+
 import app as app_module
 from daily_briefs import list_briefs, load_brief, store_brief
 
@@ -157,11 +159,26 @@ def test_brief_routes_render_archive_detail_language_notice_and_escaped_content(
     missing = client.get("/zh/briefs/2026-07-24")
 
     assert archive.status_code == 200
-    assert "2026-07-25" in archive.get_data(as_text=True)
+    archive_soup = BeautifulSoup(archive.get_data(as_text=True), "html.parser")
+    assert len(archive_soup.find_all("time", string="2026-07-25")) == 1
     detail_html = detail.get_data(as_text=True)
+    detail_soup = BeautifulSoup(detail_html, "html.parser")
     assert detail.status_code == 200
-    assert "HN #49038433" in detail_html
+    assert detail_soup.select_one("h1 time").get_text(strip=True) == "2026-07-25"
+    assert not detail_soup.select(
+        ".briefs-overline, .briefs-facts, .brief-section-index, .brief-item-number"
+    )
     assert 'class="brief-story-title" href="https://example.com/story"' in detail_html
+    assert len(detail_soup.find_all("a", href="https://example.com/story")) == 1
+    assert (
+        len(
+            detail_soup.find_all(
+                "a", href="https://news.ycombinator.com/item?id=49038433"
+            )
+        )
+        == 1
+    )
+    assert "HN #49038433" not in detail_html
     assert "1,213" not in detail_html
     assert "1213 points" in detail_html
     assert "660 条评论" in detail_html
