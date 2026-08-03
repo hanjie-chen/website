@@ -78,7 +78,7 @@
                         <h3>{{ t("home.start.briefs_title") }}</h3>
                         {% if current_brief %}
                         <p>{{ t("home.start.briefs_latest") }} {{ current_brief.date }}</p>
-                        <a class="home-entry-link" href="{{ url_for('brief_index', lang=current_lang) }}">
+                        <a class="home-entry-link" href="{{ url_for('brief_detail', lang=current_lang, brief_date=current_brief.date) }}">
                             {{ t("home.start.briefs_cta") }}
                         </a>
                         {% else %}

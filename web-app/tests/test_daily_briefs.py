@@ -4,7 +4,13 @@ import pytest
 from bs4 import BeautifulSoup
 
 import app as app_module
-from daily_briefs import BriefValidationError, load_current_brief, store_brief
+from daily_briefs import (
+    BriefValidationError,
+    load_brief,
+    load_brief_archive,
+    load_current_brief,
+    store_brief,
+)
 
 
 def brief_payload(date_label="2026-07-25", item_id="49038433"):
@@ -56,26 +62,33 @@ def test_store_brief_creates_updates_and_keeps_same_date_idempotent(tmp_path):
     assert unchanged == "unchanged"
     assert updated == "updated"
     assert (
-        load_current_brief(tmp_path)["sections"]["ai"]["items"][0]["summary"]
+        load_brief(tmp_path, "2026-07-25")["sections"]["ai"]["items"][0]["summary"]
         == "Updated summary"
     )
+    assert load_current_brief(tmp_path)["date"] == "2026-07-25"
+    assert load_brief_archive(tmp_path) == [
+        {
+            "date": "2026-07-25",
+            "generated_at": "2026-07-25T08:04:00+08:00",
+            "ai_items": 1,
+            "non_ai_hot_items": 0,
+        }
+    ]
     assert json.loads((tmp_path / "current.json").read_text()) == {"date": "2026-07-25"}
     assert not list(tmp_path.glob("*.tmp"))
 
 
-def test_unchanged_publish_repairs_current_pointer_and_removes_v1(tmp_path):
+def test_unchanged_publish_repairs_current_pointer_and_archive_index(tmp_path):
     payload = brief_payload()
     store_brief(tmp_path, payload)
     (tmp_path / "current.json").unlink()
-    legacy = brief_payload("2026-07-24", "24")
-    legacy["schema_version"] = 1
-    (tmp_path / "2026-07-24.json").write_text(json.dumps(legacy), encoding="utf-8")
+    (tmp_path / "archive-index.json").unlink()
 
     status, _ = store_brief(tmp_path, payload)
 
     assert status == "unchanged"
     assert load_current_brief(tmp_path)["date"] == "2026-07-25"
-    assert not (tmp_path / "2026-07-24.json").exists()
+    assert [entry["date"] for entry in load_brief_archive(tmp_path)] == ["2026-07-25"]
 
 
 def test_store_brief_rejects_v1_missing_status_and_unknown_item_fields(tmp_path):
@@ -107,16 +120,15 @@ def test_store_brief_rejects_non_string_content_status(tmp_path, invalid_status)
         store_brief(tmp_path, payload)
 
 
-def test_store_brief_keeps_seven_newest_v2_payloads_and_removes_v1(tmp_path):
-    legacy = brief_payload("2026-07-19", "19")
-    legacy["schema_version"] = 1
-    (tmp_path / "2026-07-19.json").write_text(json.dumps(legacy), encoding="utf-8")
-
-    for day in range(20, 28):
+def test_store_brief_retains_and_indexes_every_published_payload(tmp_path):
+    for day in range(18, 28):
         store_brief(tmp_path, brief_payload(f"2026-07-{day}", str(day)))
 
     stored_dates = sorted(path.stem for path in tmp_path.glob("2026-*.json"))
-    assert stored_dates == [f"2026-07-{day}" for day in range(21, 28)]
+    assert stored_dates == [f"2026-07-{day}" for day in range(18, 28)]
+    assert [entry["date"] for entry in load_brief_archive(tmp_path)] == [
+        f"2026-07-{day}" for day in range(27, 17, -1)
+    ]
     assert json.loads((tmp_path / "current.json").read_text()) == {"date": "2026-07-27"}
 
 
@@ -126,6 +138,44 @@ def test_current_pointer_only_moves_forward(tmp_path):
 
     assert load_current_brief(tmp_path)["date"] == "2026-07-25"
     assert (tmp_path / "2026-07-24.json").is_file()
+    assert [entry["date"] for entry in load_brief_archive(tmp_path)] == [
+        "2026-07-25",
+        "2026-07-24",
+    ]
+
+
+def test_same_date_update_refreshes_archive_metadata(tmp_path):
+    payload = brief_payload()
+    store_brief(tmp_path, payload)
+    payload["generated_at"] = "2026-07-25T09:30:00+08:00"
+    payload["sections"]["non_ai_hot"]["items"] = payload["sections"]["ai"]["items"]
+    payload["sections"]["ai"]["items"] = []
+
+    status, _ = store_brief(tmp_path, payload)
+
+    assert status == "updated"
+    assert load_brief_archive(tmp_path) == [
+        {
+            "date": "2026-07-25",
+            "generated_at": "2026-07-25T09:30:00+08:00",
+            "ai_items": 0,
+            "non_ai_hot_items": 1,
+        }
+    ]
+
+
+def test_archive_reads_only_the_index_without_falling_back_to_payload_scan(
+    tmp_path, caplog
+):
+    store_brief(tmp_path, brief_payload())
+    (tmp_path / "archive-index.json").unlink()
+
+    assert load_brief_archive(tmp_path) == []
+    assert load_brief(tmp_path, "2026-07-25")["date"] == "2026-07-25"
+
+    (tmp_path / "archive-index.json").write_text("{broken", encoding="utf-8")
+    assert load_brief_archive(tmp_path) == []
+    assert "status=invalid_archive_index" in caplog.text
 
 
 def test_load_current_brief_does_not_scan_when_pointer_is_missing_or_corrupt(
@@ -223,7 +273,7 @@ def test_publish_endpoint_rejects_oversized_body(client, monkeypatch):
     assert response.status_code == 413
 
 
-def test_brief_routes_render_only_current_and_keep_history_private(client, app):
+def test_brief_routes_render_archive_and_historical_details(client, app):
     with app.app_context():
         store_brief(
             app_module.Daily_Briefs_Directory,
@@ -231,14 +281,26 @@ def test_brief_routes_render_only_current_and_keep_history_private(client, app):
         )
         store_brief(app_module.Daily_Briefs_Directory, brief_payload())
 
-    current = client.get("/zh/briefs")
+    archive = client.get("/zh/briefs")
     detail = client.get("/zh/briefs/2026-07-25")
     english = client.get("/en/briefs/2026-07-25")
-    private_history = client.get("/zh/briefs/2026-07-24")
+    historical = client.get("/zh/briefs/2026-07-24")
 
-    assert current.status_code == 200
-    current_soup = BeautifulSoup(current.get_data(as_text=True), "html.parser")
-    assert current_soup.select_one("h1 time").get_text(strip=True) == "2026-07-25"
+    assert archive.status_code == 200
+    archive_soup = BeautifulSoup(archive.get_data(as_text=True), "html.parser")
+    assert [
+        time.get_text(strip=True) for time in archive_soup.select(".brief-date")
+    ] == [
+        "2026-07-25",
+        "2026-07-24",
+    ]
+    assert [
+        " ".join(meta.get_text().split())
+        for meta in archive_soup.select(".brief-archive-meta")
+    ] == [
+        "1 AI · 0 圈外",
+        "1 AI · 0 圈外",
+    ]
     detail_html = detail.get_data(as_text=True)
     detail_soup = BeautifulSoup(detail_html, "html.parser")
     assert detail.status_code == 200
@@ -265,7 +327,8 @@ def test_brief_routes_render_only_current_and_keep_history_private(client, app):
     assert 'rel="noopener noreferrer"' in detail_html
     assert english.status_code == 200
     assert "currently published in Chinese only" in english.get_data(as_text=True)
-    assert private_history.status_code == 404
+    assert historical.status_code == 200
+    assert "2026-07-24" in historical.get_data(as_text=True)
 
 
 def test_homepage_shows_latest_brief_and_language_scoped_links(client, app):
@@ -275,12 +338,12 @@ def test_homepage_shows_latest_brief_and_language_scoped_links(client, app):
     chinese = client.get("/zh/").get_data(as_text=True)
     english = client.get("/en/").get_data(as_text=True)
 
-    assert 'href="/zh/briefs"' in chinese
-    assert 'href="/en/briefs"' in english
+    assert 'href="/zh/briefs/2026-07-25"' in chinese
+    assert 'href="/en/briefs/2026-07-25"' in english
     assert "最新一期： 2026-07-25" in chinese
 
 
-def test_empty_current_brief_still_returns_200(client):
+def test_empty_archive_still_returns_200(client):
     response = client.get("/zh/briefs")
 
     assert response.status_code == 200

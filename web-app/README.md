@@ -8,7 +8,7 @@ If `articles-sync` is responsible for keeping the Markdown source up to date, `w
 
 The `web-app` subsystem covers these major areas:
 
-- serving the homepage, current Daily Brief page, article pages, docs-style category pages, and the About page
+- serving the homepage, Daily Brief archive/detail pages, article pages, docs-style category pages, and the About page
 - validating authenticated Daily Brief payloads and storing them in a dedicated persistent directory
 - exposing read-only article metadata APIs for public consumption
 - importing Markdown articles into the SQLite metadata database
@@ -66,9 +66,10 @@ What it does:
 - requires every `hn_item_id` to match its Hacker News discussion URL
 - writes canonical per-date JSON with an atomic replace
 - atomically advances `current.json` without scanning historical payloads during public requests
-- keeps the 7 newest valid schema v2 date payloads for operational debugging and removes incompatible or older date files after a successful publish
+- atomically maintains `archive-index.json` with dates, generation timestamps, and section counts for the public archive
+- retains every successfully published schema v2 date payload without a time or count limit for now
 - treats same-date publishing as an idempotent create, unchanged write, or update
-- returns no current brief when the pointer or its target is missing or invalid, without falling back to a directory scan
+- reads the homepage from `current.json`, the archive page from `archive-index.json`, and a dated page from its exact payload without falling back to a directory scan
 
 Daily Brief files live outside SQLite because the existing article database can be rebuilt from source. Production mounts the dedicated `daily_brief_data` volume at `/daily-briefs/data`.
 
@@ -206,11 +207,14 @@ Daily Brief publishing follows a separate flow:
 1. The local `daily-brief` generator writes a schema-versioned public JSON file.
 2. Its publisher sends the file to `POST /internal/briefs` with `X-DAILY-BRIEF-TOKEN`.
 3. `daily_briefs.py` validates and atomically stores the normalized payload by date.
-4. The homepage and Daily Brief routes read `current.json` and its exact date payload without scanning the retained debug history.
+4. The same locked write updates `archive-index.json` and advances `current.json` only to the newest successful date.
+5. The homepage reads the current pointer, the archive page reads the lightweight index, and dated pages read one exact payload.
 
-The stable `/<lang>/briefs` route renders the current brief. The dated route only
-serves that same current date; retained debug payloads are never exposed as a
-public archive.
+The stable `/<lang>/briefs` route lists every successfully published date, newest
+first. `/<lang>/briefs/<YYYY-MM-DD>` serves any retained strict schema v2 payload.
+Normal public requests never scan the storage directory. Same-date republishing
+overwrites that date and refreshes its archive metadata; explicit older backfills
+join the archive without moving the current pointer backward.
 
 The endpoint is hidden with a 404 when `DAILY_BRIEF_PUBLISH_TOKEN` is unset. `DAILY_BRIEF_DATA_DIRECTORY` overrides the default `/daily-briefs/data` storage path.
 
@@ -233,7 +237,7 @@ Most important files:
 - `article_details.html`
   - article detail page with left section nav and right TOC
 - `brief_index.html` and `brief_detail.html`
-  - empty-state and current Daily Brief reading pages
+  - Daily Brief archive and per-date reading pages
 - `_docs_tree.html`
   - recursive partial for the left docs sidebar tree
 - `404.html`
@@ -254,7 +258,7 @@ Commonly touched files:
 - `css/article-details.css`
   - article page layout, TOC card styling, and article-body presentation rules
 - `css/briefs.css`
-  - Daily Brief content-first reading layout, story hierarchy, and responsive presentation
+  - Daily Brief content-first reading layout, archive list, story hierarchy, and responsive presentation
 - `css/title.css`
   - heading presentation inside rendered Markdown
 - `css/blockquote.css`

@@ -12,8 +12,9 @@ from urllib.parse import parse_qs, urlsplit
 
 LOGGER = logging.getLogger(__name__)
 SCHEMA_VERSION = 2
-HISTORY_LIMIT = 7
 CURRENT_POINTER_NAME = "current.json"
+ARCHIVE_INDEX_NAME = "archive-index.json"
+ARCHIVE_INDEX_VERSION = 1
 SECTION_LIMITS = {"ai": 5, "non_ai_hot": 2}
 ROOT_KEYS = {"schema_version", "date", "generated_at", "timezone", "sections"}
 SECTION_KEYS = {"note", "items"}
@@ -29,6 +30,13 @@ ITEM_KEYS = {
     "comments",
 }
 CONTENT_STATUSES = {"ok", "fetch_failed", "summary_failed", "title_only"}
+ARCHIVE_INDEX_KEYS = {"index_version", "briefs"}
+ARCHIVE_ENTRY_KEYS = {
+    "date",
+    "generated_at",
+    "ai_items",
+    "non_ai_hot_items",
+}
 
 
 class BriefValidationError(ValueError):
@@ -87,6 +95,7 @@ def store_brief(directory, payload) -> tuple[str, dict]:
     ).encode("utf-8")
 
     with _store_lock(target_directory):
+        archive_entries = _load_archive_entries(target_directory)
         target = target_directory / f"{normalized['date']}.json"
         try:
             existing = target.read_bytes()
@@ -98,14 +107,16 @@ def store_brief(directory, payload) -> tuple[str, dict]:
         if status != "unchanged":
             _atomic_write(target, content)
 
+        archive_entries = _update_archive_entries(archive_entries, normalized)
+        _write_archive_index(target_directory, archive_entries)
+
         current_date = _load_current_date(target_directory)
-        if current_date is None or normalized["date"] >= current_date:
+        newest_archive_date = archive_entries[0]["date"]
+        if current_date is None or newest_archive_date >= current_date:
             pointer = (
-                json.dumps({"date": normalized["date"]}, sort_keys=True) + "\n"
+                json.dumps({"date": newest_archive_date}, sort_keys=True) + "\n"
             ).encode("utf-8")
             _atomic_write(target_directory / CURRENT_POINTER_NAME, pointer)
-
-        _prune_archived_briefs(target_directory)
     return status, normalized
 
 
@@ -115,6 +126,27 @@ def load_current_brief(directory) -> dict | None:
     if current_date is None:
         return None
     return _load_valid_file(root / f"{current_date}.json")
+
+
+def load_brief(directory, date_label: str) -> dict | None:
+    try:
+        canonical_date = _validate_date(date_label)
+    except BriefValidationError:
+        return None
+    return _load_valid_file(Path(directory) / f"{canonical_date}.json")
+
+
+def load_brief_archive(directory) -> list[dict]:
+    root = Path(directory)
+    try:
+        return _load_archive_entries(root)
+    except BriefValidationError as exc:
+        LOGGER.error(
+            "component=daily_brief_store status=invalid_archive_index file=%s error=%s",
+            root / ARCHIVE_INDEX_NAME,
+            exc,
+        )
+        return []
 
 
 def _load_current_date(directory: Path) -> str | None:
@@ -134,30 +166,82 @@ def _load_current_date(directory: Path) -> str | None:
         return None
 
 
-def _prune_archived_briefs(directory: Path) -> None:
-    valid_paths = []
-    for path in directory.glob("*.json"):
-        if path.name == CURRENT_POINTER_NAME:
-            continue
-        try:
-            _validate_date(path.stem)
-        except BriefValidationError:
-            continue
-        if _load_valid_file(path) is None:
-            path.unlink(missing_ok=True)
-            LOGGER.info(
-                "component=daily_brief_store status=removed_incompatible file=%s",
-                path,
-            )
-            continue
-        valid_paths.append(path)
+def _load_archive_entries(directory: Path) -> list[dict]:
+    index_path = directory / ARCHIVE_INDEX_NAME
+    try:
+        payload = json.loads(index_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return []
+    except (OSError, json.JSONDecodeError) as exc:
+        raise BriefValidationError("archive index must contain valid JSON") from exc
 
-    for path in sorted(valid_paths, reverse=True)[HISTORY_LIMIT:]:
-        path.unlink()
-        LOGGER.info(
-            "component=daily_brief_store status=pruned file=%s",
-            path,
+    if not isinstance(payload, dict) or set(payload) != ARCHIVE_INDEX_KEYS:
+        raise BriefValidationError("archive index must contain the exact fields")
+    if payload["index_version"] != ARCHIVE_INDEX_VERSION:
+        raise BriefValidationError("unsupported archive index version")
+    raw_entries = payload["briefs"]
+    if not isinstance(raw_entries, list):
+        raise BriefValidationError("archive index briefs must be a list")
+
+    entries = [_validate_archive_entry(entry) for entry in raw_entries]
+    dates = [entry["date"] for entry in entries]
+    if len(dates) != len(set(dates)):
+        raise BriefValidationError("archive index dates must be unique")
+    if dates != sorted(dates, reverse=True):
+        raise BriefValidationError("archive index must be sorted newest first")
+    return entries
+
+
+def _validate_archive_entry(entry) -> dict:
+    if not isinstance(entry, dict) or set(entry) != ARCHIVE_ENTRY_KEYS:
+        raise BriefValidationError("archive entry must contain the exact fields")
+
+    ai_items = _validate_count(entry["ai_items"], "archive ai_items")
+    non_ai_hot_items = _validate_count(
+        entry["non_ai_hot_items"], "archive non_ai_hot_items"
+    )
+    if ai_items > SECTION_LIMITS["ai"]:
+        raise BriefValidationError("archive ai_items exceeds the section limit")
+    if non_ai_hot_items > SECTION_LIMITS["non_ai_hot"]:
+        raise BriefValidationError("archive non_ai_hot_items exceeds the section limit")
+
+    return {
+        "date": _validate_date(entry["date"]),
+        "generated_at": _validate_generated_at(entry["generated_at"]),
+        "ai_items": ai_items,
+        "non_ai_hot_items": non_ai_hot_items,
+    }
+
+
+def _update_archive_entries(entries: list[dict], brief: dict) -> list[dict]:
+    entry = {
+        "date": brief["date"],
+        "generated_at": brief["generated_at"],
+        "ai_items": len(brief["sections"]["ai"]["items"]),
+        "non_ai_hot_items": len(brief["sections"]["non_ai_hot"]["items"]),
+    }
+    by_date = {existing["date"]: existing for existing in entries}
+    by_date[entry["date"]] = entry
+    return [by_date[date_label] for date_label in sorted(by_date, reverse=True)]
+
+
+def _write_archive_index(directory: Path, entries: list[dict]) -> None:
+    content = (
+        json.dumps(
+            {"index_version": ARCHIVE_INDEX_VERSION, "briefs": entries},
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
         )
+        + "\n"
+    ).encode("utf-8")
+    target = directory / ARCHIVE_INDEX_NAME
+    try:
+        if target.read_bytes() == content:
+            return
+    except FileNotFoundError:
+        pass
+    _atomic_write(target, content)
 
 
 @contextmanager

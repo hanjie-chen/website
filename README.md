@@ -4,7 +4,7 @@
 
 Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + Cloudflare
 
-文章内容来自独立的知识库仓库 [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过 push-driven 内容同步、增量导入与静态渲染自动发布到站点，并保留低频定时同步作为兜底。Daily Brief 由独立生成器每天产出，通过认证发布接口更新站点当前简报；网站内部仅保留最近 7 个成功发布日期的 payload 用于排错。
+文章内容来自独立的知识库仓库 [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过 push-driven 内容同步、增量导入与静态渲染自动发布到站点，并保留低频定时同步作为兜底。Daily Brief 由独立生成器每天产出，通过认证发布接口更新当前简报与网页历史归档；已成功发布的 payload 暂不设置保留期限，方便直接在网页上复盘和排错。
 
 ## Product Direction
 
@@ -15,7 +15,7 @@ Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + C
 这个仓库主要负责以下能力：
 
 - 提供带语言前缀的公开页面：`/zh/...`、`/en/...`，根路径 `/` 会按语言偏好自动跳转
-- 提供 Daily Brief 首页入口与当前简报阅读页；简报正文当前仅提供中文
+- 提供 Daily Brief 首页入口、历史归档与按日期阅读页；简报正文当前仅提供中文
 - 提供公开只读的文章 metadata API：`GET /api/articles` 与 `GET /api/articles/<id>`
 - 把 Markdown 知识库同步、导入并渲染成可访问的 HTML
 - 通过 CI/CD 将镜像部署到 GCP VM，并由 Cloudflare 暴露到公网
@@ -32,13 +32,13 @@ network traffic
   - `source_md_articles`：Markdown 源文与图片
   - `rendered_html_articles`：渲染后的 HTML 与拷贝后的静态资源
   - `webapp_instance`：SQLite 数据文件
-  - `daily_brief_data`：当前 Daily Brief 指针与最近 7 个严格校验的 debug payload
+  - `daily_brief_data`：当前 Daily Brief 指针、网页归档索引与全部严格校验的按日期 payload
 
 项目运行时的职责分工：
 
 - web-app
 
-  Flask 应用本体，负责页面路由、Daily Brief 校验与当前/调试存储、文章导入、Markdown 渲染、TOC 与 docs-style navigation
+  Flask 应用本体，负责页面路由、Daily Brief 校验、当前指针与历史归档存储、文章导入、Markdown 渲染、TOC 与 docs-style navigation
 
 - articles-sync
 
