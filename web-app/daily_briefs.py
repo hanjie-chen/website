@@ -23,6 +23,8 @@ ITEM_KEYS = {
     "points",
     "comments",
 }
+OPTIONAL_ITEM_KEYS = {"content_status"}
+CONTENT_STATUSES = {"ok", "fetch_failed", "summary_failed", "title_only"}
 
 
 class BriefValidationError(ValueError):
@@ -157,8 +159,15 @@ def _load_valid_file(path: Path) -> dict | None:
 
 
 def _validate_item(item) -> dict:
-    if not isinstance(item, dict) or set(item) != ITEM_KEYS:
+    if not isinstance(item, dict):
         raise BriefValidationError("item must contain the exact schema v1 fields")
+    item_keys = set(item)
+    if item_keys not in (ITEM_KEYS, ITEM_KEYS | OPTIONAL_ITEM_KEYS):
+        raise BriefValidationError("item must contain the exact schema v1 fields")
+
+    content_status = item.get("content_status", "ok")
+    if not isinstance(content_status, str) or content_status not in CONTENT_STATUSES:
+        raise BriefValidationError("unsupported content_status")
 
     hn_item_id = _validate_text(item["hn_item_id"], "hn_item_id", 32)
     if not hn_item_id.isdigit():
@@ -178,6 +187,7 @@ def _validate_item(item) -> dict:
         "hn_item_id": hn_item_id,
         "title": _validate_text(item["title"], "title", 300),
         "summary": _validate_text(item["summary"], "summary", 4000),
+        "content_status": content_status,
         "why": _validate_text(item["why"], "why", 1000),
         "source_url": source_url,
         "discussion_url": discussion_url,

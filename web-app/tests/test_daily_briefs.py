@@ -1,9 +1,10 @@
 import json
 
+import pytest
 from bs4 import BeautifulSoup
 
 import app as app_module
-from daily_briefs import list_briefs, load_brief, store_brief
+from daily_briefs import BriefValidationError, list_briefs, load_brief, store_brief
 
 
 def brief_payload(date_label="2026-07-25", item_id="49038433"):
@@ -20,6 +21,7 @@ def brief_payload(date_label="2026-07-25", item_id="49038433"):
                         "hn_item_id": item_id,
                         "title": "Claude <script>alert('x')</script>",
                         "summary": "支持 `code`、引号、<尖括号> 与中文标点。",
+                        "content_status": "ok",
                         "why": "keywords: Claude",
                         "source_url": "https://example.com/story",
                         "discussion_url": f"https://news.ycombinator.com/item?id={item_id}",
@@ -58,6 +60,38 @@ def test_store_brief_creates_updates_and_keeps_same_date_idempotent(tmp_path):
         == "Updated summary"
     )
     assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_store_brief_accepts_legacy_items_without_content_status(tmp_path):
+    payload = brief_payload()
+    del payload["sections"]["ai"]["items"][0]["content_status"]
+
+    _, normalized = store_brief(tmp_path, payload)
+
+    assert normalized["sections"]["ai"]["items"][0]["content_status"] == "ok"
+
+
+def test_store_brief_validates_content_status_and_rejects_unknown_item_fields(
+    tmp_path,
+):
+    invalid_status = brief_payload()
+    invalid_status["sections"]["ai"]["items"][0]["content_status"] = "unknown"
+    unknown_field = brief_payload()
+    unknown_field["sections"]["ai"]["items"][0]["unexpected"] = True
+
+    with pytest.raises(BriefValidationError, match="unsupported content_status"):
+        store_brief(tmp_path, invalid_status)
+    with pytest.raises(BriefValidationError, match="exact schema v1 fields"):
+        store_brief(tmp_path, unknown_field)
+
+
+@pytest.mark.parametrize("invalid_status", [None, [], 1])
+def test_store_brief_rejects_non_string_content_status(tmp_path, invalid_status):
+    payload = brief_payload()
+    payload["sections"]["ai"]["items"][0]["content_status"] = invalid_status
+
+    with pytest.raises(BriefValidationError, match="unsupported content_status"):
+        store_brief(tmp_path, payload)
 
 
 def test_list_briefs_sorts_descending_and_ignores_corrupt_files(tmp_path, caplog):

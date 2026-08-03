@@ -62,6 +62,7 @@ What it does:
 
 - accepts only schema version 1 with fixed `ai` and `non_ai_hot` sections
 - validates dates, timezone-aware generation timestamps, string bounds, item limits, HTTP(S) links, and non-negative statistics
+- validates the optional `content_status` item field against `ok`, `fetch_failed`, `summary_failed`, and `title_only`; legacy schema v1 items without the field normalize to `ok`
 - requires every `hn_item_id` to match its Hacker News discussion URL
 - writes canonical per-date JSON with an atomic replace
 - treats same-date publishing as an idempotent create, unchanged write, or update
