@@ -53,7 +53,7 @@ if [[ -n "${BRIEF_INGEST_TEST_TOKEN:-}" ]]; then
     -H "Host: ${HOST_HEADER}" \
     -H "Content-Type: application/json" \
     -H "X-DAILY-BRIEF-TOKEN: ${BRIEF_INGEST_TEST_TOKEN}" \
-    --data-binary '{"schema_version":1,"date":"2026-07-25","generated_at":"2026-07-25T08:00:00+08:00","timezone":"Asia/Singapore","sections":{"ai":{"note":"special: `code` <tag> \"quotes\" 中文。","items":[{"hn_item_id":"49038433","title":"Claude <script> test","summary":"Yorishiro 是一个开源的 macOS 终端项目；技术讨论可能包含 1 OR 1=1 UNION SELECT password FROM users 等纯文本示例，但这些内容只会经过严格校验后作为文本存储并由 Jinja 转义。","why":"keywords: Claude","source_url":"https://example.com/story","discussion_url":"https://news.ycombinator.com/item?id=49038433","points":1,"comments":2}]},"non_ai_hot":{"note":"","items":[]}}}' \
+    --data-binary '{"schema_version":2,"date":"2026-07-25","generated_at":"2026-07-25T08:00:00+08:00","timezone":"Asia/Singapore","sections":{"ai":{"note":"special: `code` <tag> \"quotes\" 中文。","items":[{"hn_item_id":"49038433","title":"Claude <script> test","summary":"Yorishiro 是一个开源的 macOS 终端项目；技术讨论可能包含 1 OR 1=1 UNION SELECT password FROM users 等纯文本示例，但这些内容只会经过严格校验后作为文本存储并由 Jinja 转义。","content_status":"ok","why":"keywords: Claude","source_url":"https://example.com/story","discussion_url":"https://news.ycombinator.com/item?id=49038433","points":1,"comments":2}]},"non_ai_hot":{"note":"","items":[]}}}' \
     2>/dev/null)"
   if [[ "${brief_status}" != "200" && "${brief_status}" != "201" ]]; then
     echo "[smoke] Daily Brief ingestion probe returned HTTP ${brief_status}." >&2

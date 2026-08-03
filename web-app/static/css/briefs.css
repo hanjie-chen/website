@@ -65,8 +65,7 @@
 }
 
 .brief-count,
-.brief-item-meta,
-.brief-archive-meta {
+.brief-item-meta {
     color: var(--text-secondary-color);
     font-size: 0.82rem;
 }
@@ -104,8 +103,7 @@
 }
 
 .brief-story-title:focus-visible,
-.brief-item-meta a:focus-visible,
-.brief-archive-row:focus-visible {
+.brief-item-meta a:focus-visible {
     outline: 2px solid var(--accent-color);
     outline-offset: 4px;
 }
@@ -143,33 +141,6 @@
 .brief-item-meta a {
     color: #79b8ff;
     text-decoration: none;
-}
-
-.brief-archive-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.brief-archive-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 1rem;
-    min-height: 72px;
-    border-bottom: 1px solid var(--brief-border);
-    color: var(--text-primary-color);
-    text-decoration: none;
-}
-
-.brief-archive-row:hover {
-    color: #a6d1ff;
-}
-
-.brief-archive-row .brief-date {
-    font-size: clamp(1.05rem, 2.2vw, 1.25rem);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
 }
 
 .briefs-empty-state,
@@ -211,9 +182,4 @@
         padding-block: 1.35rem;
     }
 
-    .brief-archive-row {
-        grid-template-columns: 1fr;
-        gap: 0.25rem;
-        padding-block: 0.9rem;
-    }
 }

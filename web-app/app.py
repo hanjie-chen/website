@@ -27,7 +27,7 @@ from config import (
     Daily_Briefs_Directory,
     Rendered_Articles,
 )
-from daily_briefs import BriefValidationError, list_briefs, load_brief, store_brief
+from daily_briefs import BriefValidationError, load_current_brief, store_brief
 from i18n import (
     DEFAULT_LANGUAGE,
     LANG_COOKIE_NAME,
@@ -185,11 +185,10 @@ def index_without_trailing_slash(lang):
 @app.route("/<lang>/")
 def index(lang):
     current_lang = _require_supported_language(lang)
-    briefs = list_briefs(Daily_Briefs_Directory)
     return render_template(
         "index.html",
         current_lang=current_lang,
-        latest_brief=briefs[0] if briefs else None,
+        current_brief=load_current_brief(Daily_Briefs_Directory),
     )
 
 
@@ -239,19 +238,24 @@ def about_me(lang):
 @app.route("/<lang>/briefs")
 def brief_index(lang):
     current_lang = _require_supported_language(lang)
-    briefs = list_briefs(Daily_Briefs_Directory)
+    brief = load_current_brief(Daily_Briefs_Directory)
+    if brief is not None:
+        return render_template(
+            "brief_detail.html",
+            current_lang=current_lang,
+            brief=brief,
+        )
     return render_template(
         "brief_index.html",
         current_lang=current_lang,
-        briefs=briefs,
     )
 
 
 @app.route("/<lang>/briefs/<brief_date>")
 def brief_detail(lang, brief_date):
     current_lang = _require_supported_language(lang)
-    brief = load_brief(Daily_Briefs_Directory, brief_date)
-    if brief is None:
+    brief = load_current_brief(Daily_Briefs_Directory)
+    if brief is None or brief["date"] != brief_date:
         abort(404)
     return render_template(
         "brief_detail.html",

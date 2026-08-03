@@ -22,26 +22,10 @@
             {% endif %}
         </header>
 
-        {% if briefs %}
-        <ol class="brief-archive-list" aria-label="{{ t('briefs.archive.title') }}">
-            {% for brief in briefs %}
-            <li>
-                <a class="brief-archive-row" href="{{ url_for('brief_detail', lang=current_lang, brief_date=brief.date) }}">
-                    <time class="brief-date" datetime="{{ brief.date }}">{{ brief.date }}</time>
-                    <span class="brief-archive-meta">
-                        {{ brief["sections"]["ai"]["items"]|length }} {{ t("briefs.archive.ai") }} ·
-                        {{ brief["sections"]["non_ai_hot"]["items"]|length }} {{ t("briefs.archive.non_ai") }}
-                    </span>
-                </a>
-            </li>
-            {% endfor %}
-        </ol>
-        {% else %}
         <section class="briefs-empty-state">
             <h2>{{ t("briefs.empty.title") }}</h2>
             <p>{{ t("briefs.empty.description") }}</p>
         </section>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -8,7 +8,7 @@ If `articles-sync` is responsible for keeping the Markdown source up to date, `w
 
 The `web-app` subsystem covers these major areas:
 
-- serving the homepage, Daily Brief archive/detail pages, article pages, docs-style category pages, and the About page
+- serving the homepage, current Daily Brief page, article pages, docs-style category pages, and the About page
 - validating authenticated Daily Brief payloads and storing them in a dedicated persistent directory
 - exposing read-only article metadata APIs for public consumption
 - importing Markdown articles into the SQLite metadata database
@@ -60,13 +60,15 @@ Daily Brief schema, validation, storage, and read helpers.
 
 What it does:
 
-- accepts only schema version 1 with fixed `ai` and `non_ai_hot` sections
+- accepts only strict schema version 2 with fixed `ai` and `non_ai_hot` sections
 - validates dates, timezone-aware generation timestamps, string bounds, item limits, HTTP(S) links, and non-negative statistics
-- validates the optional `content_status` item field against `ok`, `fetch_failed`, `summary_failed`, and `title_only`; legacy schema v1 items without the field normalize to `ok`
+- requires `content_status` on every item and validates it against `ok`, `fetch_failed`, `summary_failed`, and `title_only`; schema v1 is intentionally unsupported
 - requires every `hn_item_id` to match its Hacker News discussion URL
 - writes canonical per-date JSON with an atomic replace
+- atomically advances `current.json` without scanning historical payloads during public requests
+- keeps the 7 newest valid schema v2 date payloads for operational debugging and removes incompatible or older date files after a successful publish
 - treats same-date publishing as an idempotent create, unchanged write, or update
-- skips and logs corrupt persisted files instead of breaking the full archive
+- returns no current brief when the pointer or its target is missing or invalid, without falling back to a directory scan
 
 Daily Brief files live outside SQLite because the existing article database can be rebuilt from source. Production mounts the dedicated `daily_brief_data` volume at `/daily-briefs/data`.
 
@@ -204,7 +206,11 @@ Daily Brief publishing follows a separate flow:
 1. The local `daily-brief` generator writes a schema-versioned public JSON file.
 2. Its publisher sends the file to `POST /internal/briefs` with `X-DAILY-BRIEF-TOKEN`.
 3. `daily_briefs.py` validates and atomically stores the normalized payload by date.
-4. The homepage, archive, and detail routes read the newest valid files from the dedicated volume.
+4. The homepage and Daily Brief routes read `current.json` and its exact date payload without scanning the retained debug history.
+
+The stable `/<lang>/briefs` route renders the current brief. The dated route only
+serves that same current date; retained debug payloads are never exposed as a
+public archive.
 
 The endpoint is hidden with a 404 when `DAILY_BRIEF_PUBLISH_TOKEN` is unset. `DAILY_BRIEF_DATA_DIRECTORY` overrides the default `/daily-briefs/data` storage path.
 
@@ -227,7 +233,7 @@ Most important files:
 - `article_details.html`
   - article detail page with left section nav and right TOC
 - `brief_index.html` and `brief_detail.html`
-  - Daily Brief archive and per-date reading pages
+  - empty-state and current Daily Brief reading pages
 - `_docs_tree.html`
   - recursive partial for the left docs sidebar tree
 - `404.html`
@@ -248,7 +254,7 @@ Commonly touched files:
 - `css/article-details.css`
   - article page layout, TOC card styling, and article-body presentation rules
 - `css/briefs.css`
-  - Daily Brief content-first reading layout, single archive list, story hierarchy, and responsive presentation
+  - Daily Brief content-first reading layout, story hierarchy, and responsive presentation
 - `css/title.css`
   - heading presentation inside rendered Markdown
 - `css/blockquote.css`

@@ -4,7 +4,7 @@
 
 Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + Cloudflare
 
-文章内容来自独立的知识库仓库 [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过 push-driven 内容同步、增量导入与静态渲染自动发布到站点，并保留低频定时同步作为兜底。Daily Brief 由独立生成器每天产出，通过认证发布接口进入站点的日期归档。
+文章内容来自独立的知识库仓库 [hanjie-chen/knowledge-base](https://github.com/hanjie-chen/knowledge-base)，通过 push-driven 内容同步、增量导入与静态渲染自动发布到站点，并保留低频定时同步作为兜底。Daily Brief 由独立生成器每天产出，通过认证发布接口更新站点当前简报；网站内部仅保留最近 7 个成功发布日期的 payload 用于排错。
 
 ## Product Direction
 
@@ -15,7 +15,7 @@ Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + C
 这个仓库主要负责以下能力：
 
 - 提供带语言前缀的公开页面：`/zh/...`、`/en/...`，根路径 `/` 会按语言偏好自动跳转
-- 提供 Daily Brief 首页入口、按日期归档与每日详情页；简报正文当前仅提供中文
+- 提供 Daily Brief 首页入口与当前简报阅读页；简报正文当前仅提供中文
 - 提供公开只读的文章 metadata API：`GET /api/articles` 与 `GET /api/articles/<id>`
 - 把 Markdown 知识库同步、导入并渲染成可访问的 HTML
 - 通过 CI/CD 将镜像部署到 GCP VM，并由 Cloudflare 暴露到公网
@@ -32,13 +32,13 @@ network traffic
   - `source_md_articles`：Markdown 源文与图片
   - `rendered_html_articles`：渲染后的 HTML 与拷贝后的静态资源
   - `webapp_instance`：SQLite 数据文件
-  - `daily_brief_data`：通过严格校验的按日期 Daily Brief JSON
+  - `daily_brief_data`：当前 Daily Brief 指针与最近 7 个严格校验的 debug payload
 
 项目运行时的职责分工：
 
 - web-app
 
-  Flask 应用本体，负责页面路由、Daily Brief 校验与归档、文章导入、Markdown 渲染、TOC 与 docs-style navigation
+  Flask 应用本体，负责页面路由、Daily Brief 校验与当前/调试存储、文章导入、Markdown 渲染、TOC 与 docs-style navigation
 
 - articles-sync
 
@@ -199,7 +199,7 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - 内部重建接口：`POST /internal/reindex`
 - 鉴权头：`X-REIMPORT-ARTICLES-TOKEN`
 - Daily Brief 发布接口：`POST /internal/briefs`，使用独立的 `X-DAILY-BRIEF-TOKEN`；未配置 token 时接口返回 404
-- Daily Brief payload 限制为 128 KiB，写入前会校验固定 schema、条目数量、URL 与 HN item ID 一致性
+- Daily Brief payload 限制为 128 KiB，写入前会严格校验 schema v2、条目数量、URL 与 HN item ID 一致性；schema v1 不兼容
 - `/internal/briefs` 使用 Nginx exact-match location 关闭通用 WAF 检查，避免把只作为文本存储的技术内容误判为 SQLi/XSS；该例外不影响其他路由，并由 128 KiB edge limit、独立 token、严格 schema 校验与 Jinja escaping 构成补偿控制
 - ModSecurity audit log 以不含完整 request header/body 的 `AHZ` 记录进入容器日志，既能定位原始 rule ID，也避免发布 token 被整体写入 audit record；具体 rule message 仍可能包含必要的命中片段
 - `nginx-modsecurity` 默认开启 WAF

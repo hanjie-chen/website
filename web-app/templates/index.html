@@ -76,15 +76,15 @@
                 <div class="col-12 col-lg-4 d-flex home-entry-col">
                     <article class="home-entry-card home-brief-entry h-100 w-100">
                         <h3>{{ t("home.start.briefs_title") }}</h3>
-                        {% if latest_brief %}
-                        <p>{{ t("home.start.briefs_latest") }} {{ latest_brief.date }}</p>
-                        <a class="home-entry-link" href="{{ url_for('brief_detail', lang=current_lang, brief_date=latest_brief.date) }}">
+                        {% if current_brief %}
+                        <p>{{ t("home.start.briefs_latest") }} {{ current_brief.date }}</p>
+                        <a class="home-entry-link" href="{{ url_for('brief_index', lang=current_lang) }}">
                             {{ t("home.start.briefs_cta") }}
                         </a>
                         {% else %}
                         <p>{{ t("home.start.briefs_empty") }}</p>
                         <a class="home-entry-link" href="{{ url_for('brief_index', lang=current_lang) }}">
-                            {{ t("home.start.briefs_archive") }}
+                            {{ t("home.start.briefs_open") }}
                         </a>
                         {% endif %}
                     </article>
