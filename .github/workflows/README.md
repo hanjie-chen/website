@@ -30,6 +30,12 @@ Dependabot PR -> CI scan and candidate runtime checks -> review and merge -> CD
 daily container scan -> GitHub issue on actionable HIGH/CRITICAL findings
 ```
 
+When the daily scan finds an actionable vulnerability, the scan job fails
+intentionally after creating or updating the security issue. Its error
+annotation and job summary explicitly distinguish this policy failure from a
+runner failure, list the findings, and explain the Dependabot-driven upgrade
+path.
+
 Production deployment, content synchronization, and the production-reference
 check share the `production-deploy` concurrency group. They wait for each other
 instead of mutating or inspecting production concurrently. Terraform uses the

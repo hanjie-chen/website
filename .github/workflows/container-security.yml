@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   scan-pinned-images:
+    name: Scan pinned images (security policy gate)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -133,9 +134,41 @@ jobs:
             gh issue close "${issue_number}" --repo "${GITHUB_REPOSITORY}"
           fi
 
-      - name: Fail on actionable vulnerabilities
+      - name: Security update required (intentional policy failure)
         if: steps.findings.outputs.count != '0'
-        run: exit 1
+        env:
+          FINDING_COUNT: ${{ steps.findings.outputs.count }}
+        run: |
+          set -euo pipefail
+
+          if (( FINDING_COUNT == 1 )); then
+            finding_description="1 HIGH/CRITICAL vulnerability with an available fix"
+            affected_images="the affected image is"
+          else
+            finding_description="${FINDING_COUNT} HIGH/CRITICAL vulnerabilities with available fixes"
+            affected_images="the affected images are"
+          fi
+
+          {
+            echo "## Security update required"
+            echo
+            echo "The scan completed successfully and found **${finding_description}** in the pinned production images."
+            echo
+            echo "> The GitHub runner did not fail. This job is intentionally marked as failed by the repository security policy until ${affected_images} upgraded."
+            echo
+            echo "### Findings"
+            echo
+            cat trivy-reports/issue.md
+            echo
+            echo "### What to do next"
+            echo
+            echo "1. Review and merge the Dependabot image upgrade pull request when it becomes available."
+            echo "2. Confirm that CI and deployment complete successfully."
+            echo "3. The next clean scheduled scan will close the security issue automatically."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          echo "::error title=Security update required - scan completed successfully::The scan found ${finding_description} in the pinned production images. This job is intentionally marked as failed until ${affected_images} upgraded; the GitHub runner is healthy. See the job summary for findings and next steps."
+          exit 1
 
   verify-production-image-refs:
     runs-on: ubuntu-latest
