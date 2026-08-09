@@ -30,7 +30,7 @@ jinja2==3.1.6
     # via
     #   -r requirements.in
     #   flask
-markdown==3.10.2
+markdown==3.10.3
     # via
     #   -r requirements.in
     #   pymdown-extensions
@@ -65,7 +65,7 @@ pyyaml==6.0.3
     # via
     #   pymdown-extensions
     #   python-frontmatter
-ruff==0.16.0
+ruff==0.16.1
     # via -r requirements.in
 soupsieve==2.8.4
     # via beautifulsoup4
