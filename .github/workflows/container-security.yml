@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 concurrency:
   group: container-security
@@ -18,6 +17,11 @@ jobs:
   scan-pinned-images:
     name: Scan pinned images (security policy gate)
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -50,14 +54,21 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p trivy-reports
-          trivy image --scanners vuln --format json \
-            --ignorefile .trivyignore.yaml \
-            --skip-version-check \
-            --output trivy-reports/nginx.json "${NGINX_IMAGE}"
-          trivy image --scanners vuln --format json \
-            --ignorefile .trivyignore.yaml \
-            --skip-version-check \
-            --output trivy-reports/dozzle.json "${DOZZLE_IMAGE}"
+          scan_image() {
+            local name="$1"
+            local image="$2"
+            local temporary_report="trivy-reports/${name}.raw.json"
+            trivy image --scanners vuln --format json \
+              --ignorefile .trivyignore.yaml \
+              --skip-version-check \
+              --output "${temporary_report}" "${image}"
+            jq --arg image "${image}" '. + {ScannedImage: $image}' \
+              "${temporary_report}" > "trivy-reports/${name}.json"
+            rm "${temporary_report}"
+          }
+
+          scan_image nginx "${NGINX_IMAGE}"
+          scan_image dozzle "${DOZZLE_IMAGE}"
 
       - name: Build actionable vulnerability report
         id: findings
@@ -66,6 +77,7 @@ jobs:
           jq -s '
             [
               .[]
+              | .ScannedImage as $image
               | .Results[]?
               | .Target as $target
               | .Vulnerabilities[]?
@@ -74,6 +86,7 @@ jobs:
                   and ((.FixedVersion // "") != "")
                 )
               | {
+                  image: $image,
                   target: $target,
                   id: .VulnerabilityID,
                   severity: .Severity,
@@ -82,7 +95,7 @@ jobs:
                   fixed: .FixedVersion
                 }
             ]
-            | unique_by([.target, .id, .package])
+            | unique_by([.image, .target, .id, .package])
           ' trivy-reports/*.json > trivy-reports/actionable.json
 
           count="$(jq 'length' trivy-reports/actionable.json)"
@@ -91,9 +104,9 @@ jobs:
           {
             echo "The daily scan found **${count}** fixed HIGH/CRITICAL vulnerabilities in the pinned production images."
             echo
-            echo "| Severity | CVE | Package | Installed | Fixed | Target |"
-            echo "| --- | --- | --- | --- | --- | --- |"
-            jq -r '.[:50][] | "| \(.severity) | `\(.id)` | `\(.package)` | `\(.installed)` | `\(.fixed)` | `\(.target)` |"' \
+            echo "| Severity | CVE | Package | Installed | Fixed | Image | Target |"
+            echo "| --- | --- | --- | --- | --- | --- | --- |"
+            jq -r '.[:50][] | "| \(.severity) | `\(.id)` | `\(.package)` | `\(.installed)` | `\(.fixed)` | `\(.image)` | `\(.target)` |"' \
               trivy-reports/actionable.json
             echo
             echo "Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
@@ -103,7 +116,192 @@ jobs:
             fi
           } > trivy-reports/issue.md
 
+      - name: Discover and scan remediation candidates
+        id: remediation
+        if: steps.findings.outputs.count != '0'
+        env:
+          TRIVY_NO_PROGRESS: "true"
+        run: |
+          set -euo pipefail
+          mkdir -p trivy-reports/candidates
+          echo '[]' > trivy-reports/remediations.json
+
+          while IFS= read -r current_image; do
+            candidates_file="trivy-reports/candidates/discovered.json"
+            if ! python3 scripts/security/container_remediation.py discover \
+              --config .github/container-security-images.json \
+              --image "${current_image}" \
+              --max-candidates 10 > "${candidates_file}"; then
+              echo "::warning title=Container remediation discovery failed::Unable to discover candidates for ${current_image}. The vulnerability issue will remain open."
+              continue
+            fi
+
+            selected_candidate=""
+            selected_released_at=""
+            candidate_index=0
+            while IFS= read -r candidate_record; do
+              candidate_index=$((candidate_index + 1))
+              candidate_image="$(jq -r '.image' <<< "${candidate_record}")"
+              candidate_report="trivy-reports/candidates/candidate-${candidate_index}.json"
+              echo "Scanning remediation candidate ${candidate_image}"
+              if ! trivy image --scanners vuln --format json \
+                --ignorefile .trivyignore.yaml \
+                --skip-version-check \
+                --output "${candidate_report}" "${candidate_image}"; then
+                echo "::warning title=Container candidate scan failed::Unable to scan ${candidate_image}; trying the next candidate."
+                continue
+              fi
+
+              candidate_findings="$(
+                jq '[
+                  .Results[]?
+                  | .Vulnerabilities[]?
+                  | select(
+                      (.Severity == "HIGH" or .Severity == "CRITICAL")
+                      and ((.FixedVersion // "") != "")
+                    )
+                ] | length' "${candidate_report}"
+              )"
+              if (( candidate_findings == 0 )); then
+                selected_candidate="${candidate_image}"
+                selected_released_at="$(jq -r '.released_at' <<< "${candidate_record}")"
+                break
+              fi
+              echo "Candidate ${candidate_image} still has ${candidate_findings} actionable HIGH/CRITICAL findings."
+            done < <(jq -c '.[]' "${candidates_file}")
+
+            if [[ -z "${selected_candidate}" ]]; then
+              echo "::notice title=No clean container candidate::No newer candidate for ${current_image} passed the repository security policy."
+              continue
+            fi
+
+            python3 scripts/security/container_remediation.py replace \
+              --file compose.yml \
+              --current "${current_image}" \
+              --candidate "${selected_candidate}"
+            jq \
+              --arg current "${current_image}" \
+              --arg candidate "${selected_candidate}" \
+              --arg released_at "${selected_released_at}" \
+              '. + [{current: $current, candidate: $candidate, released_at: $released_at}]' \
+              trivy-reports/remediations.json > trivy-reports/remediations.tmp.json
+            mv trivy-reports/remediations.tmp.json trivy-reports/remediations.json
+          done < <(jq -r 'map(.image) | unique[]' trivy-reports/actionable.json)
+
+          remediation_count="$(jq 'length' trivy-reports/remediations.json)"
+          echo "count=${remediation_count}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create or update container security pull request
+        id: remediation_pr
+        if: steps.remediation.outcome == 'success' && steps.remediation.outputs.count != '0'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REMEDIATION_BRANCH: container-security/remediate-pinned-images
+        run: |
+          set -euo pipefail
+
+          actions_can_create_prs="$(
+            gh api "repos/${GITHUB_REPOSITORY}/actions/permissions/workflow" \
+              --jq '.can_approve_pull_request_reviews'
+          )"
+          if [[ "${actions_can_create_prs}" != "true" ]]; then
+            echo "::error title=Automatic remediation PR is disabled::Enable Settings > Actions > General > Allow GitHub Actions to create and approve pull requests. Candidate images passed the security scan, but no PR was created."
+            exit 1
+          fi
+
+          {
+            echo "This PR was created automatically because the pinned production image contains a fixable HIGH/CRITICAL vulnerability."
+            echo
+            echo "Normal Dependabot version updates keep their cooldown. This security remediation path only runs after the current pinned image fails the repository's container security policy."
+            echo
+            echo "| Current image | Security-cleared candidate | Candidate published |"
+            echo "| --- | --- | --- |"
+            jq -r '.[] | "| `\(.current)` | `\(.candidate)` | \(.released_at) |"' \
+              trivy-reports/remediations.json
+            echo
+            echo "The candidate images were scanned with the same Trivy HIGH/CRITICAL and fix-available policy used by CI. Versions remain pinned to immutable Docker Hub digests and still require review plus the full CI runtime checks."
+            echo
+            echo "Source security scan: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } > trivy-reports/remediation-pr.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "${REMEDIATION_BRANCH}"
+          git add compose.yml
+          candidate_tree="$(git write-tree)"
+          pushed=false
+
+          remote_sha="$(git ls-remote --heads origin "refs/heads/${REMEDIATION_BRANCH}" | awk '{print $1}')"
+          if [[ -n "${remote_sha}" ]]; then
+            git fetch origin "refs/heads/${REMEDIATION_BRANCH}:refs/remotes/origin/${REMEDIATION_BRANCH}"
+            remote_tree="$(git rev-parse "refs/remotes/origin/${REMEDIATION_BRANCH}^{tree}")"
+          else
+            remote_tree=""
+          fi
+
+          if [[ "${candidate_tree}" != "${remote_tree}" ]]; then
+            git commit -m "fix(security): upgrade vulnerable container images"
+            if [[ -n "${remote_sha}" ]]; then
+              git push \
+                --force-with-lease="refs/heads/${REMEDIATION_BRANCH}:${remote_sha}" \
+                origin "HEAD:refs/heads/${REMEDIATION_BRANCH}"
+            else
+              git push origin "HEAD:refs/heads/${REMEDIATION_BRANCH}"
+            fi
+            pushed=true
+          fi
+
+          pr_url="$(
+            gh pr list --repo "${GITHUB_REPOSITORY}" --state open \
+              --head "${REMEDIATION_BRANCH}" --json url --jq '.[0].url // empty'
+          )"
+          created=false
+          if [[ -z "${pr_url}" ]]; then
+            gh label create security --repo "${GITHUB_REPOSITORY}" \
+              --color B60205 --description "Security maintenance" --force
+            pr_url="$(
+              gh pr create --repo "${GITHUB_REPOSITORY}" \
+                --base main --head "${REMEDIATION_BRANCH}" \
+                --title "fix(security): upgrade vulnerable container images" \
+                --label security --body-file trivy-reports/remediation-pr.md
+            )"
+            created=true
+          else
+            gh pr edit "${pr_url}" --repo "${GITHUB_REPOSITORY}" \
+              --body-file trivy-reports/remediation-pr.md --add-label security
+          fi
+
+          echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+          if [[ "${pushed}" == "true" || "${created}" == "true" ]]; then
+            gh workflow run ci.yml --repo "${GITHUB_REPOSITORY}" --ref "${REMEDIATION_BRANCH}"
+          fi
+
+      - name: Add remediation status to the security report
+        if: always() && steps.findings.outputs.count != '0'
+        env:
+          REMEDIATION_COUNT: ${{ steps.remediation.outputs.count }}
+          REMEDIATION_OUTCOME: ${{ steps.remediation.outcome }}
+          REMEDIATION_PR_OUTCOME: ${{ steps.remediation_pr.outcome }}
+          REMEDIATION_PR_URL: ${{ steps.remediation_pr.outputs.url }}
+        run: |
+          {
+            echo
+            echo "## Automated remediation"
+            echo
+            if [[ "${REMEDIATION_OUTCOME}" != "success" ]]; then
+              echo "Candidate discovery or scanning did not complete successfully. Check the remediation step logs; the scanner will retry on the next run."
+            elif [[ "${REMEDIATION_COUNT:-0}" == "0" ]]; then
+              echo "No newer image candidate passed the repository security policy. The scanner will try again on the next run."
+            elif [[ "${REMEDIATION_PR_OUTCOME}" == "success" ]]; then
+              echo "A newer candidate passed the security scan and the remediation PR is ready: ${REMEDIATION_PR_URL}"
+            else
+              echo "A newer candidate passed the security scan, but the remediation PR could not be created or updated. Check the remediation step annotation."
+            fi
+          } >> trivy-reports/issue.md
+
       - name: Create, update, or close the security issue
+        if: always() && steps.findings.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FINDING_COUNT: ${{ steps.findings.outputs.count }}
@@ -135,9 +333,13 @@ jobs:
           fi
 
       - name: Security update required (intentional policy failure)
-        if: steps.findings.outputs.count != '0'
+        if: always() && steps.findings.outputs.count != '0'
         env:
           FINDING_COUNT: ${{ steps.findings.outputs.count }}
+          REMEDIATION_COUNT: ${{ steps.remediation.outputs.count }}
+          REMEDIATION_OUTCOME: ${{ steps.remediation.outcome }}
+          REMEDIATION_PR_OUTCOME: ${{ steps.remediation_pr.outcome }}
+          REMEDIATION_PR_URL: ${{ steps.remediation_pr.outputs.url }}
         run: |
           set -euo pipefail
 
@@ -162,7 +364,15 @@ jobs:
             echo
             echo "### What to do next"
             echo
-            echo "1. Review and merge the Dependabot image upgrade pull request when it becomes available."
+            if [[ "${REMEDIATION_OUTCOME}" != "success" ]]; then
+              echo "1. Candidate discovery or scanning failed; review the remediation step logs. The next scheduled scan will retry."
+            elif [[ "${REMEDIATION_COUNT:-0}" != "0" && "${REMEDIATION_PR_OUTCOME}" == "success" ]]; then
+              echo "1. Review the automatically generated security upgrade PR: ${REMEDIATION_PR_URL}"
+            elif [[ "${REMEDIATION_COUNT:-0}" != "0" ]]; then
+              echo "1. A security-cleared candidate was found, but PR creation failed. Review the remediation step annotation."
+            else
+              echo "1. No security-cleared newer image is available yet; the next scheduled scan will try again."
+            fi
             echo "2. Confirm that CI and deployment complete successfully."
             echo "3. The next clean scheduled scan will close the security issue automatically."
           } >> "${GITHUB_STEP_SUMMARY}"

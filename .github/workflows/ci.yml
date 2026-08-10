@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main # 仅 main 分支 push 触发
@@ -60,6 +61,9 @@ jobs:
         with:
           inputs: web-app/requirements.txt
           no-deps: true
+
+      - name: Test container security remediation helper
+        run: python3 -m unittest discover -s scripts/security/tests -p 'test_*.py' -v
 
       - name: Run pytest with coverage gate
         run: >

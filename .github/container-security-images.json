@@ -1,0 +1,12 @@
+{
+  "images": {
+    "amir20/dozzle": {
+      "tag_regex": "^v(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)$",
+      "version_scheme": "semver"
+    },
+    "owasp/modsecurity-crs": {
+      "tag_regex": "^4-nginx-alpine-(?P<version>[0-9]{12})$",
+      "version_scheme": "numeric"
+    }
+  }
+}
