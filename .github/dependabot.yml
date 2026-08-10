@@ -13,6 +13,8 @@ updates:
       - "python"
     commit-message:
       prefix: "deps(pip)"
+    allow:
+      - dependency-type: "all"
     ignore:
       - dependency-name: "pytest"
         update-types:
