@@ -11,7 +11,7 @@ written to `compose.yml` only after that scan reports no fixable HIGH or
 CRITICAL vulnerabilities.
 
 Image-specific tag formats live in
-[`../../.github/container-security-images.json`](../../.github/container-security-images.json).
+[`container-images.json`](container-images.json).
 Each regular expression must expose a named `version` group. The supported
 ordering strategies are semantic versions with exactly three numeric
 components and monotonically increasing numeric versions. This currently
@@ -27,7 +27,7 @@ registry.
 
 ```bash
 python3 scripts/security/container_remediation.py discover \
-  --config .github/container-security-images.json \
+  --config scripts/security/container-images.json \
   --image 'amir20/dozzle:v10.6.14@sha256:...'
 
 python3 scripts/security/container_remediation.py replace \

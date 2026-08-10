@@ -129,7 +129,7 @@ jobs:
           while IFS= read -r current_image; do
             candidates_file="trivy-reports/candidates/discovered.json"
             if ! python3 scripts/security/container_remediation.py discover \
-              --config .github/container-security-images.json \
+              --config scripts/security/container-images.json \
               --image "${current_image}" \
               --max-candidates 10 > "${candidates_file}"; then
               echo "::warning title=Container remediation discovery failed::Unable to discover candidates for ${current_image}. The vulnerability issue will remain open."

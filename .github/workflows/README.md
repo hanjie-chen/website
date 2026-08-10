@@ -35,7 +35,7 @@ no clean candidate -> keep the GitHub security issue open -> retry on the next s
 When the daily scan finds an actionable vulnerability, it looks up newer tags
 using [`../../scripts/security/container_remediation.py`](../../scripts/security/container_remediation.py)
 and the image policies in
-[`../container-security-images.json`](../container-security-images.json). It
+[`../../scripts/security/container-images.json`](../../scripts/security/container-images.json). It
 tries candidates from newest to oldest and accepts only an immutable digest
 whose Trivy scan contains no fixable HIGH/CRITICAL findings. The workflow then
 creates or refreshes the bot-owned
