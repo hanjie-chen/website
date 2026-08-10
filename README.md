@@ -62,6 +62,7 @@ network traffic
 ├── infra/               # Terraform / Ansible / infra workflows
 ├── nginx-modsecurity/   # Nginx、ModSecurity、证书与 /web-log 访问控制相关配置
 ├── scripts/deploy/      # 生产部署、健康检查、镜像清理脚本
+├── scripts/security/    # 容器安全扫描策略与自动修复辅助工具
 └── web-app/             # Flask 应用、模板、静态资源、测试
 ```
 
@@ -205,7 +206,7 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - `nginx-modsecurity` 默认开启 WAF
 - Nginx/ModSecurity 与 Dozzle 使用 stable tag + immutable digest；Dependabot 每日检查 Docker Compose 镜像更新并通过 PR 提交变化
 - `.github/workflows/container-security.yml` 每日重扫固定镜像；存在未豁免且已有修复的 HIGH/CRITICAL finding 时，会按镜像版本策略扫描较新的候选 tag，只有候选通过相同安全策略才以 immutable digest 创建或更新安全升级 PR，并继续维护 GitHub security issue 直到修复合并
-- `.trivyignore.yaml` 只接受带原因与到期日的临时风险例外，到期后扫描会重新阻断
+- `scripts/security/trivyignore.yaml` 只接受带原因与到期日的临时风险例外，到期后扫描会重新阻断
 - 生产环境的 origin TLS 由 Nginx 挂载 Cloudflare Origin CA 证书；开发环境可使用自签名证书
 - Cloudflare 目前已对 `/static/*` 启用 edge cache；`/rendered-articles/*.html` 暂未纳入缓存计划
 - `/web-log/` 目前由 Cloudflare Access 在 edge 侧保护，不再依赖 Nginx Basic Auth

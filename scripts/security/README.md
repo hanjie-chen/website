@@ -23,6 +23,14 @@ registry requires an explicit discovery implementation so that the digest
 written to Compose remains the immutable manifest-list digest returned by that
 registry.
 
+## Temporary Vulnerability Exceptions
+
+[`trivyignore.yaml`](trivyignore.yaml) is the shared exception policy used by
+CI and the daily Container Security workflow. Keep the empty
+`vulnerabilities: []` list when no exception is active. Every temporary entry
+must include a reason and an expiry date so an expired acceptance blocks the
+scan again.
+
 ## Commands
 
 ```bash

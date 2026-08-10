@@ -126,8 +126,9 @@ Container image updates follow this path:
    Dozzle image references.
 
 The scheduled container-security workflow rescans the pinned image every day.
-Temporary risk acceptances live in `.trivyignore.yaml` and must include a reason
-and an expiry date.
+Temporary risk acceptances live in
+[`../scripts/security/trivyignore.yaml`](../scripts/security/trivyignore.yaml)
+and must include a reason and an expiry date.
 
 ## Common Changes
 

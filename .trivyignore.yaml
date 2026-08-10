@@ -1,9 +1,0 @@
-vulnerabilities:
-  - id: GHSA-hrxh-6v49-42gf
-    expired_at: 2026-08-24
-    statement: >-
-      Dozzle v10.6.11 is the latest stable container release as of 2026-07-25
-      and still embeds google.golang.org/grpc v1.82.0. No Dozzle image with the
-      fixed grpc v1.82.1 dependency is available yet. The daily scan enforces
-      this exception's expiry; reassess earlier if a new Dozzle release is
-      published.

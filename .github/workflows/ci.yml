@@ -108,7 +108,7 @@ jobs:
               --scanners vuln \
               --severity HIGH,CRITICAL \
               --ignore-unfixed \
-              --ignorefile .trivyignore.yaml \
+              --ignorefile scripts/security/trivyignore.yaml \
               --skip-version-check \
               --exit-code 1 \
               "${image}"

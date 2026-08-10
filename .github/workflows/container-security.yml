@@ -59,7 +59,7 @@ jobs:
             local image="$2"
             local temporary_report="trivy-reports/${name}.raw.json"
             trivy image --scanners vuln --format json \
-              --ignorefile .trivyignore.yaml \
+              --ignorefile scripts/security/trivyignore.yaml \
               --skip-version-check \
               --output "${temporary_report}" "${image}"
             jq --arg image "${image}" '. + {ScannedImage: $image}' \
@@ -145,7 +145,7 @@ jobs:
               candidate_report="trivy-reports/candidates/candidate-${candidate_index}.json"
               echo "Scanning remediation candidate ${candidate_image}"
               if ! trivy image --scanners vuln --format json \
-                --ignorefile .trivyignore.yaml \
+                --ignorefile scripts/security/trivyignore.yaml \
                 --skip-version-check \
                 --output "${candidate_report}" "${candidate_image}"; then
                 echo "::warning title=Container candidate scan failed::Unable to scan ${candidate_image}; trying the next candidate."

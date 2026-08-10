@@ -87,8 +87,8 @@ the security job explicitly dispatches `ci.yml` against the remediation branch.
 - Production runtime validation and rollback are implemented by
   [`../../scripts/deploy/prod_deploy.sh`](../../scripts/deploy/prod_deploy.sh).
 - Temporary vulnerability exceptions live in
-  [`../../.trivyignore.yaml`](../../.trivyignore.yaml) and must include a reason
-  and an expiry date.
+  [`../../scripts/security/trivyignore.yaml`](../../scripts/security/trivyignore.yaml)
+  and must include a reason and an expiry date.
 - Container image versions and immutable digests are declared in
   [`../../compose.yml`](../../compose.yml); do not edit resolved image references
   only in a workflow.
