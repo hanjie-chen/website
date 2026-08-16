@@ -61,6 +61,20 @@ def test_source_hostname_uses_compact_domain(source_url, expected):
     assert app_module._source_hostname(source_url) == expected
 
 
+@pytest.mark.parametrize(
+    ("source_url", "expected"),
+    [
+        ("https://claude.com/blog/article", "Claude 官方博客"),
+        ("https://WWW.CLAUDE.COM/blog/article", "Claude 官方博客"),
+        ("https://claude.com.evil.example/article", "claude.com.evil.example"),
+        ("https://blog.claude.com/article", "blog.claude.com"),
+        ("https://www.example.com/story", "example.com"),
+    ],
+)
+def test_source_display_name_uses_exact_official_allowlist(source_url, expected):
+    assert app_module._source_display_name(source_url) == expected
+
+
 def test_store_brief_creates_updates_and_keeps_same_date_idempotent(tmp_path):
     payload = brief_payload()
 
@@ -285,12 +299,16 @@ def test_publish_endpoint_rejects_oversized_body(client, monkeypatch):
 
 
 def test_brief_routes_render_archive_and_historical_details(client, app):
+    current_payload = brief_payload()
+    current_payload["sections"]["ai"]["items"][0]["source_url"] = (
+        "https://claude.com/blog/article"
+    )
     with app.app_context():
         store_brief(
             app_module.Daily_Briefs_Directory,
             brief_payload("2026-07-24", "49038432"),
         )
-        store_brief(app_module.Daily_Briefs_Directory, brief_payload())
+        store_brief(app_module.Daily_Briefs_Directory, current_payload)
 
     archive = client.get("/zh/briefs")
     detail = client.get("/zh/briefs/2026-07-25")
@@ -319,11 +337,14 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
     assert not detail_soup.select(
         ".briefs-overline, .briefs-facts, .brief-section-index, .brief-item-number"
     )
-    assert 'class="brief-story-title" href="https://example.com/story"' in detail_html
-    source_host = detail_soup.select_one(".brief-source-host")
-    assert source_host.get_text(strip=True) == "example.com"
-    assert source_host.name == "span"
-    assert len(detail_soup.find_all("a", href="https://example.com/story")) == 1
+    assert (
+        'class="brief-story-title" href="https://claude.com/blog/article"'
+        in detail_html
+    )
+    source_name = detail_soup.select_one(".brief-source-name")
+    assert source_name.get_text(strip=True) == "Claude 官方博客"
+    assert source_name.name == "span"
+    assert len(detail_soup.find_all("a", href="https://claude.com/blog/article")) == 1
     assert (
         len(
             detail_soup.find_all(

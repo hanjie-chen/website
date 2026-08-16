@@ -151,6 +151,17 @@ def _source_hostname(source_url: str) -> str:
     return hostname.lower().removeprefix("www.")
 
 
+OFFICIAL_SOURCE_LABELS = {
+    "claude.com": "Claude 官方博客",
+}
+
+
+def _source_display_name(source_url: str) -> str:
+    """Return an allowlisted official label or the compact source hostname."""
+    hostname = _source_hostname(source_url)
+    return OFFICIAL_SOURCE_LABELS.get(hostname, hostname)
+
+
 @app.context_processor
 def inject_template_helpers():
     # Keep template logic shallow: routes decide the language namespace, and
@@ -171,7 +182,7 @@ def inject_template_helpers():
         "alternate_lang": target_lang,
         "html_lang": html_lang_code(current_lang),
         "switch_lang_url": f"/set-language/{target_lang}?next={quote(switch_path, safe='/')}",
-        "source_hostname": _source_hostname,
+        "source_display_name": _source_display_name,
         "t": lambda key, fallback=None: translate(current_lang, key, fallback=fallback),
     }
 
