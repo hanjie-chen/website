@@ -64,8 +64,9 @@ def test_source_hostname_uses_compact_domain(source_url, expected):
 @pytest.mark.parametrize(
     ("source_url", "expected"),
     [
-        ("https://claude.com/blog/article", "Claude 官方博客"),
-        ("https://WWW.CLAUDE.COM/blog/article", "Claude 官方博客"),
+        ("https://claude.com/blog/article", "Claude 官方"),
+        ("https://WWW.CLAUDE.COM/blog/article", "Claude 官方"),
+        ("https://claude.com/pricing", "Claude 官方"),
         ("https://claude.com.evil.example/article", "claude.com.evil.example"),
         ("https://blog.claude.com/article", "blog.claude.com"),
         ("https://www.example.com/story", "example.com"),
@@ -342,7 +343,7 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
         in detail_html
     )
     source_name = detail_soup.select_one(".brief-source-name")
-    assert source_name.get_text(strip=True) == "Claude 官方博客"
+    assert source_name.get_text(strip=True) == "Claude 官方"
     assert source_name.name == "span"
     assert len(detail_soup.find_all("a", href="https://claude.com/blog/article")) == 1
     assert (

@@ -152,7 +152,7 @@ def _source_hostname(source_url: str) -> str:
 
 
 OFFICIAL_SOURCE_LABELS = {
-    "claude.com": "Claude 官方博客",
+    "claude.com": "Claude 官方",
 }
 
 
