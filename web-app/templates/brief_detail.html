@@ -41,6 +41,10 @@
                     <p class="brief-summary">{{ item.summary }}</p>
                     <p class="brief-why"><span>{{ t("briefs.why") }}</span> {{ item.why }}</p>
                     <p class="brief-item-meta">
+                        {% set source_host = source_hostname(item.source_url) %}
+                        {% if source_host %}
+                        <span class="brief-source-host">{{ source_host }}</span>
+                        {% endif %}
                         <span>{{ item.points }} {{ t("briefs.points") }}</span>
                         <a href="{{ item.discussion_url }}" target="_blank" rel="noopener noreferrer"
                             aria-label="{{ item.comments }} {{ t('briefs.comments') }} — {{ t('briefs.discussion') }}">

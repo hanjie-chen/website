@@ -36,6 +36,7 @@ What it does:
   - `/<lang>/briefs/<YYYY-MM-DD>`
   - `/<lang>/about`
   - `/set-language/<lang>`
+- derives a compact source hostname from each validated Daily Brief `source_url` for display on the reading page, without changing the strict schema v2 payload
 - serves the public read-only JSON APIs:
   - `GET /api/articles`
   - `GET /api/articles/<int:article_id>`

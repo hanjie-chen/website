@@ -15,7 +15,7 @@ Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + C
 这个仓库主要负责以下能力：
 
 - 提供带语言前缀的公开页面：`/zh/...`、`/en/...`，根路径 `/` 会按语言偏好自动跳转
-- 提供 Daily Brief 首页入口、历史归档与按日期阅读页；简报正文当前仅提供中文
+- 提供 Daily Brief 首页入口、历史归档与按日期阅读页；按日期阅读页从已有 `source_url` 显示原文域名，简报正文当前仅提供中文
 - 提供公开只读的文章 metadata API：`GET /api/articles` 与 `GET /api/articles/<id>`
 - 把 Markdown 知识库同步、导入并渲染成可访问的 HTML
 - 通过 CI/CD 将镜像部署到 GCP VM，并由 Cloudflare 暴露到公网

@@ -142,6 +142,15 @@ def _safe_redirect_target(next_path: str | None, fallback_path: str) -> str:
     return urlunsplit(("", "", parsed.path, parsed.query, parsed.fragment))
 
 
+def _source_hostname(source_url: str) -> str:
+    """Return a compact display hostname for an already validated source URL."""
+    try:
+        hostname = urlsplit(source_url).hostname or ""
+    except ValueError:
+        return ""
+    return hostname.lower().removeprefix("www.")
+
+
 @app.context_processor
 def inject_template_helpers():
     # Keep template logic shallow: routes decide the language namespace, and
@@ -162,6 +171,7 @@ def inject_template_helpers():
         "alternate_lang": target_lang,
         "html_lang": html_lang_code(current_lang),
         "switch_lang_url": f"/set-language/{target_lang}?next={quote(switch_path, safe='/')}",
+        "source_hostname": _source_hostname,
         "t": lambda key, fallback=None: translate(current_lang, key, fallback=fallback),
     }
 

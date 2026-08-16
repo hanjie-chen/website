@@ -50,6 +50,17 @@ def post_brief(client, payload, token="secret-token"):
     )
 
 
+@pytest.mark.parametrize(
+    ("source_url", "expected"),
+    [
+        ("https://claude.com/blog/article", "claude.com"),
+        ("https://www.example.com:8443/story", "example.com"),
+    ],
+)
+def test_source_hostname_uses_compact_domain(source_url, expected):
+    assert app_module._source_hostname(source_url) == expected
+
+
 def test_store_brief_creates_updates_and_keeps_same_date_idempotent(tmp_path):
     payload = brief_payload()
 
@@ -309,6 +320,9 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
         ".briefs-overline, .briefs-facts, .brief-section-index, .brief-item-number"
     )
     assert 'class="brief-story-title" href="https://example.com/story"' in detail_html
+    source_host = detail_soup.select_one(".brief-source-host")
+    assert source_host.get_text(strip=True) == "example.com"
+    assert source_host.name == "span"
     assert len(detail_soup.find_all("a", href="https://example.com/story")) == 1
     assert (
         len(
