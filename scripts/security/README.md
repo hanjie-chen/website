@@ -48,3 +48,12 @@ python3 -m unittest discover -s scripts/security/tests -p 'test_*.py' -v
 
 `replace` requires the complete current reference to occur exactly once and
 refuses to switch repositories.
+
+The scheduled workflow creates remediation branches and pull requests with its
+job-scoped `GITHUB_TOKEN` and explicit `contents`, `pull-requests`, `issues`, and
+`actions` write permissions. The repository setting that allows GitHub Actions
+to create pull requests must remain enabled. The workflow intentionally does
+not query the repository Actions-permissions administration endpoint first:
+that endpoint requires repository Administration permission, which the
+workflow token cannot receive. Branch push or pull-request errors are reported
+directly by the corresponding `git` or `gh` command.
