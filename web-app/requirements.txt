@@ -20,7 +20,7 @@ flask-sqlalchemy==3.1.1
     # via -r requirements.in
 greenlet==3.5.5
     # via sqlalchemy
-gunicorn==26.0.0
+gunicorn==26.1.0
     # via -r requirements.in
 iniconfig==2.3.0
     # via pytest
@@ -40,14 +40,12 @@ markupsafe==3.0.3
     #   jinja2
     #   werkzeug
 packaging==26.3
-    # via
-    #   gunicorn
-    #   pytest
+    # via pytest
 pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pygments==2.20.0
+pygments==2.21.0
     # via
     #   -r requirements.in
     #   pytest
@@ -65,7 +63,7 @@ pyyaml==6.0.3
     # via
     #   pymdown-extensions
     #   python-frontmatter
-ruff==0.16.3
+ruff==0.16.4
     # via -r requirements.in
 soupsieve==2.9.2
     # via beautifulsoup4
