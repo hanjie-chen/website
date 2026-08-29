@@ -8,8 +8,8 @@ container security automation.
 
 | Workflow | Trigger | Purpose |
 | --- | --- | --- |
-| [`ci.yml`](ci.yml) | Pushes and pull requests targeting `main`, or manual dispatch | Validates Compose and shell scripts, runs application checks, tests the container remediation helper, scans pinned third-party images, tests the candidate runtime and Daily Brief WAF exclusions, and publishes first-party images on a push. |
-| [`cd.yml`](cd.yml) | Successful `CI` completion on `main` | Deploys the exact successful commit to production, validates the deployment, and cleans up old images. |
+| [`ci.yml`](ci.yml) | Pushes and pull requests targeting `main`, or manual dispatch | Validates Compose and shell scripts, runs application checks, scans changed pinned third-party images, tests the complete candidate runtime and Daily Brief WAF exclusions independently of that scan, and publishes first-party images after all required push checks pass. |
+| [`cd.yml`](cd.yml) | Successful push-triggered `CI` completion on `main` | Deploys the exact successful commit to production, validates the deployment, and cleans up old images. Manual CI dispatches never trigger deployment. |
 | [`container-security.yml`](container-security.yml) | Daily at 03:45 Asia/Singapore, or manually | Rescans pinned NGINX/ModSecurity and Dozzle images, tests newer remediation candidates, creates or updates a security upgrade PR when a candidate passes, manages the actionable-vulnerability issue, and verifies production image references. |
 | [`content-sync.yml`](content-sync.yml) | Manual or external `workflow_dispatch` | Pulls the current `main` branch on production, synchronizes article content, and runs health and smoke checks. |
 | [`infra-sync.yml`](infra-sync.yml) | Sundays at 11:00 Asia/Singapore, or manually | Validates, plans, and applies the Terraform configuration for GCP. |
@@ -31,6 +31,23 @@ daily container scan -> actionable HIGH/CRITICAL finding -> scan newer image tag
 clean candidate -> security remediation PR -> explicitly dispatched CI -> review and merge -> CD
 no clean candidate -> keep the GitHub security issue open -> retry on the next scan
 ```
+
+The required CI container gate is revision-aware. For pull requests it compares
+the merge candidate with the pull request base; for `main` pushes it compares
+the pushed revision with `github.event.before`. Only a changed pinned
+NGINX/ModSecurity or Dozzle reference is scanned as a merge/deployment gate.
+Existing findings in unchanged images remain owned by the daily full-inventory
+Container Security workflow, so they do not block unrelated changes. A manual
+dispatch on `main`, or any event without a usable comparison commit, scans all
+tracked third-party images. Changes to the image policy or Trivy exceptions also
+force a full scan; tracked repositories cannot be removed silently. Each tracked
+reference must keep an allowed stable tag and an immutable SHA-256 digest.
+
+Application/runtime validation and the changed-image security gate run as
+separate jobs. The final `compose-check-and-build` aggregation job preserves the
+existing required-check name and fails if either job fails. On a `main` push,
+first-party image publication runs only after both jobs pass and is also required
+by the aggregation job before CD can start.
 
 When the daily scan finds an actionable vulnerability, it looks up newer tags
 using [`../../scripts/security/container_remediation.py`](../../scripts/security/container_remediation.py)
@@ -83,7 +100,9 @@ the security job explicitly dispatches `ci.yml` against the remediation branch.
 
 ## Failure and maintenance notes
 
-- A failing CI run blocks the corresponding CD run.
+- A newly introduced third-party image policy failure or any application/runtime
+  failure blocks the corresponding CD run; findings in unchanged third-party
+  images are tracked by the scheduled Container Security workflow.
 - Production runtime validation and rollback are implemented by
   [`../../scripts/deploy/prod_deploy.sh`](../../scripts/deploy/prod_deploy.sh).
 - Temporary vulnerability exceptions live in

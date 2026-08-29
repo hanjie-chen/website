@@ -4,6 +4,16 @@
 Container Security workflow to find newer Docker Hub images and replace one
 exact pinned `tag@digest` reference in `compose.yml`.
 
+`container_ci_gate.py` is the required CI gate helper. It reads the tracked
+repositories from `container-images.json`, compares their exact pinned image
+references between base and head Compose files, and prints only changed head
+references. Every tracked reference must use an allowed stable tag and a full
+immutable SHA-256 digest; missing, duplicate, malformed, or silently removed
+tracked images fail closed. Changes to `container-images.json` or
+`trivyignore.yaml` force a full tracked-image scan. CI scans the selected
+references with the same fixable HIGH/CRITICAL policy while the daily Container
+Security workflow retains responsibility for full-inventory scans.
+
 The helper does not decide whether an update is safe. The workflow first scans
 the currently pinned images, calls this helper to discover newer stable tags,
 then scans each candidate with the same Trivy policy used by CI. A candidate is
@@ -42,6 +52,11 @@ python3 scripts/security/container_remediation.py replace \
   --file compose.yml \
   --current 'amir20/dozzle:v10.6.14@sha256:...' \
   --candidate 'amir20/dozzle:v10.7.1@sha256:...'
+
+python3 scripts/security/container_ci_gate.py changed \
+  --config scripts/security/container-images.json \
+  --base /tmp/base-compose.yml \
+  --head compose.yml
 
 python3 -m unittest discover -s scripts/security/tests -p 'test_*.py' -v
 ```
