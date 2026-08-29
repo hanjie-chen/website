@@ -14,7 +14,9 @@ concurrency:
 jobs:
   deploy:
     # ci 成功之后才部署
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      ${{ github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Deploy over SSH

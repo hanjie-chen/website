@@ -16,7 +16,117 @@ permissions:
   packages: write
 
 jobs:
-  compose-check-and-build:
+  container-security-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout history for image comparison
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve changed pinned third-party images
+        id: changed_images
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          base_sha=""
+          case "${EVENT_NAME}" in
+            pull_request)
+              base_sha="${PR_BASE_SHA}"
+              ;;
+            push)
+              base_sha="${PUSH_BEFORE_SHA}"
+              ;;
+            workflow_dispatch)
+              git fetch --no-tags origin main
+              base_sha="$(git rev-parse origin/main)"
+              if [[ "${base_sha}" == "$(git rev-parse HEAD)" ]]; then
+                base_sha=""
+              fi
+              ;;
+          esac
+
+          comparison_args=()
+          if [[ -n "${base_sha}" && ! "${base_sha}" =~ ^0+$ ]] \
+            && git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
+            base_compose="${RUNNER_TEMP}/base-compose.yml"
+            base_config="${RUNNER_TEMP}/base-container-images.json"
+            git show "${base_sha}:compose.yml" > "${base_compose}"
+            git show "${base_sha}:scripts/security/container-images.json" > "${base_config}"
+            comparison_args=(
+              --base "${base_compose}"
+              --base-config "${base_config}"
+            )
+            if ! git diff --quiet "${base_sha}" HEAD -- scripts/security/trivyignore.yaml; then
+              comparison_args+=(--force-all)
+              echo "The Trivy exception policy changed; all tracked images will be scanned."
+            fi
+            echo "Comparing pinned images in ${base_sha} with $(git rev-parse HEAD)."
+          else
+            echo "::notice title=Full third-party image scan::No usable comparison commit was available, so every tracked image will be scanned."
+          fi
+
+          images_file="${RUNNER_TEMP}/changed-third-party-images.txt"
+          python3 scripts/security/container_ci_gate.py changed \
+            --config scripts/security/container-images.json \
+            "${comparison_args[@]}" \
+            --head compose.yml > "${images_file}"
+          mapfile -t images < "${images_file}"
+          echo "count=${#images[@]}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "images<<EOF"
+            printf '%s\n' "${images[@]}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+          if (( ${#images[@]} == 0 )); then
+            {
+              echo "No pinned third-party image reference changed in this revision."
+              echo "Existing findings remain tracked by the scheduled Container Security workflow."
+            } >> "${GITHUB_STEP_SUMMARY}"
+          else
+            {
+              echo "The required security gate will scan these changed image references:"
+              printf -- '- \x60%s\x60\n' "${images[@]}"
+            } >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      # Pin the setup action to the verified immutable v0.3.1 release commit.
+      - name: Set up Trivy
+        if: steps.changed_images.outputs.count != '0'
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          cache: true
+          version: v0.72.0
+
+      - name: Scan changed pinned third-party images
+        if: steps.changed_images.outputs.count != '0'
+        env:
+          CHANGED_IMAGES: ${{ steps.changed_images.outputs.images }}
+          TRIVY_NO_PROGRESS: "true"
+        run: |
+          set -euo pipefail
+          scan_status=0
+          while IFS= read -r image; do
+            [[ -n "${image}" ]] || continue
+            if ! trivy image \
+              --scanners vuln \
+              --severity HIGH,CRITICAL \
+              --ignore-unfixed \
+              --ignorefile scripts/security/trivyignore.yaml \
+              --skip-version-check \
+              --exit-code 1 \
+              "${image}"; then
+              scan_status=1
+            fi
+          done <<< "${CHANGED_IMAGES}"
+          exit "${scan_status}"
+
+  application-and-runtime-checks:
     runs-on: ubuntu-latest # 使用最近的 ubuntu image
     steps:
       # 拉取代码
@@ -76,44 +186,6 @@ jobs:
           --cov-report=term-missing
           --cov-fail-under=30
 
-      - name: Resolve pinned third-party images
-        id: third_party_images
-        shell: bash
-        run: |
-          set -euo pipefail
-          mapfile -t images < <(docker compose -f compose.yml config --images)
-          for image in "${images[@]}"; do
-            case "${image}" in
-              owasp/modsecurity-crs:*) echo "nginx=${image}" >> "${GITHUB_OUTPUT}" ;;
-              amir20/dozzle:*) echo "dozzle=${image}" >> "${GITHUB_OUTPUT}" ;;
-            esac
-          done
-
-      # Pin the setup action to the verified immutable v0.3.1 release commit.
-      - name: Set up Trivy
-        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
-        with:
-          cache: true
-          version: v0.72.0
-
-      - name: Scan pinned third-party images
-        env:
-          NGINX_IMAGE: ${{ steps.third_party_images.outputs.nginx }}
-          DOZZLE_IMAGE: ${{ steps.third_party_images.outputs.dozzle }}
-          TRIVY_NO_PROGRESS: "true"
-        run: |
-          set -euo pipefail
-          for image in "${NGINX_IMAGE}" "${DOZZLE_IMAGE}"; do
-            trivy image \
-              --scanners vuln \
-              --severity HIGH,CRITICAL \
-              --ignore-unfixed \
-              --ignorefile scripts/security/trivyignore.yaml \
-              --skip-version-check \
-              --exit-code 1 \
-              "${image}"
-          done
-
       - name: Generate temporary TLS fixture
         run: |
           mkdir -p nginx-modsecurity/ssl
@@ -149,15 +221,21 @@ jobs:
         if: always()
         run: docker compose -f compose.yml -f compose.dev.yml down --remove-orphans
 
-      # GHCR（ghcr.io）集成：
-      # - 仅在 push 事件执行（PR 只做检查，不推镜像）
-      # - 镜像命名：ghcr.io/<owner>/<repo>-<service>:<tag>
+  publish-first-party-images:
+    if: github.event_name == 'push'
+    needs:
+      - container-security-gate
+      - application-and-runtime-checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # GHCR（ghcr.io）集成：仅在 main push 的 required checks 全部通过后执行。
       - name: Set up Docker Buildx
-        if: github.event_name == 'push'
         uses: docker/setup-buildx-action@v4
 
       - name: Login to GHCR
-        if: github.event_name == 'push'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -165,7 +243,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push web-app image
-        if: github.event_name == 'push'
         uses: docker/build-push-action@v7
         with:
           context: ./web-app
@@ -175,7 +252,6 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/website-web-app:latest
 
       - name: Build and push articles-sync image
-        if: github.event_name == 'push'
         uses: docker/build-push-action@v7
         with:
           context: ./articles-sync
@@ -183,3 +259,31 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/website-articles-sync:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/website-articles-sync:latest
+
+  # Preserve the existing required-check name while allowing the security and
+  # runtime jobs to finish independently and report all relevant failures.
+  compose-check-and-build:
+    if: always()
+    needs:
+      - container-security-gate
+      - application-and-runtime-checks
+      - publish-first-party-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful security and runtime checks
+        env:
+          SECURITY_RESULT: ${{ needs.container-security-gate.result }}
+          APPLICATION_RESULT: ${{ needs.application-and-runtime-checks.result }}
+          PUBLISH_RESULT: ${{ needs.publish-first-party-images.result }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [[ "${SECURITY_RESULT}" != "success" \
+            || "${APPLICATION_RESULT}" != "success" \
+            || ( "${EVENT_NAME}" == "push" && "${PUBLISH_RESULT}" != "success" ) \
+            || ( "${EVENT_NAME}" != "push" && "${PUBLISH_RESULT}" != "skipped" ) ]]; then
+            echo "Container security gate: ${SECURITY_RESULT}"
+            echo "Application and runtime checks: ${APPLICATION_RESULT}"
+            echo "First-party image publication: ${PUBLISH_RESULT}"
+            exit 1
+          fi
