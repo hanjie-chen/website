@@ -312,12 +312,17 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
         store_brief(app_module.Daily_Briefs_Directory, current_payload)
 
     archive = client.get("/zh/briefs")
+    english_archive = client.get("/en/briefs")
     detail = client.get("/zh/briefs/2026-07-25")
     english = client.get("/en/briefs/2026-07-25")
     historical = client.get("/zh/briefs/2026-07-24")
 
     assert archive.status_code == 200
     archive_soup = BeautifulSoup(archive.get_data(as_text=True), "html.parser")
+    assert (
+        archive_soup.select_one(".briefs-lead").get_text(strip=True)
+        == "每天从计算与软件领域及少量圈外探索中筛选值得阅读的内容，减少信息噪声。"
+    )
     assert [
         time.get_text(strip=True) for time in archive_soup.select(".brief-date")
     ] == [
@@ -328,13 +333,32 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
         " ".join(meta.get_text().split())
         for meta in archive_soup.select(".brief-archive-meta")
     ] == [
-        "1 AI · 0 圈外",
-        "1 AI · 0 圈外",
+        "1 技术精选 · 0 圈外",
+        "1 技术精选 · 0 圈外",
+    ]
+    assert english_archive.status_code == 200
+    english_archive_soup = BeautifulSoup(
+        english_archive.get_data(as_text=True), "html.parser"
+    )
+    assert (
+        english_archive_soup.select_one(".briefs-lead").get_text(strip=True)
+        == "A small daily selection from computing and software, plus a few "
+        "beyond-the-bubble discoveries, curated to reduce information noise."
+    )
+    assert [
+        " ".join(meta.get_text().split())
+        for meta in english_archive_soup.select(".brief-archive-meta")
+    ] == [
+        "1 Tech picks · 0 Beyond",
+        "1 Tech picks · 0 Beyond",
     ]
     detail_html = detail.get_data(as_text=True)
     detail_soup = BeautifulSoup(detail_html, "html.parser")
     assert detail.status_code == 200
     assert detail_soup.select_one("h1 time").get_text(strip=True) == "2026-07-25"
+    assert (
+        detail_soup.select_one("#brief-section-ai").get_text(strip=True) == "技术精选"
+    )
     assert not detail_soup.select(
         ".briefs-overline, .briefs-facts, .brief-section-index, .brief-item-number"
     )
@@ -362,7 +386,9 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
     assert "<script>alert" not in detail_html
     assert 'rel="noopener noreferrer"' in detail_html
     assert english.status_code == 200
-    assert "currently published in Chinese only" in english.get_data(as_text=True)
+    english_html = english.get_data(as_text=True)
+    assert "currently published in Chinese only" in english_html
+    assert "Tech picks" in english_html
     assert historical.status_code == 200
     assert "2026-07-24" in historical.get_data(as_text=True)
 
@@ -384,3 +410,14 @@ def test_empty_archive_still_returns_200(client):
 
     assert response.status_code == 200
     assert "第一期简报尚未发布" in response.get_data(as_text=True)
+
+
+def test_homepage_empty_brief_copy_describes_broader_selection(client):
+    chinese = client.get("/zh/").get_data(as_text=True)
+    english = client.get("/en/").get_data(as_text=True)
+
+    assert "每日筛选的计算与软件内容，以及少量圈外探索即将发布。" in chinese
+    assert (
+        "A daily selection of computing and software stories, plus a few "
+        "beyond-the-bubble discoveries, will appear here." in english
+    )
