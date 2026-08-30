@@ -14,6 +14,12 @@ tracked images fail closed. Changes to `container-images.json` or
 references with the same fixable HIGH/CRITICAL policy while the daily Container
 Security workflow retains responsibility for full-inventory scans.
 
+The daily report preserves `actionable.json` as package-level remediation input
+and derives `grouped-by-cve.json` only for presentation. GitHub issues show
+unique CVE, affected package, and image counts, followed by one summary row per
+image/target/CVE and a collapsible package-level table. The complete report
+directory is retained as a workflow artifact for 30 days.
+
 The helper does not decide whether an update is safe. The workflow first scans
 the currently pinned images, calls this helper to discover newer stable tags,
 then scans each candidate with the same Trivy policy used by CI. A candidate is

@@ -98,22 +98,76 @@ jobs:
             | unique_by([.image, .target, .id, .package])
           ' trivy-reports/*.json > trivy-reports/actionable.json
 
-          count="$(jq 'length' trivy-reports/actionable.json)"
-          echo "count=${count}" >> "${GITHUB_OUTPUT}"
+          jq '
+            sort_by([.image, .target, .id, .package])
+            | group_by([.image, .target, .id])
+            | map(
+                {
+                    image: .[0].image,
+                    target: .[0].target,
+                    id: .[0].id,
+                    severity: (
+                      if (map(.severity) | index("CRITICAL"))
+                      then "CRITICAL"
+                      else "HIGH"
+                      end
+                    ),
+                    packages: (map(.package) | unique)
+                  }
+                | .package_count = (.packages | length)
+              )
+          ' trivy-reports/actionable.json > trivy-reports/grouped-by-cve.json
+
+          finding_count="$(jq 'length' trivy-reports/actionable.json)"
+          cve_count="$(jq 'map(.id) | unique | length' trivy-reports/actionable.json)"
+          package_count="$(jq 'map([.image, .target, .package]) | unique | length' trivy-reports/actionable.json)"
+          image_count="$(jq 'map(.image) | unique | length' trivy-reports/actionable.json)"
+          group_count="$(jq 'length' trivy-reports/grouped-by-cve.json)"
+          {
+            echo "count=${finding_count}"
+            echo "cve_count=${cve_count}"
+            echo "package_count=${package_count}"
+            echo "image_count=${image_count}"
+          } >> "${GITHUB_OUTPUT}"
+
+          cve_noun="CVEs"
+          package_noun="packages"
+          image_noun="images"
+          if (( cve_count == 1 )); then cve_noun="CVE"; fi
+          if (( package_count == 1 )); then package_noun="package"; fi
+          if (( image_count == 1 )); then image_noun="image"; fi
 
           {
-            echo "The daily scan found **${count}** fixed HIGH/CRITICAL vulnerabilities in the pinned production images."
+            echo "The daily scan found **${cve_count} unique HIGH/CRITICAL ${cve_noun} / ${package_count} affected ${package_noun} / ${image_count} pinned production ${image_noun}**."
+            echo
+            echo "## CVE summary"
+            echo
+            echo "| Severity | CVE | Affected packages | Image | Target |"
+            echo "| --- | --- | --- | --- | --- |"
+            jq -r '.[:50][] | (.packages | map("`" + . + "`") | join(", ")) as $packages | "| \(.severity) | `\(.id)` | **\(.package_count)**: \($packages) | `\(.image)` | `\(.target)` |"' \
+              trivy-reports/grouped-by-cve.json
+            if (( group_count > 50 )); then
+              echo
+              echo "Only the first 50 image/target/CVE groups are shown."
+            fi
+            echo
+            echo "<details>"
+            echo "<summary>Package-level findings (${finding_count})</summary>"
             echo
             echo "| Severity | CVE | Package | Installed | Fixed | Image | Target |"
             echo "| --- | --- | --- | --- | --- | --- | --- |"
             jq -r '.[:50][] | "| \(.severity) | `\(.id)` | `\(.package)` | `\(.installed)` | `\(.fixed)` | `\(.image)` | `\(.target)` |"' \
               trivy-reports/actionable.json
+            if (( finding_count > 50 )); then
+              echo
+              echo "Only the first 50 package-level findings are shown here."
+            fi
+            echo
+            echo "</details>"
             echo
             echo "Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-            if (( count > 50 )); then
-              echo
-              echo "Only the first 50 findings are shown. See the workflow logs for the full report."
-            fi
+            echo
+            echo "Full machine-readable reports are available in the workflow artifact \`container-vulnerability-reports\` for 30 days."
           } > trivy-reports/issue.md
 
       - name: Discover and scan remediation candidates
@@ -323,10 +377,21 @@ jobs:
             gh issue close "${issue_number}" --repo "${GITHUB_REPOSITORY}"
           fi
 
+      - name: Upload full container vulnerability reports
+        if: always() && steps.findings.outcome == 'success'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: container-vulnerability-reports
+          path: trivy-reports/
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Security update required (intentional policy failure)
         if: always() && steps.findings.outputs.count != '0'
         env:
-          FINDING_COUNT: ${{ steps.findings.outputs.count }}
+          CVE_COUNT: ${{ steps.findings.outputs.cve_count }}
+          IMAGE_COUNT: ${{ steps.findings.outputs.image_count }}
+          PACKAGE_COUNT: ${{ steps.findings.outputs.package_count }}
           REMEDIATION_COUNT: ${{ steps.remediation.outputs.count }}
           REMEDIATION_OUTCOME: ${{ steps.remediation.outcome }}
           REMEDIATION_PR_OUTCOME: ${{ steps.remediation_pr.outcome }}
@@ -334,11 +399,15 @@ jobs:
         run: |
           set -euo pipefail
 
-          if (( FINDING_COUNT == 1 )); then
-            finding_description="1 HIGH/CRITICAL vulnerability with an available fix"
+          cve_noun="CVEs"
+          package_noun="packages"
+          if (( CVE_COUNT == 1 )); then cve_noun="CVE"; fi
+          if (( PACKAGE_COUNT == 1 )); then package_noun="package"; fi
+          finding_description="${CVE_COUNT} unique HIGH/CRITICAL ${cve_noun} across ${PACKAGE_COUNT} affected ${package_noun}"
+
+          if (( IMAGE_COUNT == 1 )); then
             affected_images="the affected image is"
           else
-            finding_description="${FINDING_COUNT} HIGH/CRITICAL vulnerabilities with available fixes"
             affected_images="the affected images are"
           fi
 

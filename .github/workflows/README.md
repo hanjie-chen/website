@@ -64,7 +64,10 @@ security policy.
 The scan job still fails intentionally after creating or updating the security
 issue and remediation PR. Its annotation and summary distinguish the policy
 failure from a runner failure and explain whether a clean candidate or PR was
-available.
+available. The issue headline counts unique CVEs separately from affected
+packages and images, groups the main table by image/target/CVE, and keeps the
+package-level findings in a collapsible details section. Full JSON reports are
+uploaded with the workflow run for 30 days.
 
 Production deployment, content synchronization, and the production-reference
 check share the `production-deploy` concurrency group. They wait for each other

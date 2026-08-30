@@ -208,6 +208,7 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - `nginx-modsecurity` 默认开启 WAF
 - Nginx/ModSecurity 与 Dozzle 使用 stable tag + immutable digest；Dependabot 每日检查 Docker Compose 镜像更新并通过 PR 提交变化
 - `.github/workflows/container-security.yml` 每日重扫固定镜像；存在未豁免且已有修复的 HIGH/CRITICAL finding 时，会按镜像版本策略扫描较新的候选 tag，只有候选通过相同安全策略才以 immutable digest 创建或更新安全升级 PR，并继续维护 GitHub security issue 直到修复合并
+- 容器漏洞 issue 分别统计 unique CVE、affected packages 与 images，主表按 CVE 聚合，同时保留 package-level 明细和 30 天完整 workflow artifact
 - `scripts/security/trivyignore.yaml` 只接受带原因与到期日的临时风险例外，到期后扫描会重新阻断
 - 生产环境的 origin TLS 由 Nginx 挂载 Cloudflare Origin CA 证书；开发环境可使用自签名证书
 - Cloudflare 目前已对 `/static/*` 启用 edge cache；`/rendered-articles/*.html` 暂未纳入缓存计划
