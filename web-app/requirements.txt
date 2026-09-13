@@ -63,7 +63,7 @@ pyyaml==6.0.3
     # via
     #   pymdown-extensions
     #   python-frontmatter
-ruff==0.16.6
+ruff==0.16.7
     # via -r requirements.in
 soupsieve==2.9.2
     # via beautifulsoup4
