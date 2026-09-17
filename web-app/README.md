@@ -37,6 +37,7 @@ What it does:
   - `/<lang>/about`
   - `/set-language/<lang>`
 - derives a compact source hostname from each validated Daily Brief `source_url` for display on the reading page, replacing exact allowlisted hostnames with official source labels without changing the strict schema v2 payload
+- renders the generator's explicit community-roundup summary format as a short introduction followed by a semantic project list, while storing the schema v2 `summary` as the original string
 - serves the public read-only JSON APIs:
   - `GET /api/articles`
   - `GET /api/articles/<int:article_id>`

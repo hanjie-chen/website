@@ -38,7 +38,19 @@
                     <h3 class="m-0">
                         <a class="brief-story-title" href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
                     </h3>
+                    {% set summary_view = summary_views[section_name][loop.index0] %}
+                    {% if summary_view %}
+                    <div class="brief-summary brief-summary--roundup">
+                        <p class="brief-summary-lead">{{ summary_view.intro }}</p>
+                        <ul class="brief-summary-list">
+                            {% for project in summary_view["items"] %}
+                            <li><strong>{{ project.name }}</strong>：{{ project.description }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% else %}
                     <p class="brief-summary">{{ item.summary }}</p>
+                    {% endif %}
                     <p class="brief-why"><span>{{ t("briefs.why") }}</span> {{ item.why }}</p>
                     <p class="brief-item-meta">
                         {% set source_name = source_display_name(item.source_url) %}
