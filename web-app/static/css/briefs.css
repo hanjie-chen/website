@@ -122,6 +122,23 @@
     font-size: 0.98rem;
 }
 
+.brief-summary--roundup {
+    margin-top: 0.9rem;
+}
+
+.brief-summary-lead {
+    margin: 0;
+}
+
+.brief-summary-list {
+    margin: 0.7rem 0 0;
+    padding-left: 1.3rem;
+}
+
+.brief-summary-list li + li {
+    margin-top: 0.55rem;
+}
+
 .brief-why {
     margin: 0.7rem 0 0;
     color: var(--text-secondary-color);

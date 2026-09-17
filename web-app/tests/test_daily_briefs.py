@@ -393,6 +393,42 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
     assert "2026-07-24" in historical.get_data(as_text=True)
 
 
+def test_brief_route_renders_community_roundup_as_escaped_project_list(client, app):
+    payload = brief_payload()
+    payload["sections"]["ai"]["items"][0]["summary"] = (
+        "根据 Hacker News 部分评论：以下是几位社区成员最近分享的项目。\n\n"
+        "- <script>项目</script>：用 Git 追踪法律文本的修改。\n"
+        "- ShopSpec：根据尺寸生成木工制作方案。"
+    )
+    with app.app_context():
+        store_brief(app_module.Daily_Briefs_Directory, payload)
+
+    stored = load_brief(app_module.Daily_Briefs_Directory, "2026-07-25")
+    response = client.get("/zh/briefs/2026-07-25")
+    html = response.get_data(as_text=True)
+    soup = BeautifulSoup(html, "html.parser")
+
+    assert (
+        stored["sections"]["ai"]["items"][0]["summary"]
+        == payload["sections"]["ai"]["items"][0]["summary"]
+    )
+    assert response.status_code == 200
+    assert (
+        soup.select_one(".brief-summary--roundup .brief-summary-lead").get_text(
+            strip=True
+        )
+        == "根据 Hacker News 部分评论：以下是几位社区成员最近分享的项目。"
+    )
+    assert [
+        item.get_text(strip=True) for item in soup.select(".brief-summary-list li")
+    ] == [
+        "<script>项目</script>：用 Git 追踪法律文本的修改。",
+        "ShopSpec：根据尺寸生成木工制作方案。",
+    ]
+    assert "&lt;script&gt;项目&lt;/script&gt;" in html
+    assert "<script>项目</script>" not in html
+
+
 def test_homepage_shows_latest_brief_and_language_scoped_links(client, app):
     with app.app_context():
         store_brief(app_module.Daily_Briefs_Directory, brief_payload())

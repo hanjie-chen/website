@@ -155,6 +155,33 @@ OFFICIAL_SOURCE_LABELS = {
     "claude.com": "Claude 官方",
 }
 
+COMMUNITY_ROUNDUP_PREFIX = "根据 Hacker News 部分评论："
+
+
+def _community_roundup_summary_view(summary: str) -> dict | None:
+    """Return the structured display form for the generator's roundup format."""
+    lead, separator, raw_items = summary.partition("\n\n")
+    if not separator or not lead.startswith(COMMUNITY_ROUNDUP_PREFIX):
+        return None
+
+    intro = lead.removeprefix(COMMUNITY_ROUNDUP_PREFIX).strip()
+    lines = raw_items.splitlines()
+    if not intro or len(lines) not in {2, 3}:
+        return None
+
+    items = []
+    for line in lines:
+        if not line.startswith("- "):
+            return None
+        name, separator, description = line[2:].partition("：")
+        name = name.strip()
+        description = description.strip()
+        if not separator or not name or not description:
+            return None
+        items.append({"name": name, "description": description})
+
+    return {"intro": lead, "items": items}
+
 
 def _source_display_name(source_url: str) -> str:
     """Return an allowlisted official label or the compact source hostname."""
@@ -278,10 +305,18 @@ def brief_detail(lang, brief_date):
     brief = load_brief(Daily_Briefs_Directory, brief_date)
     if brief is None:
         abort(404)
+    summary_views = {
+        section_name: [
+            _community_roundup_summary_view(item["summary"])
+            for item in section["items"]
+        ]
+        for section_name, section in brief["sections"].items()
+    }
     return render_template(
         "brief_detail.html",
         current_lang=current_lang,
         brief=brief,
+        summary_views=summary_views,
     )
 
 
