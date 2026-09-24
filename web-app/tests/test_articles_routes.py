@@ -2,6 +2,8 @@ import json
 from datetime import date
 from pathlib import Path
 
+from bs4 import BeautifulSoup
+
 import app as app_module
 from models import Article_Meta_Data, db
 
@@ -73,14 +75,24 @@ def test_articles_index_uses_shared_english_topbar_and_marks_articles_active(cli
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert '<a href="/zh/" class="site-nav-brand">hanjie site</a>' in body
-    assert '<a class="nav-link site-nav-link" href="/zh/">Home</a>' in body
-    assert (
-        '<a class="nav-link site-nav-link is-active" href="/zh/articles">Articles</a>'
-        in body
-    )
-    assert '<a class="nav-link site-nav-link" href="/zh/about">About</a>' in body
-    assert body.count("site-nav-link is-active") == 1
+    soup = BeautifulSoup(body, "html.parser")
+    brand = soup.select_one("a.site-nav-brand")
+    assert brand["href"] == "/zh/"
+    assert brand.get_text(strip=True) == "hanjie site"
+    for selector in (".site-nav-menu", "#site-nav-dropdown"):
+        navigation = soup.select_one(selector)
+        links = navigation.select("a.site-nav-link")
+        assert [(link["href"], link.get_text(strip=True)) for link in links] == [
+            ("/zh/", "Home"),
+            ("/zh/articles", "Articles"),
+            ("/zh/briefs", "Brief"),
+            ("/zh/about", "About"),
+        ]
+        active_links = navigation.select("a.site-nav-link.is-active")
+        assert len(active_links) == 1
+        assert active_links[0]["href"] == "/zh/articles"
+        assert active_links[0]["aria-current"] == "page"
+    assert soup.select_one("#site-nav-toggle").get_text(strip=True) == "Articles"
 
 
 def test_english_articles_index_uses_sidecar_title_and_brief(client, app):
