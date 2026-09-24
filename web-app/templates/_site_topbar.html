@@ -1,3 +1,12 @@
+{% set nav_items = [('home', 'index'), ('articles', 'article_index'), ('briefs', 'brief_index'), ('about', 'about_me')] %}
+{% macro nav_links(mobile=false) %}
+    {% for page, endpoint in nav_items %}
+    <li class="nav-item">
+        <a class="{% if mobile %}dropdown-item {% endif %}nav-link site-nav-link{% if active_page == page %} is-active{% endif %}"
+            href="{{ url_for(endpoint, lang=current_lang) }}"{% if active_page == page %} aria-current="page"{% endif %}>{{ t("nav." ~ page) }}</a>
+    </li>
+    {% endfor %}
+{% endmacro %}
 <nav class="navbar navbar-expand-sm navbar-custom fixed-top">
     <div class="container-fluid d-flex justify-content-center">
         <div class="site-nav-shell px-2 px-lg-3">
@@ -6,19 +15,23 @@
                 {% include "_language_switcher.html" %}
             </div>
             <ul class="navbar-nav flex-row site-nav-menu">
-                <li class="nav-item">
-                    <a class="nav-link site-nav-link{% if active_page == 'home' %} is-active{% endif %}" href="{{ url_for('index', lang=current_lang) }}">{{ t("nav.home") }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link site-nav-link{% if active_page == 'articles' %} is-active{% endif %}" href="{{ url_for('article_index', lang=current_lang) }}">{{ t("nav.articles") }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link site-nav-link{% if active_page == 'briefs' %} is-active{% endif %}" href="{{ url_for('brief_index', lang=current_lang) }}">{{ t("nav.briefs") }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link site-nav-link{% if active_page == 'about' %} is-active{% endif %}" href="{{ url_for('about_me', lang=current_lang) }}">{{ t("nav.about") }}</a>
-                </li>
+                {{ nav_links() }}
             </ul>
+            <div class="dropdown site-nav-mobile">
+                <button class="site-nav-toggle dropdown-toggle" type="button" id="site-nav-toggle"
+                    data-bs-toggle="dropdown" aria-expanded="false" aria-controls="site-nav-dropdown">
+                    {{ t("nav." ~ active_page) }}
+                </button>
+                <div class="dropdown-menu dropdown-menu-end site-nav-dropdown" id="site-nav-dropdown"
+                    aria-labelledby="site-nav-toggle">
+                    <ul class="navbar-nav">
+                        {{ nav_links(true) }}
+                    </ul>
+                    <div class="site-nav-languages">
+                        {% include "_language_switcher.html" %}
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </nav>

@@ -1,6 +1,7 @@
 from html import unescape
 
 import pytest
+from bs4 import BeautifulSoup
 
 from i18n import get_language_from_header
 
@@ -183,8 +184,12 @@ def test_homepage_marks_home_link_active(client):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert '<a class="nav-link site-nav-link is-active" href="/zh/">Home</a>' in body
-    assert body.count("site-nav-link is-active") == 1
+    links = BeautifulSoup(body, "html.parser").select("a.site-nav-link.is-active")
+    assert len(links) == 2
+    assert all(
+        link["href"] == "/zh/" and link["aria-current"] == "page" for link in links
+    )
+    assert all(link.get_text(strip=True) == "Home" for link in links)
 
 
 def test_about_page_marks_about_link_active(client):
@@ -192,10 +197,12 @@ def test_about_page_marks_about_link_active(client):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert (
-        '<a class="nav-link site-nav-link is-active" href="/en/about">About</a>' in body
+    links = BeautifulSoup(body, "html.parser").select("a.site-nav-link.is-active")
+    assert len(links) == 2
+    assert all(
+        link["href"] == "/en/about" and link["aria-current"] == "page" for link in links
     )
-    assert body.count("site-nav-link is-active") == 1
+    assert all(link.get_text(strip=True) == "About" for link in links)
 
 
 def test_chinese_about_page_keeps_hero_overline_and_removes_duplicate_section_overlines(

@@ -230,6 +230,8 @@ Most important files:
 
 - `base.html`
   - shared document shell and global asset loading
+- `_site_topbar.html`
+  - shared navigation; at widths up to 768px, a single sticky row shows the brand and current section, with navigation links and language switching in a dropdown
 - `index.html`
   - homepage / landing page
 - `about_me.html`
