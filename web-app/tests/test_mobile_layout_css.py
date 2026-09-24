@@ -11,3 +11,12 @@ def test_mobile_topbar_participates_in_document_flow():
     assert "position: sticky" in mobile_css
     assert ".main-content" in mobile_css
     assert "padding-top: 0.75rem" in mobile_css
+
+
+def test_stylesheets_do_not_reimport_unversioned_shared_styles():
+    # A later cached import can override the versioned navigation layout.
+    import re
+
+    for stylesheet in (APP_DIR / "static/css").rglob("*.css"):
+        css = stylesheet.read_text(encoding="utf-8")
+        assert not re.search(r"@import\s+[^;]*\bstyle\.css", css), stylesheet

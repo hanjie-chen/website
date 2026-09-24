@@ -306,6 +306,7 @@ Important implication:
 - `/static/css/about-me.css?v=123` and `/static/css/about-me.css?v=456` are different cache keys
 - that lets browsers and Cloudflare keep caching old asset URLs safely while new page renders point to the new URL after a CSS/JS/image update
 - production currently relies on this versioned `/static/...?...` pattern to make Cloudflare edge caching safe for site-owned CSS, JS, fonts, and images
+- `base.html` loads the shared `style.css` once through `asset_url(...)`; subsystem styles must not re-import it via an unversioned CSS URL, which can load stale cached rules after the current stylesheet
 
 Start in `app.py` if you want to change:
 
