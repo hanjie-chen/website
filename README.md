@@ -17,6 +17,7 @@ Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + C
 - 提供带语言前缀的公开页面：`/zh/...`、`/en/...`，根路径 `/` 会按语言偏好自动跳转
 - 提供 Daily Brief 首页入口、历史归档与按日期阅读页；按日期阅读页从已有 `source_url` 显示原文域名，并为 allowlist 中的站点显示官方来源名，简报正文当前仅提供中文
 - 提供公开只读的文章 metadata API：`GET /api/articles` 与 `GET /api/articles/<id>`
+- 提供公开只读的 Daily Brief JSON API：`GET /api/briefs`、`GET /api/briefs/latest` 与 `GET /api/briefs/<YYYY-MM-DD>`，方便 AI 或其他客户端读取已发布简报；字段与错误语义见 [web-app/README.md](./web-app/README.md#public-daily-brief-api)
 - 把 Markdown 知识库同步、导入并渲染成可访问的 HTML
 - 通过 CI/CD 将镜像部署到 GCP VM，并由 Cloudflare 暴露到公网
 
@@ -199,6 +200,7 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - 公开只读 API：
   - `GET /api/articles`
   - `GET /api/articles/<id>`
+  - `GET /api/briefs`、`GET /api/briefs/latest`、`GET /api/briefs/<YYYY-MM-DD>`：无需 token，只返回已发布的简报内容与归档 metadata，不包含原文全文或生成器内部诊断
 - 内部重建接口：`POST /internal/reindex`
 - 鉴权头：`X-REIMPORT-ARTICLES-TOKEN`
 - Daily Brief 发布接口：`POST /internal/briefs`，使用独立的 `X-DAILY-BRIEF-TOKEN`；未配置 token 时接口返回 404
@@ -214,6 +216,7 @@ Host bootstrap 由 `infra/ansible/` 负责，主要用于现有 VM 的基础环�
 - Cloudflare 目前已对 `/static/*` 启用 edge cache；`/rendered-articles/*.html` 暂未纳入缓存计划
 - `/web-log/` 目前由 Cloudflare Access 在 edge 侧保护，不再依赖 Nginx Basic Auth
 - 公开只读 API `/api/articles*` 目前已添加 Cloudflare rate limiting 保护
+- 新增的 `/api/briefs*` 不在上述已记录的限流范围内；上线时需核对 edge 访问规则，并使用目标 AI 客户端验证可达性
 - 当前已落地的 Cloudflare 优化主要包括：`/static/*` edge cache、`/web-log/` Cloudflare Access、`/api/articles*` rate limiting，以及生产环境 Origin CA + `Full (strict)`
 
 ## Roadmap

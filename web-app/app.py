@@ -320,6 +320,27 @@ def brief_detail(lang, brief_date):
     )
 
 
+@app.get("/api/briefs")
+def api_briefs():
+    return {"items": load_brief_archive(Daily_Briefs_Directory)}
+
+
+@app.get("/api/briefs/latest")
+def api_brief_latest():
+    brief = load_current_brief(Daily_Briefs_Directory)
+    if brief is None:
+        return {"error": "brief_not_found"}, 404
+    return brief
+
+
+@app.get("/api/briefs/<brief_date>")
+def api_brief_detail(brief_date):
+    brief = load_brief(Daily_Briefs_Directory, brief_date)
+    if brief is None:
+        return {"error": "brief_not_found"}, 404
+    return brief
+
+
 @app.route("/api/articles")
 def api_articles():
     return {

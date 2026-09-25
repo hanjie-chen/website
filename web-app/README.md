@@ -10,7 +10,7 @@ The `web-app` subsystem covers these major areas:
 
 - serving the homepage, Daily Brief archive/detail pages, article pages, docs-style category pages, and the About page
 - validating authenticated Daily Brief payloads and storing them in a dedicated persistent directory
-- exposing read-only article metadata APIs for public consumption
+- exposing read-only article metadata and Daily Brief APIs for public consumption
 - importing Markdown articles into the SQLite metadata database
 - rendering article Markdown into static HTML files under the rendered article directory
 - providing internal endpoints and helpers used by the deployment and sync flows
@@ -41,6 +41,9 @@ What it does:
 - serves the public read-only JSON APIs:
   - `GET /api/articles`
   - `GET /api/articles/<int:article_id>`
+  - `GET /api/briefs`
+  - `GET /api/briefs/latest`
+  - `GET /api/briefs/<YYYY-MM-DD>`
 - exposes `POST /internal/reindex` for article sync and authenticated `POST /internal/briefs` for Daily Brief publishing
 - validates the language-switch `next=` target so `/set-language/...` only redirects to same-site absolute paths
 - builds the article TOC for the right-hand page navigation
@@ -219,6 +222,37 @@ overwrites that date and refreshes its archive metadata; explicit older backfill
 join the archive without moving the current pointer backward.
 
 The endpoint is hidden with a 404 when `DAILY_BRIEF_PUBLISH_TOKEN` is unset. `DAILY_BRIEF_DATA_DIRECTORY` overrides the default `/daily-briefs/data` storage path.
+
+### Public Daily Brief API
+
+These read-only endpoints require no token and have no language prefix:
+
+| Endpoint | Response |
+| --- | --- |
+| `GET /api/briefs` | `{"items": [...]}` containing archive metadata, newest date first: `date`, `generated_at`, `ai_items`, `non_ai_hot_items`. An empty archive returns `{"items": []}`. |
+| `GET /api/briefs/latest` | The most recent successfully published schema v2 payload. Check its `date`: it may be earlier than today. |
+| `GET /api/briefs/YYYY-MM-DD` | The published schema v2 payload for exactly that date. |
+
+Detail responses contain `schema_version`, `date`, `generated_at`, `timezone`
+(`Asia/Singapore`), and `sections`. Each section contains `note` and `items`;
+each item contains `hn_item_id`, `title`, `summary`, `content_status`, `why`,
+`source_url`, `discussion_url`, `points`, and `comments`. Summaries are Chinese;
+points and comment counts are publishing-time snapshots. This is the same
+validated public content used by the website, with no original article full text
+or generator diagnostics. Use the date and `hn_item_id` together to identify a
+specific brief item; item ordering can change on republishing.
+
+Missing/unreadable briefs and invalid dates return HTTP 404 with
+`{"error": "brief_not_found"}`. Writes to these public routes return HTTP 405.
+Same-date republishing replaces the content returned at that date, so dated
+responses must not be treated as immutable. Reads reuse the current pointer,
+archive index, and exact-date loader without scanning storage or calling the
+generator. The authenticated `/internal/briefs` publishing contract is unchanged.
+
+Example: fetch `/api/briefs/latest`, then use `/api/briefs/<date>` from its response
+when sharing a particular day's brief with an AI client. Public reachability
+must also be checked through Cloudflare with the intended client; the existing
+documented `/api/articles*` rate limit does not cover these new routes.
 
 ## Directory Map
 

@@ -50,6 +50,59 @@ def post_brief(client, payload, token="secret-token"):
     )
 
 
+def test_public_brief_api_reads_published_content_without_token(client, monkeypatch):
+    monkeypatch.setattr(app_module, "DAILY_BRIEF_PUBLISH_TOKEN", "secret-token")
+    latest = brief_payload("2026-07-25")
+    older = brief_payload("2026-07-24")
+    assert post_brief(client, latest).status_code == 201
+    assert post_brief(client, older).status_code == 201
+
+    response = client.get("/api/briefs/latest")
+    assert response.status_code == 200
+    assert response.is_json
+    assert response.get_json() == latest
+    assert client.get("/api/briefs/2026-07-24").get_json() == older
+    assert client.get("/api/briefs").get_json() == {
+        "items": [
+            {
+                "date": payload["date"],
+                "generated_at": payload["generated_at"],
+                "ai_items": 1,
+                "non_ai_hot_items": 0,
+            }
+            for payload in (latest, older)
+        ]
+    }
+
+    latest["sections"]["ai"]["items"][0]["summary"] = "修订后的摘要"
+    assert post_brief(client, latest).status_code == 200
+    assert client.get("/api/briefs/2026-07-25").get_json() == latest
+    assert client.get("/api/briefs/latest").get_json() == latest
+
+
+def test_public_brief_api_empty_archive(client):
+    response = client.get("/api/briefs")
+    assert response.status_code == 200
+    assert response.get_json() == {"items": []}
+
+
+@pytest.mark.parametrize(
+    "date_label", ["latest", "2026-07-25", "2026-02-30", "2026-7-25", "current.json"]
+)
+def test_public_brief_api_missing_or_invalid_date_returns_json(client, date_label):
+    response = client.get(f"/api/briefs/{date_label}")
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "brief_not_found"}
+
+
+@pytest.mark.parametrize("path", ["", "/latest", "/2026-07-25"])
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE"])
+def test_public_brief_api_rejects_writes(client, path, method):
+    response = client.open(f"/api/briefs{path}", method=method, json=brief_payload())
+    assert response.status_code == 405
+    assert load_brief_archive(app_module.Daily_Briefs_Directory) == []
+
+
 @pytest.mark.parametrize(
     ("source_url", "expected"),
     [
