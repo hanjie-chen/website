@@ -12,7 +12,9 @@ Start with the root `README.md`. Before planning or making non-trivial changes i
 
 ## Verification
 
-- Run the smallest relevant verification for the files you changed, and resolve related failures before completing the task.
+Determine verification scope from the affected behavior, including consumers of shared components.
+
+- Run the smallest verification that covers this scope, and resolve related failures before completing the task. When a failure reveals a shared assumption, check other tests that rely on it.
 - Shell script changes: run `shellcheck -x scripts/deploy/*.sh articles-sync/*.sh` when practical.
 - Compose changes: validate both configurations with `docker compose -f compose.yml config --quiet` and `docker compose -f compose.yml -f compose.dev.yml config --quiet`.
 
