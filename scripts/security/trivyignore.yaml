@@ -1,1 +1,17 @@
-vulnerabilities: []
+vulnerabilities:
+  - id: CVE-2026-84445
+    paths:
+      - dozzle
+    purls:
+      - pkg:golang/google.golang.org/grpc@v1.84.0
+    expired_at: 2026-10-09
+    statement: >-
+      False positive for the gRPC v1.84.0 dependency in Dozzle v11.1.1.
+      The released source rejects missing Host/:authority in the HTTP/2
+      transport and checks for an empty authority before xDS routing.
+      The upstream advisory lists v1.84.0 as patched, but GO-2026-6443
+      includes it in a development-version affected range. Recheck the
+      database and remove this exception by 2026-10-09.
+      https://github.com/grpc/grpc-go/security/advisories/GHSA-2v4p-qf9q-27wj
+      https://github.com/grpc/grpc-go/blob/v1.84.0/internal/transport/http2_server.go#L525-L530
+      https://github.com/grpc/grpc-go/blob/v1.84.0/internal/xds/server/routing.go#L66-L69

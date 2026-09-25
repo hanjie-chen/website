@@ -65,8 +65,9 @@ The scan job still fails intentionally after creating or updating the security
 issue and remediation PR. Its annotation and summary distinguish the policy
 failure from a runner failure and explain whether a clean candidate or PR was
 available. The issue headline counts unique CVEs separately from affected
-packages and images, groups the main table by image/target/CVE, and keeps the
-package-level findings in a collapsible details section. Full JSON reports are
+packages and images. Each image gets one section with its reference shown once;
+target-specific CVE tables and collapsible package-level tables omit the
+repeated image columns. Full JSON reports are
 uploaded with the workflow run for 30 days.
 
 Production deployment, content synchronization, and the production-reference

@@ -16,9 +16,12 @@ Security workflow retains responsibility for full-inventory scans.
 
 The daily report preserves `actionable.json` as package-level remediation input
 and derives `grouped-by-cve.json` only for presentation. GitHub issues show
-unique CVE, affected package, and image counts, followed by one summary row per
-image/target/CVE and a collapsible package-level table. The complete report
-directory is retained as a workflow artifact for 30 days.
+unique CVE, affected package, and image counts, followed by a section for each
+image. Each image reference appears once above its target-specific CVE tables
+and collapsible package-level tables, rather than repeating in every row.
+Targets omit the redundant image-reference prefix. Each target shows up to
+50 CVE rows and 50 package-level rows, with a notice when truncated. The
+complete report directory is retained as a workflow artifact for 30 days.
 
 The helper does not decide whether an update is safe. The workflow first scans
 the currently pinned images, calls this helper to discover newer stable tags,
@@ -46,6 +49,14 @@ CI and the daily Container Security workflow. Keep the empty
 `vulnerabilities: []` list when no exception is active. Every temporary entry
 must include a reason and an expiry date so an expired acceptance blocks the
 scan again.
+
+The temporary CVE-2026-84445 exception expires on 2026-10-09 and matches only
+the `dozzle` target with `google.golang.org/grpc@v1.84.0`. The gRPC v1.84.0
+release contains both the HTTP/2 missing-authority rejection and the defensive
+xDS routing check; its upstream advisory lists the release as patched, while
+GO-2026-6443 includes it in an affected development-version range. Source and
+advisory links are recorded in the exception. Recheck the database before
+expiry; do not broaden the exception to other versions or targets.
 
 ## Commands
 
