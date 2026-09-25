@@ -75,38 +75,8 @@ def _fetch_all_articles():
     return db.session.execute(db.select(Article_Meta_Data)).scalars().all()
 
 
-def _fetch_api_articles():
-    return (
-        db.session.execute(db.select(Article_Meta_Data).order_by(Article_Meta_Data.id))
-        .scalars()
-        .all()
-    )
-
-
 def _localized_all_articles(lang: str):
     return localized_articles(Rendered_Articles, _fetch_all_articles(), lang)
-
-
-def _serialize_article_summary(article: Article_Meta_Data):
-    return {
-        "id": article.id,
-        "title": article.title,
-        "category": article.category,
-        "brief": article.brief_introduction,
-    }
-
-
-def _serialize_article_detail(article: Article_Meta_Data):
-    return {
-        "id": article.id,
-        "title": article.title,
-        "author": article.author,
-        "instructor": article.instructor,
-        "category": article.category,
-        "brief": article.brief_introduction,
-        "rollout_date": article.rollout_date.isoformat(),
-        "ultimate_modified_date": article.ultimate_modified_date.isoformat(),
-    }
 
 
 def _asset_url(filename: str) -> str:
@@ -339,27 +309,6 @@ def api_brief_detail(brief_date):
     if brief is None:
         return {"error": "brief_not_found"}, 404
     return brief
-
-
-@app.route("/api/articles")
-def api_articles():
-    return {
-        "items": [
-            _serialize_article_summary(article) for article in _fetch_api_articles()
-        ]
-    }
-
-
-@app.route("/api/articles/<int:article_id>")
-def api_article_detail(article_id):
-    article = db.session.execute(
-        db.select(Article_Meta_Data).where(Article_Meta_Data.id == article_id)
-    ).scalar()
-
-    if not article:
-        abort(404)
-
-    return _serialize_article_detail(article)
 
 
 # deal with 404 error

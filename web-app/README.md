@@ -10,7 +10,7 @@ The `web-app` subsystem covers these major areas:
 
 - serving the homepage, Daily Brief archive/detail pages, article pages, docs-style category pages, and the About page
 - validating authenticated Daily Brief payloads and storing them in a dedicated persistent directory
-- exposing read-only article metadata and Daily Brief APIs for public consumption
+- exposing read-only Daily Brief APIs for public consumption
 - importing Markdown articles into the SQLite metadata database
 - rendering article Markdown into static HTML files under the rendered article directory
 - providing internal endpoints and helpers used by the deployment and sync flows
@@ -39,8 +39,6 @@ What it does:
 - derives a compact source hostname from each validated Daily Brief `source_url` for display on the reading page, replacing exact allowlisted hostnames with official source labels without changing the strict schema v2 payload
 - renders the generator's explicit community-roundup summary format as a short introduction followed by a semantic project list, while storing the schema v2 `summary` as the original string
 - serves the public read-only JSON APIs:
-  - `GET /api/articles`
-  - `GET /api/articles/<int:article_id>`
   - `GET /api/briefs`
   - `GET /api/briefs/latest`
   - `GET /api/briefs/<YYYY-MM-DD>`
@@ -53,7 +51,7 @@ Start here when you want to change:
 
 - application routing
 - language detection and switch behavior
-- API response shape for article metadata
+- API response shape for Daily Briefs
 - article page rendering context
 - the internal reindex trigger
 - Daily Brief route and publishing behavior
@@ -205,7 +203,7 @@ Important implication:
 - article metadata lives in SQLite
 - article body HTML lives in the rendered article directory
 - the public article page needs both
-- the public article APIs currently expose metadata only, not rendered article HTML
+- articles are exposed through HTML pages; there is no public article JSON API
 
 Daily Brief publishing follows a separate flow:
 
@@ -251,8 +249,8 @@ generator. The authenticated `/internal/briefs` publishing contract is unchanged
 
 Example: fetch `/api/briefs/latest`, then use `/api/briefs/<date>` from its response
 when sharing a particular day's brief with an AI client. Public reachability
-must also be checked through Cloudflare with the intended client; the existing
-documented `/api/articles*` rate limit does not cover these new routes.
+must also be checked through Cloudflare with the intended client; rate limiting
+for `/api/briefs*` must be verified separately from the retired article API rules.
 
 ## Directory Map
 
@@ -383,7 +381,7 @@ Important test files:
 - `test_smoke.py`
   - high-level page content checks
 - `test_articles_routes.py`
-  - article, docs page, and public article API route behavior
+  - article and docs page route behavior
 - `test_article_toc.py`
   - TOC structure expectations
 - `test_navigation.py`
