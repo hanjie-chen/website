@@ -41,6 +41,18 @@ def brief_payload(date_label="2026-07-25", item_id="49038433"):
     }
 
 
+def brief_provenance(**overrides):
+    provenance = {
+        "summary_basis": "article",
+        "retrieval_method": "jina",
+        "retrieval_status": "success",
+        "material_origin": "original",
+        "fallback_reason": "challenge_page",
+    }
+    provenance.update(overrides)
+    return provenance
+
+
 def post_brief(client, payload, token="secret-token"):
     return client.post(
         "/internal/briefs",
@@ -78,6 +90,15 @@ def test_public_brief_api_reads_published_content_without_token(client, monkeypa
     assert post_brief(client, latest).status_code == 200
     assert client.get("/api/briefs/2026-07-25").get_json() == latest
     assert client.get("/api/briefs/latest").get_json() == latest
+
+
+def test_public_brief_api_preserves_valid_provenance(client, monkeypatch):
+    monkeypatch.setattr(app_module, "DAILY_BRIEF_PUBLISH_TOKEN", "secret-token")
+    payload = brief_payload()
+    payload["sections"]["ai"]["items"][0]["provenance"] = brief_provenance()
+
+    assert post_brief(client, payload).status_code == 201
+    assert client.get("/api/briefs/latest").get_json() == payload
 
 
 def test_public_brief_api_empty_archive(client):
@@ -188,6 +209,26 @@ def test_store_brief_rejects_v1_missing_status_and_unknown_item_fields(tmp_path)
         store_brief(tmp_path, invalid_status)
     with pytest.raises(BriefValidationError, match="exact schema v2 fields"):
         store_brief(tmp_path, unknown_field)
+
+
+@pytest.mark.parametrize(
+    "provenance",
+    [
+        {"summary_basis": "article"},
+        {**brief_provenance(), "unexpected": "field"},
+        brief_provenance(summary_basis="made_up"),
+        brief_provenance(retrieval_method=1),
+        brief_provenance(retrieval_status="done"),
+        brief_provenance(material_origin=None),
+        brief_provenance(fallback_reason="other"),
+    ],
+)
+def test_store_brief_strictly_validates_optional_provenance(tmp_path, provenance):
+    payload = brief_payload()
+    payload["sections"]["ai"]["items"][0]["provenance"] = provenance
+
+    with pytest.raises(BriefValidationError, match="provenance"):
+        store_brief(tmp_path, payload)
 
 
 @pytest.mark.parametrize("invalid_status", [None, [], 1])
@@ -480,6 +521,67 @@ def test_brief_route_renders_community_roundup_as_escaped_project_list(client, a
     ]
     assert "&lt;script&gt;项目&lt;/script&gt;" in html
     assert "<script>项目</script>" not in html
+
+
+def test_brief_detail_keeps_provenance_collapsed_and_summary_attribution_visible(
+    client, app
+):
+    payload = brief_payload()
+    item = payload["sections"]["ai"]["items"][0]
+    item["summary"] = "根据 Hacker News 部分评论：这个项目仍在早期阶段。"
+    item["provenance"] = brief_provenance(
+        summary_basis="source_and_comments",
+        retrieval_method="jina",
+        retrieval_status="failed",
+        material_origin="unknown",
+    )
+    with app.app_context():
+        store_brief(app_module.Daily_Briefs_Directory, payload)
+
+    response = client.get("/zh/briefs/2026-07-25")
+    soup = BeautifulSoup(response.get_data(as_text=True), "html.parser")
+    details = soup.select_one(".brief-details")
+
+    assert response.status_code == 200
+    assert details.name == "details"
+    assert not details.has_attr("open")
+    assert details.select_one("summary").get_text(strip=True) == "详情"
+    assert "入选依据：" in details.get_text()
+    assert "推荐理由：" not in soup.get_text()
+    assert not soup.select(".brief-why")
+    assert "页面或帖子材料与部分 HN 评论" in details.get_text()
+    assert "未取得（最后尝试：Jina Reader）" in details.get_text()
+    assert "通过 Jina Reader 取得" not in details.get_text()
+    assert (
+        "根据 Hacker News 部分评论：这个项目仍在早期阶段。"
+        in soup.select_one(".brief-summary").get_text()
+    )
+
+
+@pytest.mark.parametrize(
+    "provenance",
+    [
+        None,
+        brief_provenance(
+            summary_basis="unknown",
+            retrieval_method="unknown",
+            retrieval_status="unknown",
+            material_origin="unknown",
+            fallback_reason="unknown",
+        ),
+    ],
+)
+def test_legacy_and_unknown_provenance_do_not_invent_details(client, provenance):
+    payload = brief_payload()
+    item = payload["sections"]["ai"]["items"][0]
+    if provenance is not None:
+        item["provenance"] = provenance
+    store_brief(app_module.Daily_Briefs_Directory, payload)
+    response = client.get("/zh/briefs/2026-07-25")
+    soup = BeautifulSoup(response.get_data(as_text=True), "html.parser")
+    details = soup.select_one(".brief-details")
+    assert [label.get_text() for label in details.select("dt")] == ["入选依据："]
+    assert details.select_one("dd").get_text() == item["why"]
 
 
 def test_homepage_shows_latest_brief_and_language_scoped_links(client, app):

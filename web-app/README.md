@@ -66,6 +66,7 @@ What it does:
 - accepts only strict schema version 2 with fixed `ai` and `non_ai_hot` sections
 - validates dates, timezone-aware generation timestamps, string bounds, item limits, HTTP(S) links, and non-negative statistics
 - requires `content_status` on every item and validates it against `ok`, `fetch_failed`, `summary_failed`, and `title_only`; schema v1 is intentionally unsupported
+- accepts optional per-item `provenance` only when it contains the exact five enumerated retrieval and summary-basis fields; legacy schema v2 items without it remain readable
 - requires every `hn_item_id` to match its Hacker News discussion URL
 - writes canonical per-date JSON with an atomic replace
 - atomically advances `current.json` without scanning historical payloads during public requests
@@ -219,6 +220,17 @@ Normal public requests never scan the storage directory. Same-date republishing
 overwrites that date and refreshes its archive metadata; explicit older backfills
 join the archive without moving the current pointer backward.
 
+Each item has a native, initially collapsed **Details** disclosure containing
+its selection basis (`why`) and any recorded public provenance. Its text trigger
+uses a decorative chevron, a visible keyboard focus state, and a subtle inset
+rule for expanded content; it works without JavaScript and respects reduced
+motion preferences. Source or
+discussion attribution stays visible in the summary. Missing historical
+provenance is not inferred or backfilled. Retrieval describes the last recorded
+attempt and can fail even when a discussion summary succeeds; it is not a full
+retry trace. Deploy this accepting website before enabling the generator's
+optional provenance output.
+
 The endpoint is hidden with a 404 when `DAILY_BRIEF_PUBLISH_TOKEN` is unset. `DAILY_BRIEF_DATA_DIRECTORY` overrides the default `/daily-briefs/data` storage path.
 
 ### Public Daily Brief API
@@ -234,10 +246,16 @@ These read-only endpoints require no token and have no language prefix:
 Detail responses contain `schema_version`, `date`, `generated_at`, `timezone`
 (`Asia/Singapore`), and `sections`. Each section contains `note` and `items`;
 each item contains `hn_item_id`, `title`, `summary`, `content_status`, `why`,
-`source_url`, `discussion_url`, `points`, and `comments`. Summaries are Chinese;
+`source_url`, `discussion_url`, `points`, and `comments`, and may contain a
+strictly validated `provenance` object. `provenance` records the summary basis,
+retrieval method and status, material origin, and fallback reason; it contains no
+article text or full generator diagnostics. Its exact fields are `summary_basis`,
+`retrieval_method`, `retrieval_status`, `material_origin`, and `fallback_reason`;
+each accepts only its enumerated codes in `daily_briefs.py`. Unknown fields or
+codes are rejected. Summaries are Chinese;
 points and comment counts are publishing-time snapshots. This is the same
 validated public content used by the website, with no original article full text
-or generator diagnostics. Use the date and `hn_item_id` together to identify a
+or raw generator diagnostics. Use the date and `hn_item_id` together to identify a
 specific brief item; item ordering can change on republishing.
 
 Missing/unreadable briefs and invalid dates return HTTP 404 with

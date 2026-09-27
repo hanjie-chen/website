@@ -51,7 +51,22 @@
                     {% else %}
                     <p class="brief-summary">{{ item.summary }}</p>
                     {% endif %}
-                    <p class="brief-why"><span>{{ t("briefs.why") }}</span> {{ item.why }}</p>
+                    {% set provenance_view = provenance_views[section_name][loop.index0] %}
+                    <details class="brief-details">
+                        <summary>{{ t("briefs.details") }}<span class="brief-details-chevron" aria-hidden="true"></span></summary>
+                        <dl>
+                            {% for detail in provenance_view %}
+                            <div>
+                                <dt>{{ detail.label }}</dt>
+                                <dd>{{ detail.value }}</dd>
+                            </div>
+                            {% endfor %}
+                            <div>
+                                <dt>{{ t("briefs.selection_basis") }}</dt>
+                                <dd>{{ item.why }}</dd>
+                            </div>
+                        </dl>
+                    </details>
                     <p class="brief-item-meta">
                         {% set source_name = source_display_name(item.source_url) %}
                         {% if source_name %}

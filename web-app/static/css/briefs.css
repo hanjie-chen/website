@@ -110,8 +110,7 @@
     outline-offset: 4px;
 }
 
-.brief-summary,
-.brief-why {
+.brief-summary {
     max-width: 46rem;
     line-height: 1.78;
 }
@@ -139,15 +138,85 @@
     margin-top: 0.55rem;
 }
 
-.brief-why {
-    margin: 0.7rem 0 0;
+.brief-details {
+    max-width: 46rem;
+    margin-top: 0.7rem;
     color: var(--text-secondary-color);
     font-size: 0.84rem;
+    line-height: 1.65;
 }
 
-.brief-why span {
+.brief-details summary {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: fit-content;
+    min-height: 32px;
+    padding: 0.25rem 0.5rem;
+    margin-left: -0.5rem;
+    border-radius: 5px;
+    color: #aeb4c2;
+    cursor: pointer;
+    list-style: none;
+}
+
+.brief-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.brief-details summary:hover,
+.brief-details summary:focus-visible {
+    color: #a6d1ff;
+    background: rgba(121, 184, 255, 0.07);
+}
+
+.brief-details summary:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.brief-details-chevron {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-0.12rem) rotate(45deg);
+    transition: transform 120ms ease;
+}
+
+.brief-details[open] .brief-details-chevron {
+    transform: translateY(0.12rem) rotate(225deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brief-details-chevron {
+        transition: none;
+    }
+}
+
+.brief-details dl {
+    margin: 0.55rem 0 0;
+    padding-left: 0.9rem;
+    border-left: 1px solid rgba(174, 180, 194, 0.25);
+}
+
+.brief-details dl div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.35rem;
+}
+
+.brief-details dl div + div {
+    margin-top: 0.25rem;
+}
+
+.brief-details dt {
     color: rgba(219, 220, 226, 0.86);
     font-weight: 700;
+}
+
+.brief-details dd {
+    margin: 0;
 }
 
 .brief-item-meta {

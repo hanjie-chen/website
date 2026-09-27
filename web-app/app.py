@@ -159,6 +159,56 @@ def _source_display_name(source_url: str) -> str:
     return OFFICIAL_SOURCE_LABELS.get(hostname, hostname)
 
 
+def _brief_provenance_view(provenance: dict | None, language: str) -> list[dict]:
+    """Return only provenance facts that can be stated without guessing."""
+    if provenance is None:
+        return []
+
+    label = lambda key: translate(language, f"briefs.provenance.{key}")
+    details = []
+    summary_basis = provenance["summary_basis"]
+    material_origin = provenance["material_origin"]
+    if summary_basis == "article" and material_origin != "unknown":
+        details.append(
+            {
+                "label": label("summary_basis"),
+                "value": label(f"summary.article.{material_origin}"),
+            }
+        )
+    elif summary_basis not in {"article", "none", "unknown"}:
+        details.append(
+            {
+                "label": label("summary_basis"),
+                "value": label(f"summary.{summary_basis}"),
+            }
+        )
+
+    retrieval_method = provenance["retrieval_method"]
+    retrieval_status = provenance["retrieval_status"]
+    if retrieval_method not in {"none", "unknown"} and retrieval_status in {
+        "success",
+        "failed",
+    }:
+        details.append(
+            {
+                "label": label("retrieval"),
+                "value": label(f"retrieval.{retrieval_status}").format(
+                    method=label(f"method.{retrieval_method}")
+                ),
+            }
+        )
+
+    fallback_reason = provenance["fallback_reason"]
+    if fallback_reason not in {"none", "unknown"}:
+        details.append(
+            {
+                "label": label("fallback_reason"),
+                "value": label(f"fallback.{fallback_reason}"),
+            }
+        )
+    return details
+
+
 @app.context_processor
 def inject_template_helpers():
     # Keep template logic shallow: routes decide the language namespace, and
@@ -282,11 +332,19 @@ def brief_detail(lang, brief_date):
         ]
         for section_name, section in brief["sections"].items()
     }
+    provenance_views = {
+        section_name: [
+            _brief_provenance_view(item.get("provenance"), current_lang)
+            for item in section["items"]
+        ]
+        for section_name, section in brief["sections"].items()
+    }
     return render_template(
         "brief_detail.html",
         current_lang=current_lang,
         brief=brief,
         summary_views=summary_views,
+        provenance_views=provenance_views,
     )
 
 

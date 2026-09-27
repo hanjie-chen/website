@@ -16,6 +16,7 @@ Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + C
 
 - 提供带语言前缀的公开页面：`/zh/...`、`/en/...`，根路径 `/` 会按语言偏好自动跳转
 - 提供 Daily Brief 首页入口、历史归档与按日期阅读页；按日期阅读页从已有 `source_url` 显示原文域名，并为 allowlist 中的站点显示官方来源名，简报正文当前仅提供中文
+- 每条简报提供默认收起的「详情」，展示入选依据，以及新数据记录的摘要依据、材料获取结果和回退原因；评论或其他报道的归因仍直接显示在摘要中，历史简报无需迁移
 - 提供公开只读的 Daily Brief JSON API：`GET /api/briefs`、`GET /api/briefs/latest` 与 `GET /api/briefs/<YYYY-MM-DD>`，方便 AI 或其他客户端读取已发布简报；字段与错误语义见 [web-app/README.md](./web-app/README.md#public-daily-brief-api)
 - 把 Markdown 知识库同步、导入并渲染成可访问的 HTML
 - 通过 CI/CD 将镜像部署到 GCP VM，并由 Cloudflare 暴露到公网

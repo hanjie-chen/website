@@ -29,6 +29,61 @@ ITEM_KEYS = {
     "points",
     "comments",
 }
+OPTIONAL_ITEM_KEYS = {"provenance"}
+PROVENANCE_KEYS = {
+    "summary_basis",
+    "retrieval_method",
+    "retrieval_status",
+    "material_origin",
+    "fallback_reason",
+}
+SUMMARY_BASES = {
+    "article",
+    "source_and_comments",
+    "hn_comments",
+    "hn_post",
+    "video_captions",
+    "none",
+    "unknown",
+}
+RETRIEVAL_METHODS = {
+    "direct",
+    "jina",
+    "wayback",
+    "github_readme",
+    "github_raw",
+    "youtube_caption",
+    "story_text",
+    "none",
+    "unknown",
+}
+RETRIEVAL_STATUSES = {
+    "success",
+    "failed",
+    "not_attempted",
+    "not_needed",
+    "unknown",
+}
+MATERIAL_ORIGINS = {
+    "original",
+    "archived_copy",
+    "same_article",
+    "syndicated_copy",
+    "alternate_reporting",
+    "unknown",
+}
+FALLBACK_REASONS = {
+    "none",
+    "challenge_page",
+    "cloudflare_challenge",
+    "datadome_challenge",
+    "vercel_challenge",
+    "empty_content",
+    "network_timeout",
+    "tls_issuer_unavailable",
+    "source_material_insufficient",
+    "unknown",
+}
 CONTENT_STATUSES = {"ok", "fetch_failed", "summary_failed", "title_only"}
 ARCHIVE_INDEX_KEYS = {"index_version", "briefs"}
 ARCHIVE_ENTRY_KEYS = {
@@ -295,7 +350,9 @@ def _load_valid_file(path: Path) -> dict | None:
 
 
 def _validate_item(item) -> dict:
-    if not isinstance(item, dict) or set(item) != ITEM_KEYS:
+    if not isinstance(item, dict) or not ITEM_KEYS <= set(item) <= (
+        ITEM_KEYS | OPTIONAL_ITEM_KEYS
+    ):
         raise BriefValidationError("item must contain the exact schema v2 fields")
 
     content_status = item["content_status"]
@@ -316,7 +373,7 @@ def _validate_item(item) -> dict:
     ):
         raise BriefValidationError("discussion_url must match hn_item_id")
 
-    return {
+    normalized = {
         "hn_item_id": hn_item_id,
         "title": _validate_text(item["title"], "title", 300),
         "summary": _validate_text(item["summary"], "summary", 4000),
@@ -327,6 +384,29 @@ def _validate_item(item) -> dict:
         "points": _validate_count(item["points"], "points"),
         "comments": _validate_count(item["comments"], "comments"),
     }
+    if "provenance" in item:
+        normalized["provenance"] = _validate_provenance(item["provenance"])
+    return normalized
+
+
+def _validate_provenance(provenance) -> dict:
+    if not isinstance(provenance, dict) or set(provenance) != PROVENANCE_KEYS:
+        raise BriefValidationError("provenance must contain the exact fields")
+
+    fields = {
+        "summary_basis": SUMMARY_BASES,
+        "retrieval_method": RETRIEVAL_METHODS,
+        "retrieval_status": RETRIEVAL_STATUSES,
+        "material_origin": MATERIAL_ORIGINS,
+        "fallback_reason": FALLBACK_REASONS,
+    }
+    normalized = {}
+    for field, allowed_values in fields.items():
+        value = provenance[field]
+        if not isinstance(value, str) or value not in allowed_values:
+            raise BriefValidationError(f"unsupported provenance {field}")
+        normalized[field] = value
+    return normalized
 
 
 def _validate_date(value) -> str:
