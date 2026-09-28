@@ -7,6 +7,10 @@
     --card-background: rgba(28, 30, 34, 0.7);
     /* Shared visual height for pills and buttons in the top bar. */
     --nav-control-height: 36px;
+    /* Top-bar pills by role: accent marks where you are, neutral holds info. */
+    --pill-accent-border: rgba(59, 130, 246, 0.4);
+    --pill-neutral-background: rgba(255, 255, 255, 0.08);
+    --pill-neutral-border: rgba(255, 255, 255, 0.24);
 }
 
 body {
@@ -153,7 +157,7 @@ body {
 
 .navbar-custom .navbar-nav .site-nav-link.is-active {
     color: var(--accent-color);
-    border-color: rgba(59, 130, 246, 0.4);
+    border-color: var(--pill-accent-border);
     font-weight: 700;
 }
 
@@ -163,8 +167,8 @@ body {
     gap: 0.2rem;
     padding: 0.2rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--pill-neutral-background);
+    border: 1px solid var(--pill-neutral-border);
 }
 
 .site-nav-identity > .site-language-switcher {
@@ -468,7 +472,7 @@ body {
     position: relative;
     min-height: var(--nav-control-height);
     padding: 0 0.75rem;
-    border: 1px solid rgba(59, 130, 246, 0.4);
+    border: 1px solid var(--pill-accent-border);
     border-radius: 999px;
     background: transparent;
     color: var(--accent-color);

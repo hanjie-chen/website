@@ -293,7 +293,7 @@ Most important files:
 - `base.html`
   - shared document shell and global asset loading
 - `_site_topbar.html`
-  - shared navigation; the brand is a blue dot mark (matching the favicon) followed by `hanjie site`, pages may pass a `topbar_center` block that renders centered in the bar, and bar pills and buttons share the `--nav-control-height` token (36px; the phone section toggle keeps a 44px touch target); at widths up to 768px, a single sticky row shows the brand and current section, with navigation links and language switching in a dropdown
+  - shared navigation; the brand is a blue dot mark (matching the favicon) followed by `hanjie site`, pages may pass a `topbar_center` block that renders centered in the bar, and bar pills and buttons share the `--nav-control-height` token (36px; the phone section toggle keeps a 44px touch target) and take their colors by role from `--pill-accent-border` (current location) or `--pill-neutral-*` (information such as the language switcher and the brief date capsule); at widths up to 768px, a single sticky row shows the brand and current section, with navigation links and language switching in a dropdown
 - `index.html`
   - homepage / landing page
 - `about_me.html`

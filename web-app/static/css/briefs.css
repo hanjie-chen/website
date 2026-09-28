@@ -119,9 +119,9 @@ a.brief-date-step:focus-visible {
     gap: 0.5rem;
     min-height: var(--nav-control-height);
     padding: 0 0.85rem;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    border: 1px solid var(--pill-neutral-border);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.07);
+    background: var(--pill-neutral-background);
     color: var(--text-primary-color);
     font-size: 0.9rem;
     font-weight: 700;
@@ -135,7 +135,7 @@ a.brief-date-step:focus-visible {
 .brief-dock-date:hover,
 .brief-dock-date:focus-visible {
     color: var(--accent-color);
-    border-color: rgba(59, 130, 246, 0.4);
+    border-color: var(--pill-accent-border);
     background: rgba(59, 130, 246, 0.06);
 }
 
