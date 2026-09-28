@@ -6,16 +6,52 @@
 <link rel="stylesheet" href="{{ asset_url('css/briefs.css') }}">
 {% endblock %}
 
+{# A link to the nearest older/newer brief, or an inert placeholder that keeps the date centered. #}
+{% macro date_step(date_label, direction) %}
+{% if date_label %}
+<a class="brief-date-step brief-date-step--{{ direction }}"
+    href="{{ url_for('brief_detail', lang=current_lang, brief_date=date_label) }}"
+    rel="{{ 'prev' if direction == 'older' else 'next' }}"
+    aria-label="{{ t('briefs.previous' if direction == 'older' else 'briefs.next') }}: {{ date_label }}">
+    <span class="brief-date-step-body" aria-hidden="true">
+        {%- if direction == "older" %}<span class="brief-date-step-icon">‹</span>{% endif -%}
+        <span class="brief-date-step-label">{{ date_label[5:] }}</span>
+        {%- if direction == "newer" %}<span class="brief-date-step-icon">›</span>{% endif -%}
+    </span>
+</a>
+{% else %}
+<span class="brief-date-step brief-date-step--{{ direction }}" aria-hidden="true"></span>
+{% endif %}
+{% endmacro %}
+
 {% block navbar %}
 {% set active_page = "briefs" %}
+{% set topbar_center %}
+<div class="brief-dock">
+    {{ date_step(older_date, "older") }}
+    <a class="brief-dock-date" href="#brief-top" data-brief-back-to-top
+        aria-label="{{ brief.date }} · {{ t('briefs.back_to_top') }}">
+        <time datetime="{{ brief.date }}">
+            <span class="brief-dock-date-full">{{ brief.date }}</span>
+            <span class="brief-dock-date-short">{{ brief.date[5:] }}</span>
+        </time>
+        <span class="brief-dock-date-arrow" aria-hidden="true">↑</span>
+    </a>
+    {{ date_step(newer_date, "newer") }}
+</div>
+{% endset %}
 {% include "_site_topbar.html" %}
 {% endblock %}
 
 {% block main_content %}
 <div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
     <article class="content-wrapper briefs-page-shell brief-detail-shell px-2 px-lg-3">
-        <header class="briefs-hero">
-            <h1><time datetime="{{ brief.date }}">{{ brief.date }}</time></h1>
+        <header class="briefs-hero" id="brief-top">
+            <div class="brief-date-row" data-brief-hero-date>
+                {{ date_step(older_date, "older") }}
+                <h1 tabindex="-1"><time datetime="{{ brief.date }}">{{ brief.date }}</time></h1>
+                {{ date_step(newer_date, "newer") }}
+            </div>
             {% if current_lang == "en" %}
             <p class="briefs-language-note">{{ t("briefs.language_note") }}</p>
             {% endif %}
@@ -88,4 +124,8 @@
         {% endfor %}
     </article>
 </div>
+{% endblock %}
+
+{% block script %}
+<script src="{{ asset_url('brief-date-dock.js') }}"></script>
 {% endblock %}

@@ -6,7 +6,7 @@
 
 在 Flask 中，我们需要创建一个 static 文件夹来保存静态文件，它应该和程序模块、templates 文件夹在同一目录层级
 
-其中favicon_wind.ico图标是网站的图标
+其中 favicon_point.ico（蓝色圆点）是网站当前的图标，顶栏品牌名前的圆点标志与它保持一致
 
 ## CSS框架:Bootstrap5
 

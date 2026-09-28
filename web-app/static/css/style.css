@@ -30,6 +30,7 @@ body {
 }
 
 .site-nav-shell {
+    position: relative;
     width: min(100%, 1760px);
     display: flex;
     align-items: center;
@@ -47,6 +48,7 @@ body {
 .site-nav-brand {
     display: inline-flex;
     align-items: center;
+    min-height: 44px;
     font-size: 1.08rem;
     font-weight: 700;
     letter-spacing: -0.02em;
@@ -57,6 +59,38 @@ body {
 
 .site-nav-brand:hover {
     color: var(--text-primary-color);
+}
+
+.site-nav-brand-mark {
+    flex-shrink: 0;
+    width: 0.62rem;
+    height: 0.62rem;
+    border-radius: 50%;
+    background: var(--accent-color);
+}
+
+/* Pages can collapse the text into the mark, e.g. while reading a brief. */
+.site-nav-brand-text {
+    display: inline-block;
+    max-width: 7em;
+    margin-left: 0.55rem;
+    overflow: hidden;
+    transition: max-width 240ms ease, margin-left 240ms ease, opacity 180ms ease,
+        transform 240ms ease;
+}
+
+/* Optional page-owned slot, centered in the bar independently of its sides. */
+.site-nav-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .site-nav-brand-text {
+        transition: none;
+    }
 }
 
 .site-nav-menu {

@@ -128,6 +128,14 @@ OFFICIAL_SOURCE_LABELS = {
 COMMUNITY_ROUNDUP_PREFIX = "根据 Hacker News 部分评论："
 
 
+def _adjacent_brief_dates(date_label: str) -> tuple[str | None, str | None]:
+    """Return the nearest older and newer archived dates around ``date_label``."""
+    dates = [entry["date"] for entry in load_brief_archive(Daily_Briefs_Directory)]
+    older = max((date for date in dates if date < date_label), default=None)
+    newer = min((date for date in dates if date > date_label), default=None)
+    return older, newer
+
+
 def _community_roundup_summary_view(summary: str) -> dict | None:
     """Return the structured display form for the generator's roundup format."""
     lead, separator, raw_items = summary.partition("\n\n")
@@ -339,12 +347,15 @@ def brief_detail(lang, brief_date):
         ]
         for section_name, section in brief["sections"].items()
     }
+    older_date, newer_date = _adjacent_brief_dates(brief["date"])
     return render_template(
         "brief_detail.html",
         current_lang=current_lang,
         brief=brief,
         summary_views=summary_views,
         provenance_views=provenance_views,
+        older_date=older_date,
+        newer_date=newer_date,
     )
 
 

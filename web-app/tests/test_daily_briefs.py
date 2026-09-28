@@ -487,6 +487,74 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
     assert "2026-07-24" in historical.get_data(as_text=True)
 
 
+def date_step_links(soup, container):
+    return [
+        (link["rel"], link["href"], link["aria-label"])
+        for link in soup.select(f"{container} a.brief-date-step")
+    ]
+
+
+def test_brief_detail_links_adjacent_archived_briefs_in_hero_and_topbar_dock(
+    client, app
+):
+    # 2026-07-23 has no brief, so steps must skip archive gaps.
+    with app.app_context():
+        for date_label in ("2026-07-22", "2026-07-24", "2026-07-25"):
+            store_brief(app_module.Daily_Briefs_Directory, brief_payload(date_label))
+
+    middle = BeautifulSoup(
+        client.get("/zh/briefs/2026-07-24").get_data(as_text=True), "html.parser"
+    )
+    expected = [
+        (["prev"], "/zh/briefs/2026-07-22", "上一期: 2026-07-22"),
+        (["next"], "/zh/briefs/2026-07-25", "下一期: 2026-07-25"),
+    ]
+    assert date_step_links(middle, ".brief-date-row") == expected
+    assert date_step_links(middle, ".navbar-custom .brief-dock") == expected
+    assert middle.select_one(".brief-date-row h1 time")["datetime"] == "2026-07-24"
+
+    back_to_top = middle.select_one(".navbar-custom .brief-dock-date")
+    assert back_to_top["href"] == "#brief-top"
+    assert back_to_top["aria-label"] == "2026-07-24 · 回到顶部"
+    assert middle.select_one("#brief-top").select_one(".brief-date-row")
+    assert back_to_top.select_one(".brief-dock-date-full").get_text() == "2026-07-24"
+    assert back_to_top.select_one(".brief-dock-date-short").get_text() == "07-24"
+    assert back_to_top.select_one(".brief-dock-date-arrow")["aria-hidden"] == "true"
+
+    newest = BeautifulSoup(
+        client.get("/en/briefs/2026-07-25").get_data(as_text=True), "html.parser"
+    )
+    assert date_step_links(newest, ".brief-date-row") == [
+        (["prev"], "/en/briefs/2026-07-24", "Previous brief: 2026-07-24"),
+    ]
+    # An inert placeholder keeps the date centered where no newer brief exists.
+    placeholder = newest.select_one(".brief-date-row .brief-date-step--newer")
+    assert placeholder.name == "span"
+    assert placeholder["aria-hidden"] == "true"
+
+    oldest = BeautifulSoup(
+        client.get("/zh/briefs/2026-07-22").get_data(as_text=True), "html.parser"
+    )
+    assert date_step_links(oldest, ".brief-dock") == [
+        (["next"], "/zh/briefs/2026-07-24", "下一期: 2026-07-24"),
+    ]
+
+
+def test_topbar_date_dock_only_renders_on_brief_detail_pages(client, app):
+    with app.app_context():
+        store_brief(app_module.Daily_Briefs_Directory, brief_payload())
+
+    detail = client.get("/zh/briefs/2026-07-25").get_data(as_text=True)
+    assert 'class="site-nav-center"' in detail
+    assert "brief-date-dock.js" in detail
+
+    for path in ("/zh/", "/zh/briefs", "/zh/articles", "/zh/about"):
+        html = client.get(path).get_data(as_text=True)
+        assert 'class="site-nav-center"' not in html, path
+        assert "brief-date-dock.js" not in html, path
+        assert 'class="site-nav-brand-mark"' in html, path
+
+
 def test_brief_route_renders_community_roundup_as_escaped_project_list(client, app):
     payload = brief_payload()
     payload["sections"]["ai"]["items"][0]["summary"] = (

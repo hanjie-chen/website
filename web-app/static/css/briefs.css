@@ -21,6 +21,273 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* Detail hero: ‹ older   date   newer › */
+.brief-date-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.brief-date-row h1:focus {
+    outline: none;
+}
+
+.brief-date-row .brief-date-step--older {
+    justify-self: end;
+}
+
+.brief-date-row .brief-date-step--newer {
+    justify-self: start;
+}
+
+.brief-detail-shell .briefs-language-note {
+    margin-inline: auto;
+    text-align: center;
+}
+
+.brief-date-step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--text-secondary-color);
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-decoration: none;
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.brief-date-step-body {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
+
+.brief-date-step-icon {
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+.brief-date-row a.brief-date-step {
+    padding: 0.35rem 0.8rem;
+}
+
+a.brief-date-step:hover,
+a.brief-date-step:focus-visible {
+    color: var(--accent-color);
+}
+
+.brief-date-row a.brief-date-step:hover,
+.brief-date-row a.brief-date-step:focus-visible {
+    border-color: rgba(59, 130, 246, 0.16);
+    background: rgba(59, 130, 246, 0.04);
+}
+
+.brief-date-row a.brief-date-step:focus-visible,
+.brief-dock-date:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Top-bar dock: hidden until the hero date scrolls under the bar. */
+.brief-dock {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(0.6rem);
+    transition: opacity 200ms ease, transform 200ms ease, visibility 0s linear 200ms;
+}
+
+.navbar-custom.is-brief-docked .brief-dock {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: opacity 200ms ease, transform 200ms ease, visibility 0s;
+}
+
+.navbar-custom.is-brief-docked .site-nav-brand-text {
+    max-width: 0;
+    margin-left: 0;
+    opacity: 0;
+    transform: translateX(-0.4rem);
+}
+
+.brief-dock-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 34px;
+    padding: 0.3rem 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary-color);
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.brief-dock-date:hover,
+.brief-dock-date:focus-visible {
+    color: var(--accent-color);
+    border-color: rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.06);
+}
+
+.brief-dock-date-arrow {
+    color: var(--text-secondary-color);
+    font-weight: 400;
+}
+
+.brief-dock-date:hover .brief-dock-date-arrow,
+.brief-dock-date:focus-visible .brief-dock-date-arrow {
+    color: inherit;
+}
+
+.brief-dock-date-short {
+    display: none;
+}
+
+/*
+ * Dock steps keep a fixed footprint; the visible pill is positioned outward from
+ * it, so revealing the date label never moves the capsule.
+ */
+.brief-dock .brief-date-step {
+    position: relative;
+    width: 2.25rem;
+    font-size: 0.85rem;
+}
+
+.brief-dock .brief-date-step-body {
+    position: absolute;
+    top: 50%;
+    gap: 0;
+    min-height: 2.25rem;
+    padding: 0 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    transform: translateY(-50%);
+    transition: gap 200ms ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.brief-dock .brief-date-step--older .brief-date-step-body {
+    right: 0;
+}
+
+.brief-dock .brief-date-step--newer .brief-date-step-body {
+    left: 0;
+}
+
+.brief-dock .brief-date-step-label {
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-width 200ms ease, opacity 150ms ease;
+}
+
+.brief-dock a.brief-date-step:focus-visible {
+    outline: none;
+}
+
+.brief-dock a.brief-date-step:focus-visible .brief-date-step-body {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Preview the neighbor's date on keyboard focus, or on hover where hover exists. */
+.brief-dock a.brief-date-step:focus-visible .brief-date-step-body {
+    gap: 0.4rem;
+    border-color: rgba(59, 130, 246, 0.16);
+    background: #1f2530;
+}
+
+.brief-dock a.brief-date-step:focus-visible .brief-date-step-label {
+    max-width: 4em;
+    opacity: 1;
+}
+
+@media (hover: hover) {
+    .brief-dock a.brief-date-step:hover .brief-date-step-body {
+        gap: 0.4rem;
+        border-color: rgba(59, 130, 246, 0.16);
+        background: #1f2530;
+    }
+
+    .brief-dock a.brief-date-step:hover .brief-date-step-label {
+        max-width: 4em;
+        opacity: 1;
+    }
+}
+
+@media (max-width: 1023.98px) {
+    .brief-dock-date-full {
+        display: none;
+    }
+
+    .brief-dock-date-short {
+        display: inline;
+    }
+}
+
+/*
+ * Where the true center would collide with the bar's sides, center the dock in
+ * the gap between the collapsed brand (plus language switcher on desktop) and
+ * the navigation instead. Offsets match the fixed-width bar controls.
+ */
+@media (min-width: 769px) and (max-width: 959.98px) {
+    .site-nav-center {
+        left: 11rem;
+        right: 21.5rem;
+        display: flex;
+        justify-content: center;
+        transform: translateY(-50%);
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar-custom.is-brief-docked .site-nav-brand {
+        min-width: 2.75rem;
+    }
+
+    .site-nav-center {
+        left: 3.5rem;
+        right: 7rem;
+        display: flex;
+        justify-content: center;
+        transform: translateY(-50%);
+    }
+}
+
+@media (max-width: 359.98px) {
+    /* Too narrow for the steps; the hero row keeps them. */
+    .brief-dock .brief-date-step {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brief-date-step,
+    .brief-dock,
+    .navbar-custom.is-brief-docked .brief-dock,
+    .brief-dock-date,
+    .brief-dock .brief-date-step-body,
+    .brief-dock .brief-date-step-label {
+        transition: none;
+    }
+}
+
 .briefs-lead {
     max-width: 42rem;
     margin: 1.2rem 0 0;
@@ -279,6 +546,27 @@
 
     .briefs-hero {
         padding: 1.5rem 0 1.9rem;
+    }
+
+    .brief-date-row {
+        gap: 0.25rem;
+    }
+
+    .brief-date-row h1 {
+        font-size: clamp(2rem, 10vw, 2.6rem);
+    }
+
+    .brief-date-row .brief-date-step {
+        min-width: 2.5rem;
+        min-height: 2.75rem;
+    }
+
+    .brief-date-row a.brief-date-step {
+        padding: 0;
+    }
+
+    .brief-date-row .brief-date-step-label {
+        display: none;
     }
 
     .brief-section {

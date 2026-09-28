@@ -11,9 +11,15 @@
     <div class="container-fluid d-flex justify-content-center">
         <div class="site-nav-shell px-2 px-lg-3">
             <div class="site-nav-identity">
-                <a href="{{ url_for('index', lang=current_lang) }}" class="site-nav-brand">hanjie site</a>
+                <a href="{{ url_for('index', lang=current_lang) }}" class="site-nav-brand">
+                    <span class="site-nav-brand-mark" aria-hidden="true"></span>
+                    <span class="site-nav-brand-text">hanjie site</span>
+                </a>
                 {% include "_language_switcher.html" %}
             </div>
+            {% if topbar_center is defined %}
+            <div class="site-nav-center">{{ topbar_center }}</div>
+            {% endif %}
             <ul class="navbar-nav flex-row site-nav-menu">
                 {{ nav_links() }}
             </ul>

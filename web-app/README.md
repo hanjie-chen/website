@@ -220,6 +220,20 @@ Normal public requests never scan the storage directory. Same-date republishing
 overwrites that date and refreshes its archive metadata; explicit older backfills
 join the archive without moving the current pointer backward.
 
+The dated page opens with a centered date row: the brief date flanked by
+`‹ MM-DD` and `MM-DD ›` links to the nearest older and newer archived dates,
+which skip days without a brief and leave an inert placeholder at either end of
+the archive. When that row scrolls under the top bar, `static/brief-date-dock.js`
+docks a compact copy into the bar center: the brand text collapses into its dot,
+the date becomes a capsule with a persistent `↑` that scrolls back to the top,
+and the neighbors shrink to `‹` / `›`, previewing their dates on hover or
+keyboard focus. The capsule shows `MM-DD` below 1024px; below 360px only the
+capsule remains in the bar. The script compares element positions on scroll
+instead of using `IntersectionObserver`, which reports no root bounds inside
+cross-origin frames. Without JavaScript the bar stays unchanged and the page
+date row still provides navigation; reduced-motion preferences disable the
+transitions.
+
 Each item has a native, initially collapsed **Details** disclosure containing
 its selection basis (`why`) and any recorded public provenance. Its text trigger
 uses a decorative chevron, a visible keyboard focus state, and a subtle inset
@@ -281,7 +295,7 @@ Most important files:
 - `base.html`
   - shared document shell and global asset loading
 - `_site_topbar.html`
-  - shared navigation; at widths up to 768px, a single sticky row shows the brand and current section, with navigation links and language switching in a dropdown
+  - shared navigation; the brand is a blue dot mark (matching the favicon) followed by `hanjie site`, and pages may pass a `topbar_center` block that renders centered in the bar; at widths up to 768px, a single sticky row shows the brand and current section, with navigation links and language switching in a dropdown
 - `index.html`
   - homepage / landing page
 - `about_me.html`
@@ -319,6 +333,8 @@ Commonly touched files:
   - blockquote styling
 - `article-toc.js`
   - right-side TOC active/expand behavior
+- `brief-date-dock.js`
+  - docks the Daily Brief date and adjacent-brief steps into the top bar after the page date scrolls away, and handles the capsule's back-to-top action
 - `code-copy.js`
   - copy button for code blocks
 - `math-render.js`

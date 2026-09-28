@@ -170,7 +170,10 @@ def test_shared_topbar_uses_fixed_brand_and_english_nav_on_chinese_homepage(clie
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert '<a href="/zh/" class="site-nav-brand">hanjie site</a>' in body
+    brand = BeautifulSoup(body, "html.parser").select_one("a.site-nav-brand")
+    assert brand["href"] == "/zh/"
+    assert brand.select_one(".site-nav-brand-mark")["aria-hidden"] == "true"
+    assert brand.get_text(strip=True) == "hanjie site"
     assert ">Home<" in body
     assert ">Articles<" in body
     assert ">Brief<" in body
@@ -278,7 +281,7 @@ def test_homepage_renders_left_aligned_segmented_language_switcher_in_fixed_orde
     assert 'class="site-language-option is-active"' in html
     assert ">EN</span>" in html
     assert (
-        html.index('class="site-nav-brand">hanjie site</a>')
+        html.index('class="site-nav-brand"')
         < html.index('class="site-language-switcher"')
         < html.index('class="navbar-nav flex-row site-nav-menu"')
     )
