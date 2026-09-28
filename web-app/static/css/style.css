@@ -5,6 +5,8 @@
     --navbar-background: rgba(28, 30, 34, 0.95);
     --accent-color: #3b82f6;
     --card-background: rgba(28, 30, 34, 0.7);
+    /* Shared visual height for pills and buttons in the top bar. */
+    --nav-control-height: 36px;
 }
 
 body {
@@ -124,7 +126,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 34px;
+    min-height: var(--nav-control-height);
     padding: 0.35rem 0.78rem !important;
     border-radius: 999px;
     border: 1px solid transparent;
@@ -163,6 +165,15 @@ body {
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.site-nav-identity > .site-language-switcher {
+    align-items: stretch;
+    height: var(--nav-control-height);
+}
+
+.site-nav-identity > .site-language-switcher .site-language-option {
+    min-height: 0;
 }
 
 .site-language-option {
@@ -454,15 +465,24 @@ body {
 }
 
 .site-nav-toggle {
-    min-height: 44px;
-    padding: 0.5rem 0.75rem;
+    position: relative;
+    min-height: var(--nav-control-height);
+    padding: 0 0.6rem;
     border: 1px solid rgba(59, 130, 246, 0.4);
     border-radius: 999px;
     background: transparent;
     color: var(--accent-color);
     font: inherit;
+    font-size: 0.9rem;
     font-weight: 700;
     white-space: nowrap;
+}
+
+/* Keep a 44px touch target around the shorter visual pill (offsets start inside the 1px border). */
+.site-nav-toggle::before {
+    content: "";
+    position: absolute;
+    inset: calc((var(--nav-control-height) - 44px) / 2 - 1px) 0;
 }
 
 .site-nav-toggle:focus-visible,

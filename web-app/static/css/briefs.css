@@ -117,11 +117,11 @@ a.brief-date-step:focus-visible {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    min-height: 34px;
-    padding: 0.3rem 0.85rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: var(--nav-control-height);
+    padding: 0 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.07);
     color: var(--text-primary-color);
     font-size: 0.9rem;
     font-weight: 700;
@@ -160,6 +160,7 @@ a.brief-date-step:focus-visible {
 .brief-dock .brief-date-step {
     position: relative;
     width: 2.25rem;
+    min-height: var(--nav-control-height);
     font-size: 0.85rem;
 }
 
@@ -167,7 +168,7 @@ a.brief-date-step:focus-visible {
     position: absolute;
     top: 50%;
     gap: 0;
-    min-height: 2.25rem;
+    min-height: var(--nav-control-height);
     padding: 0 0.75rem;
     border: 1px solid transparent;
     border-radius: 999px;
@@ -257,9 +258,10 @@ a.brief-date-step:focus-visible {
 }
 
 /*
- * Where the true center would collide with the bar's sides, center the dock in
- * the gap between the collapsed brand (plus language switcher on desktop) and
- * the navigation instead. Offsets match the fixed-width bar controls.
+ * Between the phone layout and wide bars, the true center would collide with the
+ * desktop navigation, so center the dock in the gap between the collapsed brand
+ * plus language switcher and the navigation instead. Offsets match the
+ * fixed-width bar controls.
  */
 @media (min-width: 769px) and (max-width: 959.98px) {
     .site-nav-center {
@@ -276,12 +278,21 @@ a.brief-date-step:focus-visible {
         min-width: 2.75rem;
     }
 
+    /* A tighter dock lets the date stay on the true center of the phone bar. */
+    .brief-dock .brief-date-step {
+        width: 1.75rem;
+    }
+
+    .brief-dock-date {
+        gap: 0.4rem;
+        padding-inline: 0.7rem;
+    }
+}
+
+@media (min-width: 360px) and (max-width: 369.98px) {
+    /* Nudge the dock off center just enough to keep a gap before the section toggle. */
     .site-nav-center {
-        left: 3.5rem;
-        right: 7rem;
-        display: flex;
-        justify-content: center;
-        transform: translateY(-50%);
+        transform: translate(calc(-50% - 4px), -50%);
     }
 }
 
