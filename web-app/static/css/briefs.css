@@ -160,6 +160,7 @@ a.brief-date-step:focus-visible {
 .brief-dock .brief-date-step {
     position: relative;
     width: 2.25rem;
+    min-width: 0;
     min-height: var(--nav-control-height);
     font-size: 0.85rem;
 }
@@ -278,21 +279,25 @@ a.brief-date-step:focus-visible {
         min-width: 2.75rem;
     }
 
-    /* A tighter dock lets the date stay on the true center of the phone bar. */
-    .brief-dock .brief-date-step {
-        width: 1.75rem;
-    }
-
-    .brief-dock-date {
-        gap: 0.4rem;
-        padding-inline: 0.7rem;
+    /*
+     * Center the dock on the free space between the brand dot and the section
+     * toggle rather than on the bar: with a small dot on one side and a wide
+     * button on the other, only equal gaps read as centered. Offsets are the
+     * shell padding plus the dot, and the shell padding plus the toggle.
+     */
+    .site-nav-center {
+        left: calc(0.5rem + 0.62rem);
+        right: 5.9rem;
+        display: flex;
+        justify-content: center;
+        transform: translateY(-50%);
     }
 }
 
-@media (min-width: 360px) and (max-width: 369.98px) {
-    /* Nudge the dock off center just enough to keep a gap before the section toggle. */
-    .site-nav-center {
-        transform: translate(calc(-50% - 4px), -50%);
+@media (max-width: 374.98px) {
+    /* Keep the steps clear of the brand dot's touch target on small phones. */
+    .brief-dock .brief-date-step {
+        width: 2rem;
     }
 }
 
