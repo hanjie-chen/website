@@ -228,10 +228,8 @@ docks a compact copy into the bar center: the brand text collapses into its dot,
 the date becomes a capsule with a persistent `↑` that scrolls back to the top,
 and the neighbors shrink to `‹` / `›`, previewing their dates on hover or
 keyboard focus. The capsule shows `MM-DD` below 1024px; below 360px only the
-capsule remains in the bar. The script compares element positions on scroll
-instead of using `IntersectionObserver`, which reports no root bounds inside
-cross-origin frames. Without JavaScript the bar stays unchanged and the page
-date row still provides navigation; reduced-motion preferences disable the
+capsule remains in the bar. Without JavaScript the bar stays unchanged and the
+page date row still provides navigation; reduced-motion preferences disable the
 transitions.
 
 Each item has a native, initially collapsed **Details** disclosure containing
