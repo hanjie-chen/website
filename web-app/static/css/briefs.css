@@ -242,10 +242,10 @@ a.brief-date-step:focus-visible {
      * sliver behind, and the date arrives once the brand has made room.
      */
     .navbar-custom.is-brief-docked .site-nav-brand-text {
-        max-width: 0;
+        grid-template-columns: 0fr;
         margin-left: 0;
         opacity: 0;
-        transition: max-width 400ms cubic-bezier(0.4, 0, 0.2, 1),
+        transition: grid-template-columns 400ms cubic-bezier(0.4, 0, 0.2, 1),
             margin-left 400ms cubic-bezier(0.4, 0, 0.2, 1),
             opacity 340ms cubic-bezier(0.4, 0, 0.2, 1);
     }
