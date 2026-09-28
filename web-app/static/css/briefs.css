@@ -256,6 +256,20 @@ a.brief-date-step:focus-visible {
         transition: opacity 260ms ease 120ms,
             transform 360ms cubic-bezier(0.32, 0.72, 0, 1) 120ms, visibility 0s 120ms;
     }
+
+    /*
+     * Undocking mirrors that order: the date fades out quickly in place (it only
+     * resets its offset once hidden), and the brand waits for it before growing
+     * back over the same spot.
+     */
+    .brief-dock {
+        transition: opacity 120ms ease, transform 0s linear 120ms,
+            visibility 0s linear 120ms;
+    }
+
+    .site-nav-brand-text {
+        transition-delay: 100ms;
+    }
 }
 
 /*
