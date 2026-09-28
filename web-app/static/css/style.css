@@ -73,8 +73,16 @@ body {
 .site-nav-brand-text {
     display: inline-block;
     max-width: 7em;
-    margin-left: 0.55rem;
+    /* The negative margin cancels the padding that holds the fade below. */
+    margin: 0 -0.75em 0 0.55rem;
+    padding-right: 0.75em;
     overflow: hidden;
+    /*
+     * The fade covers only that padding at full width, so a collapsing width
+     * dissolves the letters instead of slicing through them.
+     */
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 0.75em), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 0.75em), transparent);
     transition: max-width 240ms ease, margin-left 240ms ease, opacity 180ms ease,
         transform 240ms ease;
 }

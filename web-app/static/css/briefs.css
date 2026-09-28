@@ -236,11 +236,23 @@ a.brief-date-step:focus-visible {
 
 /* Only narrow bars need the room: collapse the brand text into its dot there. */
 @media (max-width: 959.98px) {
+    /*
+     * Collapsing is slower and more even than expanding, so the letters are seen
+     * retracting into the dot; they fade in step with the width to leave no
+     * sliver behind, and the date arrives once the brand has made room.
+     */
     .navbar-custom.is-brief-docked .site-nav-brand-text {
         max-width: 0;
         margin-left: 0;
         opacity: 0;
-        transform: translateX(-0.4rem);
+        transition: max-width 400ms cubic-bezier(0.4, 0, 0.2, 1),
+            margin-left 400ms cubic-bezier(0.4, 0, 0.2, 1),
+            opacity 340ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .navbar-custom.is-brief-docked .brief-dock {
+        transition: opacity 260ms ease 120ms,
+            transform 360ms cubic-bezier(0.32, 0.72, 0, 1) 120ms, visibility 0s 120ms;
     }
 }
 
@@ -284,6 +296,7 @@ a.brief-date-step:focus-visible {
     .brief-date-step,
     .brief-dock,
     .navbar-custom.is-brief-docked .brief-dock,
+    .navbar-custom.is-brief-docked .site-nav-brand-text,
     .brief-dock-date,
     .brief-dock .brief-date-step-body,
     .brief-dock .brief-date-step-label {
