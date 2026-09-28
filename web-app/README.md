@@ -224,10 +224,10 @@ The dated page opens with a centered date row: the brief date flanked by
 `‹ MM-DD` and `MM-DD ›` links to the nearest older and newer archived dates,
 which skip days without a brief and leave an inert placeholder at either end of
 the archive. When that row scrolls under the top bar, `static/brief-date-dock.js`
-docks a compact copy into the bar center: the brand text collapses into its dot,
-the date becomes a capsule with a persistent `↑` that scrolls back to the top,
-and the neighbors shrink to `‹` / `›`, previewing their dates on hover or
-keyboard focus. The capsule shows `MM-DD` below 1024px; below 360px only the
+docks a compact copy into the bar center: below 960px the brand text collapses
+into its dot to make room, the date becomes a capsule with a persistent `↑` that
+scrolls back to the top, and the neighbors shrink to `‹` / `›`, previewing their
+dates on hover or keyboard focus. The capsule shows `MM-DD` below 1024px; below 360px only the
 capsule remains in the bar. Without JavaScript the bar stays unchanged and the
 page date row still provides navigation; reduced-motion preferences disable the
 transitions.

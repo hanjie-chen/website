@@ -113,13 +113,6 @@ a.brief-date-step:focus-visible {
     transition: opacity 200ms ease, transform 200ms ease, visibility 0s;
 }
 
-.navbar-custom.is-brief-docked .site-nav-brand-text {
-    max-width: 0;
-    margin-left: 0;
-    opacity: 0;
-    transform: translateX(-0.4rem);
-}
-
 .brief-dock-date {
     display: inline-flex;
     align-items: center;
@@ -238,6 +231,16 @@ a.brief-date-step:focus-visible {
 
     .brief-dock-date-short {
         display: inline;
+    }
+}
+
+/* Only narrow bars need the room: collapse the brand text into its dot there. */
+@media (max-width: 959.98px) {
+    .navbar-custom.is-brief-docked .site-nav-brand-text {
+        max-width: 0;
+        margin-left: 0;
+        opacity: 0;
+        transform: translateX(-0.4rem);
     }
 }
 
