@@ -1,272 +1,147 @@
 # Deploy Scripts
 
-This directory contains the production deployment helpers used by the website stack.
+Production initialization, release deployment and validation helpers for the
+Docker Compose stack. GitHub Actions calls these scripts over SSH; trigger and
+credential setup live in the [workflow guide](../../.github/workflows/README.md).
 
-The scripts here are designed for a Docker Compose based deployment on the production VM. They are used by GitHub Actions CD as well as by manual operational workflows such as first-time setup, health validation, and post-deploy cleanup.
+## Prerequisites
 
-## Purpose
+Run commands from the repository root on the target host. Prepare Docker Compose,
+Bash, curl, Python 3, access to the configured images, production environment
+variables and Nginx TLS files. These scripts do not provision the host or create
+credentials. See [compose.yml](../../compose.yml),
+[application configuration](../../web-app/README.md#configuration) and
+[Nginx documentation](../../nginx-modsecurity/README.md).
 
-The deploy scripts cover four main areas:
+Use the production Compose configuration. Most helpers resolve the active Compose
+configuration from the environment; `prod_init.sh` explicitly uses `compose.yml`
+for startup. Wait helpers inspect container names directly, so the fixed names
+in Compose must match the service names passed to them.
 
-- first-time environment initialization
-- routine production deploys by immutable image tag
-- health and smoke verification after deploy
-- third-party image-reference verification and rollback
-- cleanup of old first-party images on the production host
+## Initialize or Deploy
 
-## Script Overview
+### Initial Setup
 
-### `prod_init.sh`
-
-Initial bootstrap flow for a fresh production host.
-
-What it does:
-
-- starts `articles-sync` first
-- waits until article source sync is healthy
-- runs `scripts/init_db.py` in a one-off `web-app` container
-- starts the full stack
-- waits for `web-app` and `nginx-modsecurity` to become healthy
-- runs smoke checks
-
-Use this when:
-
-- bringing up production for the first time
-- recreating the host from scratch
-- re-initializing the stack after persistent state was removed
-
-### `prod_deploy.sh <deploy_sha>`
-
-Regular production deploy by immutable image tag.
-
-What it does:
-
-- exports `WEB_APP_IMAGE_TAG` and `ARTICLES_SYNC_IMAGE_TAG`
-- records the currently running Nginx and Dozzle image references for rollback
-- explicitly pulls first-party SHA images and third-party pinned-digest images
-- applies Compose changes with `docker compose up -d --remove-orphans`
-- reloads `nginx-modsecurity` so upstream resolution stays fresh
-- runs DB readiness, service health, smoke, and image-reference checks
-- restores the previous Nginx and Dozzle images if post-deploy validation fails
-
-Use this when:
-
-- deploying a new CI-built release to production
-
-### `ensure_db_ready.sh <deploy_sha>`
-
-Post-deploy DB safety and consistency check for the SQLite database.
-
-What it does:
-
-- waits for `articles-sync` health so the source article mirror is stable
-- waits until `web-app` is at least running
-- checks whether the `article_meta_data` table exists in the SQLite DB resolved from `SQLALCHEMY_DATABASE_URI`
-- compares the current DB row count with the number of importable source articles under the synced Markdown tree
-- optionally re-runs `init_db.py` if the DB file is missing, the table is missing, or the DB article count does not match the importable source count
-- refuses destructive repair when the synced source count resolves to zero, so an empty or broken source mirror does not wipe a previously populated DB
-
-Use this when:
-
-- a deploy has completed but the app may still be missing required DB state
-- you want a safe recovery step before strict health and smoke validation
-- you want a post-deploy safeguard against partial or stale article imports surviving across releases
-
-### `wait_services_healthy.sh [services...]`
-
-Wrapper around the shared wait helpers.
-
-What it does:
-
-- waits until the target services reach `healthy`
-- defaults to `web-app nginx-modsecurity` when no explicit services are passed
-
-Use this when:
-
-- validating the core traffic path after deploy
-- waiting on a subset of services during troubleshooting
-
-### `smoke_check.sh`
-
-Short post-deploy public-path verification.
-
-What it does:
-
-- hits `https://127.0.0.1/` with the production `Host` header
-- checks `/`
-- checks `/zh/articles`
-- checks `/zh/briefs`
-- when `BRIEF_INGEST_TEST_TOKEN` is set, verifies that technical prose reaches the WAF-bypassed ingestion endpoint, the Nginx 128 KiB body limit returns `413`, and WAF SQLi blocking remains active on a normal public route
-- retries briefly to tolerate warm-up jitter
-
-Use this when:
-
-- confirming that the production HTTP path is actually serving traffic
-
-Local development note:
-
-- `compose.dev.yml` exposes nginx HTTPS on `8444`, so run `BASE_URL=https://127.0.0.1:8444 ./scripts/deploy/smoke_check.sh` when validating the dev stack locally
-
-### `verify_image_refs.sh [services...]`
-
-Compares each running container's original image reference with the exact image
-reference resolved from `compose.yml`.
-
-It defaults to:
-
-- `nginx-modsecurity`
-- `dozzle`
-
-Use this after deploys and for scheduled drift checks. A tag or digest mismatch
-returns a non-zero status.
-
-### `cleanup_old_images.sh <deploy_sha>`
-
-Post-deploy cleanup for first-party images on the production VM.
-
-What it does:
-
-- keeps `latest`
-- keeps the current deployed SHA
-- keeps a small number of previous SHA tags for rollback cache
-- removes older `website-web-app` and `website-articles-sync` images
-
-Use this when:
-
-- you want to prevent old release images from consuming disk space on the VM
-
-### `service_wait.sh`
-
-Shared helper library sourced by other deploy scripts.
-
-What it provides:
-
-- `wait_for_service_state <service> <healthy|running> [timeout] [interval] [prefix]`
-
-This file is not meant to be executed directly.
-
-## Execution Flow
-
-### Initial Production Setup
-
-Use this path on a new host:
+On a prepared new host:
 
 ```bash
 ./scripts/deploy/prod_init.sh
 ```
 
-High-level sequence:
+[prod_init.sh](prod_init.sh) starts `articles-sync`, waits for its health check,
+runs the application database initializer, then starts the full stack and checks
+web-app/Nginx health plus HTTP smoke paths. Images use the tags resolved from
+Compose and the environment, defaulting to `latest` for application images.
 
-1. sync markdown source
-2. initialize DB and render/import content
-3. start full stack
-4. wait for core services
-5. run smoke checks
+**Initialization drops and recreates article database tables before importing
+sources.** It can change article IDs and URLs. Do not use this as a routine
+restart or rerender command. Daily Brief data is stored separately.
 
-### Regular Production Deploy
+### Release Deployment
 
-This is the routine deployment path used by CD:
-
-```bash
-./scripts/deploy/prod_deploy.sh <deploy_sha>
-./scripts/deploy/cleanup_old_images.sh <deploy_sha>
-```
-
-GitHub Actions runs this sequence remotely over SSH from `.github/workflows/cd.yml`.
-`prod_deploy.sh` owns DB readiness, health, smoke, image-reference verification,
-and automatic third-party rollback as one deployment transaction.
-
-### Rollback-Oriented Notes
-
-Before applying Compose changes, `prod_deploy.sh` records the running Nginx and
-Dozzle image references. If Compose apply or any post-deploy validation fails,
-it recreates those stateless services from the previous references, waits for
-health, and reruns smoke checks. The deployment still exits non-zero so the
-failure remains visible.
-
-This automatic rollback intentionally covers only the stateless third-party
-edge/log services. It does not attempt to reverse application or database
-changes.
-
-`cleanup_old_images.sh` keeps a limited rollback buffer by default. If you need to be more aggressive about disk usage, set:
-
-```bash
-KEEP_PREVIOUS_RELEASES=0
-```
-
-This reduces retained old images but removes the on-host rollback cache.
-
-## Common Operations
-
-### Deploy a Specific Release
+Use an existing CI-published commit SHA:
 
 ```bash
 DEPLOY_SHA=<commit_sha>
-./scripts/deploy/prod_deploy.sh "${DEPLOY_SHA}"
+./scripts/deploy/prod_deploy.sh "$DEPLOY_SHA"
+./scripts/deploy/cleanup_old_images.sh "$DEPLOY_SHA"
 ```
 
-### Verify Production Image References
+[prod_deploy.sh](prod_deploy.sh) selects the `web-app` and `articles-sync` image
+tags, records running third-party image references, explicitly pulls all four
+service images, applies Compose, reloads Nginx, then checks database readiness,
+service health, HTTP smoke paths and third-party image references.
+
+The script does not check out Git revisions. CD updates the host checkout to
+latest `main` before invoking it with the successful CI run's SHA; host scripts,
+Compose and mounted configuration may therefore be newer than the application
+images. For manual deployment, verify the host checkout and environment as well
+as the image tag. Run cleanup only after deployment succeeds.
+
+## Database Repair and Rollback
+
+[ensure_db_ready.sh](ensure_db_ready.sh) runs inside the deployment flow. It waits
+for `articles-sync` to be healthy and `web-app` to be running, then uses
+[db_health.py](../../web-app/db_health.py) to check the SQLite file/table and
+compare article row count with valid discoverable source articles.
+
+- Missing database/table or a count mismatch can trigger a rebuild through
+  [init_db.py](../../web-app/scripts/init_db.py), which drops and recreates tables.
+- `AUTO_INIT_ON_MISSING=0` disables automatic rebuilds and fails the readiness
+  check instead. The default is `1`, including repair of count mismatches.
+- When the database/table exists and the expected source count is zero, the
+  check refuses repair. Missing database/table checks occur first; this is not
+  an unconditional zero-source guard on every initialization path.
+- Matching counts do not prove content freshness or generated HTML correctness.
+  The sync health check also does not prove that the latest source fetch succeeded.
+
+After Compose application begins, failures in apply, reload or validation cause
+an attempt to restore the previous Nginx and Dozzle image references. Rollback
+then waits for those services and reruns smoke checks. A service without a
+recorded previous image is skipped; rollback itself can fail. The deployment
+returns failure even when rollback succeeds.
+
+This rollback does not restore application images, database contents, Git files
+or mounted configuration. A pull failure before Compose apply exits without
+attempting rollback. Keep database/source backups and recovery decisions separate
+from this limited image rollback.
+
+## Independent Checks
+
+| Command | Scope |
+| --- | --- |
+| `./scripts/deploy/wait_services_healthy.sh [services...]` | Wait for Docker health; defaults to `web-app nginx-modsecurity` |
+| `./scripts/deploy/smoke_check.sh` | Request `/`, `/zh/articles` and `/zh/briefs` through local Nginx |
+| `./scripts/deploy/verify_image_refs.sh [services...]` | Compare running container image references with resolved Compose configuration; defaults to `nginx-modsecurity dozzle` |
+| `./scripts/deploy/ensure_db_ready.sh [deploy_sha]` | Check and potentially rebuild the article DB as described above |
+
+[service_wait.sh](service_wait.sh) is a sourced helper, not a standalone command.
+[verify_image_refs.sh](verify_image_refs.sh) checks the container's configured
+image reference string; it does not independently attest image contents.
+
+### Smoke Check Boundaries
+
+[smoke_check.sh](smoke_check.sh) defaults to `https://127.0.0.1` with
+`Host: hanjie-chen.com`. It skips TLS certificate verification and does not follow
+redirects. These checks exercise the host's Nginx/application path, not public DNS,
+Cloudflare Access/cache rules or end-to-end certificate validity.
+
+For an already prepared development stack:
 
 ```bash
-./scripts/deploy/verify_image_refs.sh nginx-modsecurity dozzle
+COMPOSE_FILE=compose.yml:compose.dev.yml BASE_URL=https://127.0.0.1:8444 ./scripts/deploy/smoke_check.sh
 ```
 
-### Run Only Health Waits
+Setting `BRIEF_INGEST_TEST_TOKEN` enables additional publishing, 128 KiB body-limit
+and WAF-blocking probes. **The publishing probe writes or replaces the brief dated
+`2026-07-25` and does not clean it up.** Use it with disposable test data, as CI
+does; do not treat it as a read-only production check.
 
-```bash
-./scripts/deploy/wait_services_healthy.sh
-./scripts/deploy/wait_services_healthy.sh web-app
-```
+## Image Cleanup
 
-### Run Only Smoke Checks
+[cleanup_old_images.sh](cleanup_old_images.sh) handles only the hardcoded
+`website-web-app` and `website-articles-sync` GHCR repositories. Supply the actual
+active release SHA. It keeps that tag, `latest` and one additional recent tag per
+repository by default. `KEEP_PREVIOUS_RELEASES` changes the additional tag count.
 
-```bash
-./scripts/deploy/smoke_check.sh
-```
+Cleanup does not prune volumes, build cache, dangling images or third-party
+images. Failed removals produce warnings and do not fail the script, so a
+successful exit does not guarantee that disk space was reclaimed. Retained tags
+are a local image cache, not a complete application rollback mechanism.
 
-### Manually Clean Old First-Party Images
+## Configuration Reference
 
-```bash
-./scripts/deploy/cleanup_old_images.sh <deploy_sha>
-```
+| Variable | Default / use |
+| --- | --- |
+| `WEB_APP_IMAGE_TAG`, `ARTICLES_SYNC_IMAGE_TAG` | Set to the supplied SHA by release deployment; Compose defaults to `latest` |
+| `ARTICLES_SYNC_READY_TIMEOUT`, `CORE_SERVICES_READY_TIMEOUT` | Initialization waits: 600 / 180 seconds |
+| `AUTO_INIT_ON_MISSING` | `1`; set to `0` to disable automatic database rebuild |
+| `WAIT_HEALTH_TIMEOUT_SECONDS`, `WAIT_HEALTH_INTERVAL_SECONDS` | Health wrapper: 180 / 3 seconds per service |
+| `BASE_URL`, `HOST_HEADER` | Smoke target: `https://127.0.0.1`, `hanjie-chen.com` |
+| `SMOKE_TIMEOUT_SECONDS`, `SMOKE_INTERVAL_SECONDS` | Basic smoke-path retries: 60 / 2 seconds per path |
+| `BRIEF_INGEST_TEST_TOKEN` | Unset; enables probes that include a persistent test write |
+| `KEEP_PREVIOUS_RELEASES` | `1`; additional local application image tags to retain |
 
-More aggressive cleanup:
-
-```bash
-KEEP_PREVIOUS_RELEASES=0 ./scripts/deploy/cleanup_old_images.sh <deploy_sha>
-```
-
-## Environment Notes
-
-### Required Inputs
-
-- `prod_deploy.sh` requires a deploy SHA
-- `ensure_db_ready.sh` accepts the deploy SHA so Compose resolves the same image tags
-- `cleanup_old_images.sh` requires the active deploy SHA
-- `verify_image_refs.sh` defaults to `nginx-modsecurity dozzle`
-
-### Key Environment Variables
-
-- `WEB_APP_IMAGE_TAG`
-- `ARTICLES_SYNC_IMAGE_TAG`
-- `ARTICLES_SYNC_READY_TIMEOUT`
-- `CORE_SERVICES_READY_TIMEOUT`
-- `WAIT_HEALTH_TIMEOUT_SECONDS`
-- `SMOKE_TIMEOUT_SECONDS`
-- `BRIEF_INGEST_TEST_TOKEN` (optional; enables authenticated Daily Brief edge-policy probes)
-- `KEEP_PREVIOUS_RELEASES`
-
-### Assumptions
-
-These scripts assume:
-
-- Docker Compose is available on the production host
-- the current working directory is the repository root
-- Compose service names match `compose.yml`
-- production traffic is served through `nginx-modsecurity`
-
-## Related Files
-
-- `.github/workflows/cd.yml`
-- `compose.yml`
-- `scripts/init_db.py`
+Database-specific wait settings are defined at the top of `ensure_db_ready.sh`.
+When editing scripts, run the repository's ShellCheck command and validate the
+relevant deployment behavior; see the root [AGENTS.md](../../AGENTS.md).
