@@ -68,4 +68,3 @@ Workflow 职责、触发条件与维护说明见 [.github/workflows/README.md](.
     - dark/light mode switch
 
 2. 盘点 Cloudflare 配置并集中记录，评估将适合的配置纳入 Terraform 管理。
-3. 删除项目中的 bootstrap 5 依赖

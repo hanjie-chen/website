@@ -16,8 +16,8 @@ class Image_Processor(Postprocessor):
     def run(self, text):
         """
         use beautifulSoup to parse html
-        1. only change <img> tag src attribute which start with "./"
-        2. add bootstrap5 responsive/centering classes to all images
+        only change <img> tag src attribute which start with "./"
+        (sizing and centering come from the .article-body img styles)
         """
         soup = BeautifulSoup(text, "html.parser")
         for img in soup.find_all("img"):
@@ -28,13 +28,6 @@ class Image_Processor(Postprocessor):
                 # debug the image url
                 # print("base_url = ", self.base_url)
                 # print("Update image src to ",img["src"])
-
-            bootstrap_classes = ["img-fluid", "d-block", "mx-auto"]
-            existing_classes = img.get("class", [])
-            for class_name in bootstrap_classes:
-                if class_name not in existing_classes:
-                    existing_classes.append(class_name)
-            img["class"] = existing_classes
 
         return str(soup)
 

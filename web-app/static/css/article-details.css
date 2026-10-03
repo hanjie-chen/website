@@ -1,11 +1,3 @@
-.article-page-shell {
-  width: min(100%, 1760px);
-}
-
-.article-main-column {
-  min-width: 0;
-}
-
 .article-content-card {
   background: linear-gradient(
     180deg,
@@ -16,6 +8,15 @@
   border-radius: 18px;
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.18);
   padding: 1.65rem 1.9rem;
+}
+
+.article-header {
+  margin-bottom: 1.5rem;
+}
+
+.article-meta {
+  margin-bottom: 0.5rem;
+  font-style: italic;
 }
 
 .article-body {
@@ -235,12 +236,50 @@
   color: rgba(156, 163, 175, 0.92);
 }
 
-.image-preview-modal {
-  --bs-modal-width: min(1600px, calc(100vw - 0.5rem));
+/* Full-viewport dialog so a click outside the content lands on the dialog itself. */
+.image-preview {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0.25rem;
+  border: 0;
+  background: transparent;
+  overflow: auto;
+}
+
+.image-preview[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+html:has(.image-preview[open]) {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .image-preview[open],
+  .image-preview[open]::backdrop {
+    animation: image-preview-fade-in 0.15s linear;
+  }
+}
+
+@keyframes image-preview-fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .image-preview-content {
   position: relative;
+  max-width: min(1600px, 100%);
+  margin: auto;
   padding: 0.5rem;
   background: rgba(8, 11, 18, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -249,15 +288,33 @@
 
 .image-preview-close {
   position: absolute;
-  top: 0.9rem;
-  right: 0.9rem;
+  top: 0.5rem;
+  right: 0.5rem;
   z-index: 1;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linecap='round'%3e%3cpath d='M3 3l10 10M13 3 3 13'/%3e%3c/svg%3e") center / 1rem no-repeat;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.image-preview-close:hover {
+  opacity: 0.75;
+}
+
+.image-preview-close:focus-visible {
+  opacity: 1;
+  outline: 2px solid rgba(121, 184, 255, 0.88);
+  outline-offset: -4px;
 }
 
 .image-preview-full {
   display: block;
   max-width: 100%;
-  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 1.6rem);
   width: auto;
   height: auto;
   margin: 0 auto;
@@ -288,6 +345,6 @@
   }
 
   .image-preview-full {
-    max-height: calc(100vh - 1rem);
+    max-height: calc(100dvh - 1.3rem);
   }
 }

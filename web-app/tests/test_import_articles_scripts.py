@@ -378,3 +378,49 @@ English body
         'src="/rendered-articles/devops-linux-learn-services-ssh/resources/images/gcp-vm-ssh-1.png"'
         in english_html
     )
+
+
+def test_import_articles_rerenders_unchanged_sources_after_renderer_version_bump(
+    app, tmp_path, monkeypatch
+):
+    root_dir = tmp_path / "tests"
+    article_dir = root_dir / "tools" / "git"
+    (article_dir / "images").mkdir(parents=True)
+    (article_dir / "guide.md").write_text(
+        """---
+Title: git guide
+Author: 陈翰杰
+CoverImage: ./images/cover.png
+RolloutDate: 2026-04-06
+---
+
+```
+BriefIntroduction: git guide
+```
+
+<!-- split -->
+
+# git guide
+
+正文
+""",
+        encoding="utf-8",
+    )
+
+    rendered_root = app_module.app.config["RENDERED_ARTICLES_FOLDER"]
+    monkeypatch.setattr("import_articles_scripts.Rendered_Articles", rendered_root)
+    monkeypatch.setattr("import_articles_scripts.IS_DEV", False)
+
+    with app.app_context():
+        import_articles(str(root_dir), db)
+        article = db.session.execute(db.select(Article_Meta_Data)).scalar_one()
+        html_path = Path(rendered_root) / "tools-git" / f"{article.id}.html"
+        html_path.write_text("stale renderer output", encoding="utf-8")
+
+        import_articles(str(root_dir), db)
+        assert html_path.read_text(encoding="utf-8") == "stale renderer output"
+
+        monkeypatch.setattr("import_articles_scripts.RENDERER_VERSION", "next")
+        import_articles(str(root_dir), db)
+
+    assert "正文" in html_path.read_text(encoding="utf-8")

@@ -44,8 +44,8 @@
 {% endblock %}
 
 {% block main_content %}
-<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
-    <article class="content-wrapper briefs-page-shell brief-detail-shell px-2 px-lg-3">
+<div class="main-content">
+    <article class="content-wrapper briefs-page-shell brief-detail-shell">
         <header class="briefs-hero" id="brief-top">
             <div class="brief-date-row" data-brief-hero-date>
                 {{ date_step(older_date, "older") }}
@@ -71,7 +71,7 @@
             <div class="brief-item-list">
                 {% for item in section["items"] %}
                 <article class="brief-item-card">
-                    <h3 class="m-0">
+                    <h3 class="brief-story-heading">
                         <a class="brief-story-title" href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
                     </h3>
                     {% set summary_view = summary_views[section_name][loop.index0] %}

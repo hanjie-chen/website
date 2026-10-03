@@ -13,8 +13,7 @@
     <link rel="icon" href="{{ asset_url('icon/favicon_point.ico') }}" type="image/x-icon">
 
 
-    <!--engage Bootstrap 5 CSS -->
-    <link rel="stylesheet" href="{{ asset_url('bootstrap5/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset_url('css/base.css') }}">
     <!-- preload the lightweight Chinese UI subset so fixed labels can settle earlier -->
     <link rel="preload" href="{{ asset_url('font/PingFangSC/PingFang-SC-UI-subset.woff2') }}" as="font"
         type="font/woff2" crossorigin>
@@ -23,8 +22,6 @@
     <!-- pointed body color -->
     <link rel="stylesheet" href="{{ asset_url('css/style.css') }}">
     <link rel="stylesheet" href="{{ asset_url('css/docs-shell.css') }}">
-    <!-- engage articles index page card -->
-    <link rel="stylesheet" href="{{ asset_url('css/card.css') }}">
     <link rel="stylesheet" href="{{ asset_url('css/article-details.css') }}">
     <!-- engage bockquote style -->
     <link rel="stylesheet" href="{{ asset_url('css/blockquote.css') }}">
@@ -47,7 +44,7 @@
 </head>
 
 <body>
-    <main class="d-flex flex-column min-vh-100">
+    <main class="site-main">
         <!-- Navbar -->
         {% block navbar%}
 
@@ -59,15 +56,12 @@
         {% endblock %}
 
         <!-- Footer -->
-        <footer class="footer-custom py-3">
-            <div class="container text-center">
-                <span>&copy; 2026 {{ t("footer.copy") }}</span>
-            </div>
+        <footer class="footer-custom">
+            <span>&copy; 2026 {{ t("footer.copy") }}</span>
         </footer>
 
     </main>
-    <!-- Bootstrap 5 JS Bundle with Popper -->
-    <script src="{{ asset_url('bootstrap5/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset_url('site-nav.js') }}"></script>
     <script src="{{ asset_url('code-copy.js') }}"></script>
     <script src="{{ asset_url('article-toc.js') }}"></script>
     {% block script %}
