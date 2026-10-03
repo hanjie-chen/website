@@ -1,119 +1,110 @@
 # GitHub Actions Workflows
 
-This directory contains the repository's continuous integration, production
-deployment, content synchronization, infrastructure reconciliation, and
-container security automation.
+Automation for application delivery, article synchronization, GCP infrastructure
+and container security. This guide covers triggers, operational boundaries and
+repository setup; exact commands and action versions live in the linked YAML.
 
-## Workflow index
+## Workflow Index
 
-| Workflow | Trigger | Purpose |
+Scheduled times below use UTC. All scheduled workflows also accept manual dispatch.
+
+| Workflow | Trigger | Responsibility |
 | --- | --- | --- |
-| [`ci.yml`](ci.yml) | Pushes and pull requests targeting `main`, or manual dispatch | Validates Compose and shell scripts, runs application checks, scans changed pinned third-party images, tests the complete candidate runtime and Daily Brief WAF exclusions independently of that scan, and publishes first-party images after all required push checks pass. |
-| [`cd.yml`](cd.yml) | Successful push-triggered `CI` completion on `main` | Deploys the exact successful commit to production, validates the deployment, and cleans up old images. Manual CI dispatches never trigger deployment. |
-| [`container-security.yml`](container-security.yml) | Daily at 03:45 Asia/Singapore, or manually | Rescans pinned NGINX/ModSecurity and Dozzle images, tests newer remediation candidates, creates or updates a security upgrade PR when a candidate passes, manages the actionable-vulnerability issue, and verifies production image references. |
-| [`content-sync.yml`](content-sync.yml) | Manual or external `workflow_dispatch` | Pulls the current `main` branch on production, synchronizes article content, and runs health and smoke checks. |
-| [`infra-sync.yml`](infra-sync.yml) | Sundays at 11:00 Asia/Singapore, or manually | Validates, plans, and applies the Terraform configuration for GCP. |
+| [ci.yml](ci.yml) | Push to `main`, pull request targeting `main`, or manual dispatch | Validate code/configuration and candidate runtime; publish application images on successful `main` push checks |
+| [cd.yml](cd.yml) | Successful push-triggered `CI` completion on `main` | Deploy application images tagged with the CI commit SHA, validate production and clean up old images |
+| [content-sync.yml](content-sync.yml) | Manual or external `workflow_dispatch` | Sync article sources on production, then run health and smoke checks |
+| [container-security.yml](container-security.yml) | Daily at 19:45 UTC (03:45 UTC+8 next day) | Scan pinned third-party images, propose security updates and check production image references |
+| [infra-sync.yml](infra-sync.yml) | Sundays at 03:00 UTC (11:00 UTC+8) | Validate and plan GCP Terraform; automatically apply a plan containing changes |
 
-## Main execution flows
-
-Application delivery follows this sequence:
+## Application Delivery
 
 ```text
-pull request -> CI checks
-merge/push to main -> CI checks and image publication -> CD -> production validation
+pull request / manual CI -> checks only
+push to main -> checks -> GHCR image publication -> CD -> production validation
 ```
 
-Third-party image maintenance follows this sequence:
+CI runs application/runtime checks and the container security gate independently.
+The runtime job covers Compose, ShellCheck, Ruff, application and security-helper
+tests, coverage, Nginx configuration, service health and smoke checks. Python
+`pip-audit` is advisory and does not block publication.
 
-```text
-normal Dependabot PR -> CI scan and candidate runtime checks -> review and merge -> CD
-daily container scan -> actionable HIGH/CRITICAL finding -> scan newer image tags
-clean candidate -> security remediation PR -> explicitly dispatched CI -> review and merge -> CD
-no clean candidate -> keep the GitHub security issue open -> retry on the next scan
-```
+The container gate normally scans changed pinned third-party image references.
+Policy changes or lack of a usable comparison revision cause a full tracked-image
+scan. Existing findings in unchanged images remain with the daily security
+workflow. Selection rules and vulnerability exceptions are documented in
+[scripts/security/README.md](../../scripts/security/README.md).
 
-The required CI container gate is revision-aware. For pull requests it compares
-the merge candidate with the pull request base; for `main` pushes it compares
-the pushed revision with `github.event.before`. Only a changed pinned
-NGINX/ModSecurity or Dozzle reference is scanned as a merge/deployment gate.
-Existing findings in unchanged images remain owned by the daily full-inventory
-Container Security workflow, so they do not block unrelated changes. A manual
-dispatch on `main`, or any event without a usable comparison commit, scans all
-tracked third-party images. Changes to the image policy or Trivy exceptions also
-force a full scan; tracked repositories cannot be removed silently. Each tracked
-reference must keep an allowed stable tag and an immutable SHA-256 digest.
+`compose-check-and-build` aggregates the results and preserves the required-check
+name. On `main` pushes it also requires successful publication of `web-app` and
+`articles-sync` images, tagged with both the commit SHA and `latest`. Pull requests
+and manual CI runs neither publish images nor trigger CD.
 
-Application/runtime validation and the changed-image security gate run as
-separate jobs. The final `compose-check-and-build` aggregation job preserves the
-existing required-check name and fails if either job fails. On a `main` push,
-first-party image publication runs only after both jobs pass and is also required
-by the aggregation job before CD can start.
+CD selects application images using `workflow_run.head_sha`. The host checkout,
+Compose configuration and deployment scripts are first updated to the latest
+`main`; they are **not pinned to that CI SHA**. Third-party images use the
+references in the host's Compose file. Deployment checks and rollback scope are
+owned by [scripts/deploy/README.md](../../scripts/deploy/README.md).
 
-When the daily scan finds an actionable vulnerability, it looks up newer tags
-using [`../../scripts/security/container_remediation.py`](../../scripts/security/container_remediation.py)
-and the image policies in
-[`../../scripts/security/container-images.json`](../../scripts/security/container-images.json). It
-tries candidates from newest to oldest and accepts only an immutable digest
-whose Trivy scan contains no fixable HIGH/CRITICAL findings. The workflow then
-creates or refreshes the bot-owned
-`container-security/remediate-pinned-images` branch and opens one reviewed
-security PR for the accepted image changes. Normal Dependabot updates retain
-their cooldown because this path runs only after the pinned image fails the
-security policy.
+## Content and Infrastructure Updates
 
-The scan job still fails intentionally after creating or updating the security
-issue and remediation PR. Its annotation and summary distinguish the policy
-failure from a runner failure and explain whether a clean candidate or PR was
-available. The issue headline counts unique CVEs separately from affected
-packages and images. Each image gets one section with its reference shown once;
-target-specific CVE tables and collapsible package-level tables omit the
-repeated image columns. Full JSON reports are
-uploaded with the workflow run for 30 days.
+- **Content Sync** updates the website checkout on the production host to `main`
+  and invokes `articles-sync`. Dispatch inputs such as `source_sha` are log
+  context, not a requested checkout revision. The sync service follows its
+  configured source branch; see [articles-sync](../../articles-sync/README.md).
+- **Terraform Infra Sync** authenticates through GCP Workload Identity Federation
+  and operates in `infra/terraform/gcp`. A plan error fails the run, no changes
+  skips apply, and detected changes are applied automatically from the saved
+  plan. Manual dispatch follows the same behavior; it is not a plan-only mode.
+  Resource and backend details are in the [GCP guide](../../infra/terraform/gcp/README.md).
 
-Production deployment, content synchronization, and the production-reference
-check share the `production-deploy` concurrency group. They wait for each other
-instead of mutating or inspecting production concurrently. Terraform uses the
-separate `terraform-infra-sync` group.
+## Container Security
 
-## Repository configuration
+The daily workflow scans pinned Nginx/ModSecurity and Dozzle images for actionable
+HIGH/CRITICAL vulnerabilities with available fixes, using the shared exception
+policy. It scans newer candidates and proposes accepted replacements through
+`container-security/remediate-pinned-images`; it does not merge or deploy them.
+Normal version updates are proposed separately by [Dependabot](../dependabot.yml).
 
-Production SSH workflows require these Actions secrets:
+When the remediation branch changes or its PR is created, the workflow explicitly
+dispatches CI for that branch. Candidate runtime validation happens in CI, after
+candidate vulnerability scanning. Review and merge are still required.
 
-- `SSH_HOST`
-- `SSH_USER`
-- `SSH_PORT`
-- `SSH_PRIVATE_KEY`
+Actionable findings intentionally fail the scan job even if a remediation PR was
+created. Read the job summary to distinguish findings from discovery, permission
+or runner errors. The security issue is updated while findings remain and closed
+by a subsequent clean scan. Reports are uploaded as `container-vulnerability-reports`.
+Scan policy, report contents and helper usage belong in the
+[security guide](../../scripts/security/README.md).
 
-Terraform additionally requires:
+A separate job compares running third-party image references with the production
+host's current `compose.yml`. It neither updates that checkout nor depends on the
+scan job succeeding.
 
-- `GCP_WIF_PROVIDER`
-- `GCP_TERRAFORM_SERVICE_ACCOUNT`
+## Coordination and Repository Setup
 
-First-party container publication uses the automatically provided
-`GITHUB_TOKEN`. The daily security workflow uses a job-scoped token with
-`contents`, `issues`, `pull-requests`, and `actions` write permissions to manage
-one security issue, its bot-owned remediation branch and PR, and the explicit
-CI dispatch for that branch. Other jobs retain read-only repository access.
+CD, Content Sync and the production image-reference check share the
+`production-deploy` concurrency group. Terraform uses `terraform-infra-sync`;
+the security workflow uses `container-security`. All set `cancel-in-progress:
+false` to avoid interrupting active runs. These groups do not provide a lock for
+manual commands run directly on the host.
 
-Repository administrators must enable **Settings > Actions > General > Allow
-GitHub Actions to create and approve pull requests**. If it is disabled, the
-workflow keeps the security issue open and reports that a clean candidate was
-found, but deliberately does not leave an orphan remediation branch. Pull
-requests created with `GITHUB_TOKEN` do not recursively trigger workflows, so
-the security job explicitly dispatches `ci.yml` against the remediation branch.
+| Actions secrets | Used by |
+| --- | --- |
+| `SSH_HOST`, `SSH_USER`, `SSH_PORT`, `SSH_PRIVATE_KEY` | CD, Content Sync and production image-reference checks |
+| `GCP_WIF_PROVIDER`, `GCP_TERRAFORM_SERVICE_ACCOUNT` | Terraform authentication |
 
-## Failure and maintenance notes
+SSH jobs expect the website checkout at `/home/plain/projects/website` on the
+production host, with Docker Compose and the deployment environment prepared.
 
-- A newly introduced third-party image policy failure or any application/runtime
-  failure blocks the corresponding CD run; findings in unchanged third-party
-  images are tracked by the scheduled Container Security workflow.
-- Production runtime validation and rollback are implemented by
-  [`../../scripts/deploy/prod_deploy.sh`](../../scripts/deploy/prod_deploy.sh).
-- Temporary vulnerability exceptions live in
-  [`../../scripts/security/trivyignore.yaml`](../../scripts/security/trivyignore.yaml)
-  and must include a reason and an expiry date.
-- Container image versions and immutable digests are declared in
-  [`../../compose.yml`](../../compose.yml); do not edit resolved image references
-  only in a workflow.
-- Keep workflow-specific implementation details in the YAML and update this
-  README when adding, removing, renaming, or materially changing a workflow.
+CI uses `GITHUB_TOKEN` with `packages: write` for GHCR publication. The security
+scan job grants `contents`, `issues`, `pull-requests` and `actions` write access
+for remediation and reporting. Terraform grants `id-token: write` for WIF.
+
+Enable **Settings > Actions > General > Allow GitHub Actions to create and approve
+pull requests** for automated remediation PRs. The workflow pushes its branch
+before creating the PR; a PR permission failure can therefore leave a branch
+without a PR. Inspect the remediation step logs when creation or dispatch fails.
+
+Update this guide when triggers, publication rules, permissions or production
+coordination change. Keep script internals and report formatting in their
+subsystem guides.
