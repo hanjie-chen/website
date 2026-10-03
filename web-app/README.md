@@ -112,8 +112,10 @@ This credential is separate from the Daily Brief publishing token. The
 
 - Production imports skip existing canonical HTML when the source hash is
   unchanged. Missing HTML is regenerated; English sidecars are refreshed during
-  import. A normal reindex does **not** force canonical HTML regeneration after
-  renderer-only changes.
+  import. The hash includes `RENDERER_VERSION` from
+  [markdown_render_scripts.py](markdown_render_scripts.py): bump it whenever a
+  renderer change alters HTML for unchanged Markdown, and the next reindex
+  re-renders every article.
 - Development imports clear the rendered tree before rebuilding it.
 - Source files no longer discovered are removed from the article database and
   their generated HTML is deleted. Verify the source tree before reindexing;
@@ -183,8 +185,12 @@ immutable. Use the date and `hn_item_id` together to identify an item.
 ## Frontend Maintenance
 
 - [base.html](templates/base.html) and [_site_topbar.html](templates/_site_topbar.html)
-  own the shared shell. [style.css](static/css/style.css) provides global theme,
-  navigation and homepage styles; page-specific styles extend it.
+  own the shared shell. The site uses no CSS or JavaScript framework:
+  [base.css](static/css/base.css) is the browser reset and page shell,
+  [style.css](static/css/style.css) provides global theme, navigation and
+  homepage styles, and page-specific styles extend them. Lay out pages with
+  CSS grid or flexbox in the component's stylesheet rather than utility classes.
+  [site-nav.js](static/site-nav.js) drives the mobile navigation menu.
 - UI translations live in `i18n.py`. Article translations use the sidecars above;
   switching the page language does not translate Daily Brief summaries.
 - Use `asset_url(...)` for direct template references to site assets. It appends

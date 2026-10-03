@@ -13,123 +13,121 @@
 
 <!-- Main Content -->
 {% block main_content%}
-<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
-    <div class="content-wrapper docs-shell px-2 px-lg-3">
-        <div class="row g-3">
-            <aside class="col-xl-2 docs-sidebar-column">
+<div class="main-content">
+    <div class="content-wrapper docs-shell">
+        <div class="docs-layout">
+            <aside class="docs-sidebar-column">
                 <nav class="docs-sidebar" aria-label="Articles navigation">
                     <p class="docs-sidebar-title">{{ t("docs.sidebar.browse") }}</p>
                     {{ docs_tree.render_nodes(nav_root.children, current_lang=current_lang) }}
                 </nav>
             </aside>
 
-            <section class="col-12 col-xl-10">
-                <div class="docs-content-panel">
-                    {% if current_category %}
-                    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
-                        {% for crumb in breadcrumbs %}
-                        {% if not loop.first %}
-                        <span class="docs-breadcrumb-separator">/</span>
-                        {% endif %}
-
-                        {% if crumb.url and not loop.last %}
-                        <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
-                        {% else %}
-                        <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
-                        {% endif %}
-                        {% endfor %}
-                    </nav>
+            <section class="docs-content-panel">
+                {% if current_category %}
+                <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+                    {% for crumb in breadcrumbs %}
+                    {% if not loop.first %}
+                    <span class="docs-breadcrumb-separator">/</span>
                     {% endif %}
 
-                    {% if current_category %}
-                    <p class="docs-overline">{{ t("docs.overline.section") }}</p>
-                    <h1 class="docs-page-title">{{ current_category_label }}</h1>
-                    <p class="docs-page-subtitle">
-                        {{ t("docs.page.subtitle.section") }} <code>{{ current_category }}</code>
-                    </p>
-
-                    {% if category_children %}
-                    <div class="docs-section-header">
-                        <h2 class="docs-section-title">{{ t("docs.section.subcategories") }}</h2>
-                        <span class="docs-section-caption">{{ category_children|length }} {{ t("docs.label.sections") }}</span>
-                    </div>
-                    <div class="docs-category-grid">
-                        {% for category in category_children %}
-                        <a href="{{ url_for('article_category', lang=current_lang, category_path=category.path) }}" class="docs-category-card">
-                            <h3 class="docs-category-name">{{ category.label }}</h3>
-                            <span class="docs-category-meta">{{ category.article_count }} articles</span>
-                            <span class="docs-category-path">{{ category.path }}</span>
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-
-                    {% if category_articles %}
-                    <div class="docs-section-header">
-                        <h2 class="docs-section-title">
-                            {% if category_children %}{{ t("docs.section.articles_in_section") }}{% else %}{{ t("docs.section.articles") }}{% endif %}
-                        </h2>
-                        <span class="docs-section-caption">{{ category_articles|length }} {{ t("docs.label.articles") }}</span>
-                    </div>
-                    <div class="docs-article-list">
-                        {% for article in category_articles %}
-                        <a href="{{ url_for('view_article', lang=current_lang, article_id=article.id) }}" class="docs-article-row">
-                            <h3 class="docs-article-title">{{ article.title }}</h3>
-                            <p class="docs-article-summary">{{ article.brief_introduction }}</p>
-                            <div class="docs-article-meta">
-                                <span>{{ t("article.meta.author") }}: {{ article.author }}</span>
-                                <span>{{ t("article.meta.published") }}: {{ article.rollout_date }}</span>
-                                <span>{{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}</span>
-                            </div>
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% elif not category_children %}
-                    <div class="docs-empty-state">{{ t("docs.empty.no_articles") }}</div>
-                    {% endif %}
+                    {% if crumb.url and not loop.last %}
+                    <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
                     {% else %}
-                    {% set docs_overline = t("docs.overline.documentation") %}
-                    {% if docs_overline %}
-                    <p class="docs-overline">{{ docs_overline }}</p>
+                    <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
                     {% endif %}
-                    <h1 class="docs-page-title">{{ t("docs.page.title.articles") }}</h1>
-                    <p class="docs-page-subtitle">
-                        {{ t("docs.page.subtitle.root") }}
-                    </p>
+                    {% endfor %}
+                </nav>
+                {% endif %}
 
-                    <div class="docs-section-header">
-                        <h2 class="docs-section-title">{{ t("docs.section.top_level") }}</h2>
-                        <span class="docs-section-caption">{{ category_children|length }} {{ t("docs.label.sections") }}</span>
-                    </div>
-                    <div class="docs-category-grid">
-                        {% for category in category_children %}
-                        <a href="{{ url_for('article_category', lang=current_lang, category_path=category.path) }}" class="docs-category-card">
-                            <h3 class="docs-category-name">{{ category.label }}</h3>
-                            <span class="docs-category-meta">{{ category.article_count }} articles</span>
-                            <span class="docs-category-path">{{ category.path }}</span>
-                        </a>
-                        {% endfor %}
-                    </div>
+                {% if current_category %}
+                <p class="docs-overline">{{ t("docs.overline.section") }}</p>
+                <h1 class="docs-page-title">{{ current_category_label }}</h1>
+                <p class="docs-page-subtitle">
+                    {{ t("docs.page.subtitle.section") }} <code>{{ current_category }}</code>
+                </p>
 
-                    <div class="docs-section-header">
-                        <h2 class="docs-section-title">{{ t("docs.section.recent") }}</h2>
-                        <span class="docs-section-caption">{{ recent_articles|length }} {{ t("docs.label.items") }}</span>
-                    </div>
-                    <div class="docs-article-list">
-                        {% for article in recent_articles %}
-                        <a href="{{ url_for('view_article', lang=current_lang, article_id=article.id) }}" class="docs-article-row">
-                            <h3 class="docs-article-title">{{ article.title }}</h3>
-                            <p class="docs-article-summary">{{ article.brief_introduction }}</p>
-                            <div class="docs-article-meta">
-                                <span>{{ article.category }}</span>
-                                <span>{{ t("article.meta.published") }}: {{ article.rollout_date }}</span>
-                                <span>{{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}</span>
-                            </div>
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+                {% if category_children %}
+                <div class="docs-section-header">
+                    <h2 class="docs-section-title">{{ t("docs.section.subcategories") }}</h2>
+                    <span class="docs-section-caption">{{ category_children|length }} {{ t("docs.label.sections") }}</span>
                 </div>
+                <div class="docs-category-grid">
+                    {% for category in category_children %}
+                    <a href="{{ url_for('article_category', lang=current_lang, category_path=category.path) }}" class="docs-category-card">
+                        <h3 class="docs-category-name">{{ category.label }}</h3>
+                        <span class="docs-category-meta">{{ category.article_count }} articles</span>
+                        <span class="docs-category-path">{{ category.path }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if category_articles %}
+                <div class="docs-section-header">
+                    <h2 class="docs-section-title">
+                        {% if category_children %}{{ t("docs.section.articles_in_section") }}{% else %}{{ t("docs.section.articles") }}{% endif %}
+                    </h2>
+                    <span class="docs-section-caption">{{ category_articles|length }} {{ t("docs.label.articles") }}</span>
+                </div>
+                <div class="docs-article-list">
+                    {% for article in category_articles %}
+                    <a href="{{ url_for('view_article', lang=current_lang, article_id=article.id) }}" class="docs-article-row">
+                        <h3 class="docs-article-title">{{ article.title }}</h3>
+                        <p class="docs-article-summary">{{ article.brief_introduction }}</p>
+                        <div class="docs-article-meta">
+                            <span>{{ t("article.meta.author") }}: {{ article.author }}</span>
+                            <span>{{ t("article.meta.published") }}: {{ article.rollout_date }}</span>
+                            <span>{{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% elif not category_children %}
+                <div class="docs-empty-state">{{ t("docs.empty.no_articles") }}</div>
+                {% endif %}
+                {% else %}
+                {% set docs_overline = t("docs.overline.documentation") %}
+                {% if docs_overline %}
+                <p class="docs-overline">{{ docs_overline }}</p>
+                {% endif %}
+                <h1 class="docs-page-title">{{ t("docs.page.title.articles") }}</h1>
+                <p class="docs-page-subtitle">
+                    {{ t("docs.page.subtitle.root") }}
+                </p>
+
+                <div class="docs-section-header">
+                    <h2 class="docs-section-title">{{ t("docs.section.top_level") }}</h2>
+                    <span class="docs-section-caption">{{ category_children|length }} {{ t("docs.label.sections") }}</span>
+                </div>
+                <div class="docs-category-grid">
+                    {% for category in category_children %}
+                    <a href="{{ url_for('article_category', lang=current_lang, category_path=category.path) }}" class="docs-category-card">
+                        <h3 class="docs-category-name">{{ category.label }}</h3>
+                        <span class="docs-category-meta">{{ category.article_count }} articles</span>
+                        <span class="docs-category-path">{{ category.path }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+
+                <div class="docs-section-header">
+                    <h2 class="docs-section-title">{{ t("docs.section.recent") }}</h2>
+                    <span class="docs-section-caption">{{ recent_articles|length }} {{ t("docs.label.items") }}</span>
+                </div>
+                <div class="docs-article-list">
+                    {% for article in recent_articles %}
+                    <a href="{{ url_for('view_article', lang=current_lang, article_id=article.id) }}" class="docs-article-row">
+                        <h3 class="docs-article-title">{{ article.title }}</h3>
+                        <p class="docs-article-summary">{{ article.brief_introduction }}</p>
+                        <div class="docs-article-meta">
+                            <span>{{ article.category }}</span>
+                            <span>{{ t("article.meta.published") }}: {{ article.rollout_date }}</span>
+                            <span>{{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </section>
         </div>
     </div>

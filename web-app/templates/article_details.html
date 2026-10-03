@@ -36,44 +36,42 @@
 
 <!-- Main Content -->
 {% block main_content%}
-<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
-    <div class="content-wrapper article-page-shell docs-shell px-2 px-lg-3">
-        <div class="row g-3">
-            <aside class="col-xl-2 docs-sidebar-column">
+<div class="main-content">
+    <div class="content-wrapper docs-shell">
+        <div class="docs-layout article-layout">
+            <aside class="docs-sidebar-column">
                 <nav class="docs-sidebar" aria-label="Section navigation">
                     <p class="docs-sidebar-title">{{ t("article.sidebar.section_title") }}</p>
                     {{ docs_tree.render_nodes(nav_root.children, current_lang=current_lang, current_article_id=current_article_id) }}
                 </nav>
             </aside>
 
-            <div class="col-12 col-xl-8 article-main-column">
-                <div class="article-content-card">
-                    <article class="article-body">
-                        <header class="mb-4">
-                            <nav class="docs-breadcrumb" aria-label="Breadcrumb">
-                                {% for crumb in breadcrumbs %}
-                                {% if not loop.first %}
-                                <span class="docs-breadcrumb-separator">/</span>
-                                {% endif %}
+            <div class="article-content-card">
+                <article class="article-body">
+                    <header class="article-header">
+                        <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+                            {% for crumb in breadcrumbs %}
+                            {% if not loop.first %}
+                            <span class="docs-breadcrumb-separator">/</span>
+                            {% endif %}
 
-                                {% if crumb.url and not loop.last %}
-                                <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
-                                {% else %}
-                                <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
-                                {% endif %}
-                                {% endfor %}
-                            </nav>
-                            <h1 class="article-page-title">{{ article.title }}</h1>
-                            <div class="fst-italic mb-2">
-                                {{ t("article.meta.author") }}: {{ article.author }} | {{ t("article.meta.published") }}: {{ article.rollout_date }} | {{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}
-                            </div>
-                        </header>
-                        {{ article_content|safe }}
-                    </article>
-                </div>
+                            {% if crumb.url and not loop.last %}
+                            <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
+                            {% else %}
+                            <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
+                            {% endif %}
+                            {% endfor %}
+                        </nav>
+                        <h1 class="article-page-title">{{ article.title }}</h1>
+                        <div class="article-meta">
+                            {{ t("article.meta.author") }}: {{ article.author }} | {{ t("article.meta.published") }}: {{ article.rollout_date }} | {{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}
+                        </div>
+                    </header>
+                    {{ article_content|safe }}
+                </article>
             </div>
             {% if toc_items %}
-            <aside class="col-xl-2 article-toc-column">
+            <aside class="article-toc-column">
                 <nav class="article-toc" aria-label="On this page" data-article-toc>
                     <p class="article-toc-title">{{ t("article.toc.title") }}</p>
                     {{ render_toc_items(toc_items) }}
@@ -84,16 +82,14 @@
     </div>
 </div>
 
-<div class="modal fade image-preview-modal" tabindex="-1" aria-hidden="true" data-image-preview-modal>
-    <div class="modal-dialog modal-dialog-centered image-preview-dialog">
-        <div class="modal-content image-preview-content">
-            <button type="button" class="btn-close btn-close-white image-preview-close" data-bs-dismiss="modal"
-                aria-label="{{ t('article.image_preview.close') }}"></button>
-            <img class="image-preview-full" src="" alt="" data-image-preview-target>
-            <p class="image-preview-caption" data-image-preview-caption hidden></p>
-        </div>
+<dialog class="image-preview" aria-label="{{ t('article.image_preview.label') }}" data-image-preview-modal>
+    <div class="image-preview-content">
+        <button type="button" class="image-preview-close" aria-label="{{ t('article.image_preview.close') }}"
+            data-image-preview-close></button>
+        <img class="image-preview-full" src="" alt="" data-image-preview-target>
+        <p class="image-preview-caption" data-image-preview-caption hidden></p>
     </div>
-</div>
+</dialog>
 {% endblock %}
 
 {% block script %}

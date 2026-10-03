@@ -2,8 +2,13 @@
   width: min(100%, 1760px);
 }
 
-.site-nav-shell {
-  width: min(100%, 1760px);
+.docs-layout {
+  /* Side columns span 2 of 12 columns, measured across the gaps. */
+  --docs-gap: 1rem;
+  --docs-side: calc((100% + var(--docs-gap)) / 6 - var(--docs-gap));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--docs-gap);
 }
 
 .docs-sidebar-column {
@@ -309,6 +314,14 @@
 }
 
 @media (min-width: 1200px) {
+  .docs-layout {
+    grid-template-columns: var(--docs-side) minmax(0, 1fr);
+  }
+
+  .article-layout {
+    grid-template-columns: var(--docs-side) minmax(0, 1fr) var(--docs-side);
+  }
+
   .docs-sidebar-column {
     display: block;
     align-self: stretch;

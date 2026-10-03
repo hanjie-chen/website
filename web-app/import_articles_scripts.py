@@ -19,7 +19,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 
 from config import IS_DEV, Rendered_Articles
-from markdown_render_scripts import render_markdown_to_html
+from markdown_render_scripts import RENDERER_VERSION, render_markdown_to_html
 from models import Article_Meta_Data
 
 # consider use python logging package to instead of print information
@@ -95,7 +95,7 @@ def _read_markdown(md_path: str):
         print(f"Error reading file {md_path}: {e}. Skipped.")
         return None, None
 
-    content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    content_hash = hashlib.sha256(f"{RENDERER_VERSION}\n{content}".encode()).hexdigest()
     return content, content_hash
 
 

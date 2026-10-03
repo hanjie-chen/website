@@ -18,11 +18,11 @@
 
 
 {% block main_content%}
-<div class="main-content container-fluid flex-grow-1 d-flex justify-content-center">
-    <div class="content-wrapper about-page-shell px-2 px-lg-3">
+<div class="main-content">
+    <div class="content-wrapper about-page-shell">
         <section class="about-hero about-panel">
-            <div class="row g-4 align-items-center">
-                <div class="col-12 col-lg-7">
+            <div class="about-hero-layout">
+                <div class="about-hero-intro">
                     <p class="about-overline">{{ t("about.hero.overline") }}</p>
                     <h1 class="about-hero-title">
                         <span class="about-hero-name-primary">陈翰杰</span>
@@ -40,30 +40,28 @@
                         {{ t("about.hero.copy3") }}
                     </p>
                     <div class="about-cta-group">
-                        <button class="btn about-btn-primary" type="button" disabled aria-disabled="true">
+                        <button class="about-btn-primary" type="button" disabled aria-disabled="true">
                             {{ t("about.hero.resume") }}
                             <span class="about-btn-note">{{ t("about.hero.resume_note") }}</span>
                         </button>
-                        <a class="btn about-btn-secondary" href="#contact">{{ t("about.hero.contact") }}</a>
+                        <a class="about-btn-secondary" href="#contact">{{ t("about.hero.contact") }}</a>
                     </div>
                 </div>
-                <div class="col-12 col-lg-5">
-                    <div class="about-hero-aside">
-                        <img alt="avatar" class="about-avatar"
-                            src="{{ asset_url('images/headavatar/head_avatar_problem.png') }}">
-                        <div class="about-status-list">
-                            <div class="about-status-pill">
-                                <span class="about-status-label">{{ t("about.status.focus") }}</span>
-                                <span class="about-status-value">{{ t("about.status.focus_value") }}</span>
-                            </div>
-                            <div class="about-status-pill">
-                                <span class="about-status-label">{{ t("about.status.status") }}</span>
-                                <span class="about-status-value">{{ t("about.status.status_value") }}</span>
-                            </div>
-                            <div class="about-status-pill">
-                                <span class="about-status-label">{{ t("about.status.location") }}</span>
-                                <span class="about-status-value">{{ t("about.status.location_value") }}</span>
-                            </div>
+                <div class="about-hero-aside">
+                    <img alt="avatar" class="about-avatar"
+                        src="{{ asset_url('images/headavatar/head_avatar_problem.png') }}">
+                    <div class="about-status-list">
+                        <div class="about-status-pill">
+                            <span class="about-status-label">{{ t("about.status.focus") }}</span>
+                            <span class="about-status-value">{{ t("about.status.focus_value") }}</span>
+                        </div>
+                        <div class="about-status-pill">
+                            <span class="about-status-label">{{ t("about.status.status") }}</span>
+                            <span class="about-status-value">{{ t("about.status.status_value") }}</span>
+                        </div>
+                        <div class="about-status-pill">
+                            <span class="about-status-label">{{ t("about.status.location") }}</span>
+                            <span class="about-status-value">{{ t("about.status.location_value") }}</span>
                         </div>
                     </div>
                 </div>

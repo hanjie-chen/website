@@ -68,7 +68,9 @@ def test_homepage_static_assets_are_versioned(client):
     html = response.get_data(as_text=True)
 
     assert "/static/css/style.css?v=" in html
-    assert "/static/bootstrap5/js/bootstrap.bundle.min.js?v=" in html
+    assert "/static/css/base.css?v=" in html
+    assert "/static/site-nav.js?v=" in html
+    assert "bootstrap" not in html.lower()
     assert "/static/images/headavatar/head_avatar_problem.png?v=" in html
 
 

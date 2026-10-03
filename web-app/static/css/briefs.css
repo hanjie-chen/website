@@ -398,6 +398,10 @@ a.brief-date-step:focus-visible {
     border-bottom: 1px solid var(--brief-border);
 }
 
+.brief-story-heading {
+    margin: 0;
+}
+
 .brief-story-title {
     color: var(--text-primary-color);
     font-size: clamp(1.08rem, 2.2vw, 1.3rem);

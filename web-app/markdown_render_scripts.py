@@ -5,6 +5,11 @@ import pymdownx.emoji
 
 from custom_md_extensions import Gfm_Admonition_Extension, Image_Processor_Extension
 
+# Bump when rendered HTML changes for unchanged Markdown (extensions, post-processing).
+# Imports fold it into each article's content hash, so the next reindex re-renders
+# every article instead of keeping HTML produced by the previous renderer.
+RENDERER_VERSION = "2"
+
 
 def render_markdown_to_html(
     markdown_content: str, filename: str, destination_folder: str, url_base_path: str

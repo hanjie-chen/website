@@ -99,11 +99,10 @@ def test_chinese_homepage_uses_english_current_focus_heading_with_mixed_language
         "我希望它是一份长期可维护、可复用、可迭代的工程记录，而不只是零散文章的集合。"
         in html
     )
-    assert 'class="row align-items-center g-4 g-xl-5 home-hero-row"' in html
-    assert html.count('class="col-12 col-lg-4 d-flex home-entry-col"') == 3
-    assert html.count('class="col-12 col-md-6 col-xl-4 d-flex home-focus-col"') == 3
-    assert 'class="row g-4 home-note-row"' in html
-    assert html.count('class="col-12"') >= 2
+    assert '<div class="home-hero-row">' in html
+    assert html.count('<article class="home-entry-card') == 3
+    assert html.count('<article class="home-focus-card">') == 3
+    assert '<div class="home-note-row">' in html
     assert "home-section-inner" not in html
     assert "home-entry-grid" not in html
     assert "home-focus-grid" not in html
@@ -283,7 +282,7 @@ def test_homepage_renders_left_aligned_segmented_language_switcher_in_fixed_orde
     assert (
         html.index('class="site-nav-brand"')
         < html.index('class="site-language-switcher"')
-        < html.index('class="navbar-nav flex-row site-nav-menu"')
+        < html.index('class="site-nav-list site-nav-menu"')
     )
 
 

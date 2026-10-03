@@ -2,6 +2,24 @@
   width: min(100%, 1320px);
 }
 
+.about-hero-layout {
+  --about-hero-gap: 1.5rem;
+  display: grid;
+  align-items: center;
+  gap: var(--about-hero-gap);
+}
+
+.about-hero-intro {
+  min-width: 0;
+}
+
+@media (min-width: 992px) {
+  /* The aside spans 5 of 12 columns, measured across the gap. */
+  .about-hero-layout {
+    grid-template-columns: minmax(0, 1fr) calc((100% + var(--about-hero-gap)) * 5 / 12 - var(--about-hero-gap));
+  }
+}
+
 .about-section {
   margin-top: 1.4rem;
 }
@@ -97,8 +115,17 @@
   padding: 0.72rem 1.15rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 1rem;
   font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
   text-decoration: none;
+  user-select: none;
+}
+
+.about-btn-secondary:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 .about-btn-primary {
