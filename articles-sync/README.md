@@ -1,198 +1,111 @@
 # Article Sync Service
 
-This directory contains the container image and runtime scripts for the article synchronization service.
-
-The service is responsible for keeping the Markdown source repository up to date inside the shared article volume and notifying the Flask app when a content refresh is required.
-
-## Purpose
-
-`articles-sync` covers three responsibilities:
-
-- bootstrap the shared article source directory on first start
-- sync the latest branch state from the upstream Git repository when triggered on demand
-- provide a low-frequency scheduled sync as a fallback path
-- trigger the web app reindex endpoint only when the repository HEAD changes
-
-The local checkout is intentionally shallow. The service only keeps the latest branch state needed for rendering and import, not the full Git history.
-
-This service is part of the production content pipeline. It does not render or import articles itself. That work happens inside the `web-app` service after a successful reindex trigger.
+Maintains a shallow mirror of the knowledge-base repository in the shared source
+volume and notifies the web app when its checked-out commit changes. Article
+validation, database import and HTML rendering belong to
+[web-app](../web-app/README.md#article-pipeline).
 
 ## Files
 
-### `Dockerfile`
+| File | Responsibility |
+| --- | --- |
+| [Dockerfile](Dockerfile) | Alpine image with Git, curl, dcron, tini and su-exec; creates `appuser` and the source directory |
+| [init.sh](init.sh) | Initial clone or update, cron installation and foreground cron daemon |
+| [update-articles.sh](update-articles.sh) | Fetch/reset the mirror and conditionally request reindexing |
+| [cron-heartbeat-sync.sh](cron-heartbeat-sync.sh) | Log a scheduled run and execute the update as `appuser` |
 
-Builds the lightweight Alpine-based runtime image used by the `articles-sync` service.
+The container starts through tini. Root installs/runs cron; initialization and
+scheduled Git operations switch to `appuser`. The source directory must be
+writable by that user (image build defaults: UID/GID 1000).
 
-What it installs:
+## Startup and Updates
 
-- `git` for repository sync
-- `dcron` for scheduled pulls
-- `tini` as PID 1
-- `curl` for the reindex request
-- `su-exec` so Git operations run as the non-root application user
+- **Empty source directory:** initialization clones the configured branch with
+  depth 1, then starts cron. This initial clone does not request reindexing;
+  [production initialization](../scripts/deploy/README.md#initial-setup) imports
+  the source through the web app's database initializer.
+- **Existing source directory:** initialization runs the update script before
+  starting cron. An update failure that returns nonzero stops initialization.
+- **Triggered update:** the website's [Content Sync workflow](../.github/workflows/content-sync.yml)
+  runs the update inside the container over SSH. It can be dispatched by the
+  knowledge-base publishing flow or manually; it follows the configured branch,
+  not the workflow's informational `source_sha` input.
+- **Scheduled update:** Compose sets a daily fallback at 03:00 UTC. Cron and sync
+  messages include the timezone and are written to container logs.
 
-### `init.sh`
+An update sets the configured origin, fetches the branch at depth 1, then uses
+`git reset --hard FETCH_HEAD` and `git clean -fd`. This is a disposable content
+mirror: tracked local changes and untracked files/directories can be discarded.
+Do not use the source volume as a developer working copy.
 
-Container entry flow.
-
-What it does:
-
-- resolves the article source directory and repo settings
-- resolves the cron schedule used for periodic syncs
-- verifies that `su-exec` is available
-- shallow-clones the source repository into `/articles/src` if the directory is empty
-- otherwise runs an immediate update via `update-articles.sh`
-- installs the root crontab entry for scheduled syncs
-- starts `crond` in the foreground
-
-### `update-articles.sh`
-
-Main sync workflow.
-
-What it does:
-
-- enters the shared article source directory
-- verifies that the directory is a Git repository
-- records the current `HEAD`
-- updates `origin` to the configured repository URL
-- runs `git fetch --depth=1 origin "$REPO_BRANCH"`
-- hard-resets the working tree to `FETCH_HEAD`
-- removes stale untracked files with `git clean -fd`
-- compares the previous and current `HEAD`
-- skips reindex if nothing changed
-- sends a `POST` request to the web app reindex endpoint when new content is detected
-- falls back to a fresh shallow clone if the local mirror is missing or cannot be updated safely
-
-### `cron-heartbeat-sync.sh`
-
-Thin cron wrapper around `update-articles.sh`.
-
-What it does:
-
-- writes a scheduled-sync log line
-- executes `update-articles.sh` as `appuser`
-
-## Runtime Flow
-
-### Initial Start
-
-When the container starts for the first time:
-
-1. `init.sh` checks whether `/articles/src` is empty.
-2. If empty, the upstream article repository is shallow-cloned into the shared volume.
-3. If not empty, the service performs an immediate sync with `update-articles.sh`.
-4. A recurring cron job is installed as a fallback path.
-5. `crond` stays in the foreground so the container remains alive.
-
-### Triggered Sync
-
-The primary production sync path is now event-driven:
-
-1. `knowledge-base` pushes changes to `main`.
-2. A `knowledge-base` GitHub Actions workflow decides whether those changed files may affect published content.
-3. If yes, it triggers the `website` repository's content-sync workflow.
-4. That workflow SSHes to production and runs `/usr/local/bin/update-articles.sh` inside `articles-sync`.
-5. `update-articles.sh` fetches the latest repository state and only triggers reindex when `HEAD` actually changed.
-
-This keeps content updates close to source pushes without exposing a new public webhook on the site itself.
-
-### Scheduled Sync
-
-The default cron entry configured by `init.sh` is:
-
-```cron
-0 3 * * * /usr/local/bin/cron-heartbeat-sync.sh >> /proc/1/fd/1 2>&1
-```
-
-This means the container performs one scheduled sync per day at 03:00 UTC and writes cron output to container stdout.
-
-The schedule can be overridden with `CRON_SCHEDULE`.
+The script attempts a replacement shallow clone when `.git` is missing, origin
+cannot be updated, or fetch fails. This requires access to the directory's parent
+and the ability to replace the source directory; a successful fallback is not
+guaranteed for every permissions or mount failure. Reset/clean failures return
+nonzero rather than triggering another reclone.
 
 ### Reindex Trigger
 
-`update-articles.sh` only notifies the web app when the Git `HEAD` changes.
+If both the before/after HEAD values are non-empty and equal, the script exits
+without reindexing. Otherwise, when `WEB_APP_REINDEX_URL` is configured, it sends
+an HTTP POST with `X-REIMPORT-ARTICLES-TOKEN` if a token is configured.
 
-This avoids unnecessary reindex work when the upstream branch has no new commits.
+Use the same non-empty `REIMPORT_ARTICLES_TOKEN` in both services. The client can
+omit the header, but the web app rejects anonymous reindexing; see
+[Reindex Authentication](../web-app/README.md#reindex-authentication).
 
-The update flow mirrors the latest remote branch state instead of preserving local history. This makes the sync resilient to force-pushes or to recreating the upstream repository with the same name.
+A failed POST is logged but does not make the update command fail. There is no
+pending-reindex marker or retry queue: if the next run sees the same HEAD, it
+skips the request. Rerunning sync alone therefore does not guarantee recovery of
+a failed import. Resolve the endpoint/token problem and explicitly reindex using
+the web app's documented contract and rebuild precautions.
 
-If the reindex endpoint is configured, the service sends:
+## Configuration
 
-- `POST $WEB_APP_REINDEX_URL`
-- `X-REIMPORT-ARTICLES-TOKEN` when `REIMPORT_ARTICLES_TOKEN` is configured
+[compose.yml](../compose.yml) mounts `source_md_articles` read-write here and
+read-only in the web app.
 
-The client can omit this header, but the web app does not allow anonymous
-reindexing. Configure the same non-empty token in both services for reindexing
-to succeed. See [Reindex Authentication](../web-app/README.md#reindex-authentication)
-for the server's authentication behavior.
+| Variable | Script default / deployment setting |
+| --- | --- |
+| `GITHUB_REPO` | `https://github.com/hanjie-chen/knowledge-base.git` |
+| `REPO_BRANCH` | `main` |
+| `SOURCE_ARTICLES_DIRECTORY` | `/articles/src`; a custom location must exist and be writable at startup |
+| `CRON_SCHEDULE` | Script default: `0 */4 * * *`; Compose overrides it with `0 3 * * *` |
+| `TZ` | Compose sets `UTC` |
+| `WEB_APP_REINDEX_URL` | Unset in the script; Compose sets `http://web-app:5000/internal/reindex` |
+| `REIMPORT_ARTICLES_TOKEN` | Unset by default; must match the web app token for successful reindexing |
 
-### Why Not `git pull`?
+If changing the source mount path, update the Compose health check too: it
+currently checks the literal `/articles/src/.git` path.
 
-This service is not a developer working copy. It is a disposable mirror of the latest branch state used for rendering and import.
+## Operational Checks
 
-`git pull` is designed for continuing local branch history through merge or rebase. That makes it a weaker fit for this service because the upstream repository may be force-pushed, rewritten, or even deleted and recreated with the same name.
+Run from the repository root:
 
-The current sync flow is intentionally mirror-oriented:
+```bash
+# Inspect recent sync and cron messages.
+docker compose logs --tail=100 articles-sync
 
-- `git fetch --depth=1` downloads only the latest remote state
-- `git reset --hard FETCH_HEAD` makes the local checkout match that state exactly
-- `git clean -fd` removes stale local files that no longer exist upstream
+# Inspect the local mirror's revision without updating it.
+docker compose exec -T articles-sync sh -lc 'su-exec appuser git -C "$SOURCE_ARTICLES_DIRECTORY" rev-parse HEAD'
 
-This keeps disk usage low, avoids carrying full history, and makes the sync resilient when the upstream repository history is replaced entirely.
+# Update the mirror; this can discard local changes and trigger web-app writes.
+docker compose exec -T articles-sync su-exec appuser /usr/local/bin/update-articles.sh
+```
 
-## Environment Variables
+The health check only verifies that `.git` exists and `crond` is running. It does
+not prove Git integrity, successful remote fetching, successful reindexing or
+fresh rendered pages. For stale content, inspect the fetch/reset and reindex log
+messages separately, then check web-app logs and token configuration without
+printing the token. Web-app import may also skip unchanged canonical HTML; see
+[Rebuild Behavior](../web-app/README.md#rebuild-behavior).
 
-### Repository Settings
+The update script has no synchronization lock. Workflow concurrency coordinates
+GitHub-triggered production jobs, but does not serialize the container's cron or
+manual invocations with them; avoid overlapping updates when troubleshooting.
 
-- `GITHUB_REPO`
-  - upstream Markdown repository URL
-- `REPO_BRANCH`
-  - branch to clone and pull
-- `SOURCE_ARTICLES_DIRECTORY`
-  - shared directory used by both `articles-sync` and `web-app`
-- `CRON_SCHEDULE`
-  - cron expression used by `crond`; default is `0 3 * * *`
-- `TZ`
-  - optional container timezone for cron and log timestamps; `compose.yml` sets this service to `UTC`
+When editing shell scripts, run from the repository root:
 
-### Reindex Settings
-
-- `WEB_APP_REINDEX_URL`
-  - internal endpoint used to trigger content refresh
-- `REIMPORT_ARTICLES_TOKEN`
-  - shared secret passed as `X-REIMPORT-ARTICLES-TOKEN`; required for successful
-    reindex requests and must match the web app configuration
-
-## Service Behavior Notes
-
-- Git operations run as `appuser`, not as root.
-- Cron is installed for root, but the actual sync command switches to `appuser`.
-- The service treats `/articles/src` as a disposable mirror of the latest branch state.
-- The primary production sync path is GitHub Actions driven; cron remains as a low-frequency fallback in case the dispatch path fails.
-- Sync and cron log lines include the timezone offset and timezone name to make commit-time comparisons easier.
-- The Compose health check for `articles-sync` only verifies:
-  - `/articles/src/.git` exists
-  - `crond` is running
-- A healthy `articles-sync` container does not guarantee that the last pull changed content. It only means the sync service is ready to operate.
-- Reindex is best-effort after a successful pull. If the POST fails, the failure is logged, but the sync script itself still completes.
-
-## Related Files
-
-- [`compose.yml`](../compose.yml)
-  - service definition, environment variables, and health check
-- [`web-app/app.py`](../web-app/app.py)
-  - exposes the `/internal/reindex` endpoint used by this service
-- [`scripts/deploy/prod_init.sh`](../scripts/deploy/prod_init.sh)
-  - waits for `articles-sync` before initializing the rest of the stack
-- [`scripts/deploy/ensure_db_ready.sh`](../scripts/deploy/ensure_db_ready.sh)
-  - also waits for `articles-sync` before DB repair work
-
-## Common Operational Notes
-
-If content seems stale in production, the first things to check are:
-
-1. whether `articles-sync` is healthy
-2. whether `/articles/src` is still a valid Git repository
-3. whether the local mirror can still fetch the configured branch from the remote repository
-4. whether the web app reindex endpoint is reachable from the container
-5. whether `REIMPORT_ARTICLES_TOKEN` matches the web app configuration
+```bash
+shellcheck -x scripts/deploy/*.sh articles-sync/*.sh
+```
