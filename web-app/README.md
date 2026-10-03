@@ -245,6 +245,17 @@ optional provenance output.
 
 The endpoint is hidden with a 404 when `DAILY_BRIEF_PUBLISH_TOKEN` is unset. `DAILY_BRIEF_DATA_DIRECTORY` overrides the default `/daily-briefs/data` storage path.
 
+### Reindex Authentication
+
+`POST /internal/reindex` requires the shared secret configured by
+`REIMPORT_ARTICLES_TOKEN`, sent in the `X-REIMPORT-ARTICLES-TOKEN` header.
+
+- If the server token is unset or empty, the endpoint returns HTTP 404.
+- If the server token is configured but the request token is missing or incorrect,
+  the endpoint returns HTTP 403.
+- The sync service and web app must use the same reindex token. This credential
+  is separate from `DAILY_BRIEF_PUBLISH_TOKEN`, used for Daily Brief publishing.
+
 ### Public Daily Brief API
 
 These read-only endpoints require no token and have no language prefix:

@@ -101,8 +101,8 @@ Private key file mounted into the container.
 ## Security Notes
 
 - WAF stays enabled for the public site by default.
-- `/web-log/` and the exact `/internal/briefs` location are the only intentionally relaxed paths in the current config.
-- `/internal/briefs` compensates for its WAF bypass with an Nginx 128 KiB limit plus application-level authentication, strict validation, safe storage, and output escaping. The WAF remains active on every other route.
+- WAF is disabled only for the `/web-log/` prefix location and the exact `/internal/briefs` location in the current config.
+- `/internal/briefs` compensates for its WAF bypass with an Nginx 128 KiB limit plus application-level authentication, strict validation, safe storage, and output escaping.
 - audit logs omit full request headers and bodies to keep internal tokens out of the container log stream and minimize unpublished-content exposure; individual rule messages may still include a matched fragment.
 - Even though WAF is disabled on `/web-log/`, that endpoint is currently protected by Cloudflare Access.
 - Production currently uses Cloudflare Origin CA material at the mounted TLS paths.

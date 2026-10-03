@@ -119,7 +119,12 @@ The update flow mirrors the latest remote branch state instead of preserving loc
 If the reindex endpoint is configured, the service sends:
 
 - `POST $WEB_APP_REINDEX_URL`
-- optionally with `X-REIMPORT-ARTICLES-TOKEN` when the token is present
+- `X-REIMPORT-ARTICLES-TOKEN` when `REIMPORT_ARTICLES_TOKEN` is configured
+
+The client can omit this header, but the web app does not allow anonymous
+reindexing. Configure the same non-empty token in both services for reindexing
+to succeed. See [Reindex Authentication](../web-app/README.md#reindex-authentication)
+for the server's authentication behavior.
 
 ### Why Not `git pull`?
 
@@ -155,7 +160,8 @@ This keeps disk usage low, avoids carrying full history, and makes the sync resi
 - `WEB_APP_REINDEX_URL`
   - internal endpoint used to trigger content refresh
 - `REIMPORT_ARTICLES_TOKEN`
-  - optional shared secret passed as `X-REIMPORT-ARTICLES-TOKEN`
+  - shared secret passed as `X-REIMPORT-ARTICLES-TOKEN`; required for successful
+    reindex requests and must match the web app configuration
 
 ## Service Behavior Notes
 
