@@ -1,517 +1,211 @@
 # Web App
 
-This directory contains the Flask application, Daily Brief publishing and storage layer, article import pipeline, page templates, frontend assets, and tests for the website.
+Flask application for the personal dashboard, article reader, Daily Brief pages
+and APIs. Article sources are maintained by [articles-sync](../articles-sync/README.md);
+this service imports and renders them. Daily Briefs are generated externally and
+submitted through an authenticated publishing endpoint.
 
-If `articles-sync` is responsible for keeping the Markdown source up to date, `web-app` is responsible for turning that source into rendered HTML, database records, and the end-user pages served by the site.
+## Code Map
 
-## Purpose
+| Entry | Responsibility |
+| --- | --- |
+| [app.py](app.py) | Routes, authentication, page context and template helpers |
+| [config.py](config.py) | Environment configuration |
+| [models.py](models.py), [db_health.py](db_health.py) | Article metadata and deployment-time database assessment |
+| [import_articles_scripts.py](import_articles_scripts.py) | Source discovery, incremental import, translations and deletion cleanup |
+| [markdown_render_scripts.py](markdown_render_scripts.py), [custom_md_extensions/](custom_md_extensions/) | Markdown rendering, image processing and admonitions |
+| [article_views.py](article_views.py), [navigation.py](navigation.py) | Localized article views, TOC, category tree and breadcrumbs |
+| [daily_briefs.py](daily_briefs.py) | Brief validation, JSON storage, current pointer and archive index |
+| [i18n.py](i18n.py) | Supported languages, UI translations and language-aware URLs |
+| [templates/](templates/), [static/](static/) | Jinja pages, styles and browser scripts |
+| [scripts/](scripts/), [tests/](tests/) | Maintenance helpers and automated checks |
 
-The `web-app` subsystem covers these major areas:
+HTML pages use `/zh/` and `/en/` prefixes. `/` chooses a language from the
+`preferred_language` cookie, then `Accept-Language`, then `zh`. The language
+switch accepts only same-site absolute redirect paths. API and internal routes
+have no language prefix. See `app.py` for the complete route list.
 
-- serving the homepage, Daily Brief archive/detail pages, article pages, docs-style category pages, and the About page
-- validating authenticated Daily Brief payloads and storing them in a dedicated persistent directory
-- exposing read-only Daily Brief APIs for public consumption
-- importing Markdown articles into the SQLite metadata database
-- rendering article Markdown into static HTML files under the rendered article directory
-- providing internal endpoints and helpers used by the deployment and sync flows
+## Configuration
 
-## Primary Entry Points
+Settings are read at import time by `config.py`. Docker Compose supplies the
+runtime mounts and overrides; see [compose.yml](../compose.yml) and
+[compose.dev.yml](../compose.dev.yml).
 
-### `app.py`
+| Variable | Default / purpose |
+| --- | --- |
+| `SOURCE_ARTICLES_DIRECTORY` | `/articles/src`: synchronized Markdown and assets |
+| `RENDERED_ARTICLES_DIRECTORY` | `/articles/rendered`: generated HTML and copied assets |
+| `SQLALCHEMY_DATABASE_URI` | `sqlite:///project.db`: article metadata in the Flask instance directory; development Compose uses `project_test.db` |
+| `DAILY_BRIEF_DATA_DIRECTORY` | `/daily-briefs/data`: published briefs and their index/pointer |
+| `REIMPORT_ARTICLES_TOKEN` | Unset by default; enables authenticated article reindexing |
+| `DAILY_BRIEF_PUBLISH_TOKEN` | Unset by default; enables authenticated brief publishing |
+| `APP_ENV` | `production`; `development` or `dev` enables `/debug` and clears rendered output before each article import |
 
-Main Flask entrypoint.
+If `APP_ENV` is absent, `FLASK_ENV` is used before the production default.
+Production runs Gunicorn; development Compose mounts the source and runs Flask
+with debug enabled. Keep development imports away from production data volumes.
+Host initialization, deployment and health checks are documented in
+[scripts/deploy/README.md](../scripts/deploy/README.md).
 
-What it does:
+## Article Pipeline
 
-- creates and configures the Flask app
-- registers `/rendered-articles/...` as an additional static route
-- resolves the preferred language from the `preferred_language` cookie, then `Accept-Language`, then default `zh`
-- serves the public HTML routes:
-  - `/`
-  - `/<lang>/`
-  - `/<lang>/articles`
-  - `/<lang>/articles/category/<path>`
-  - `/<lang>/articles/<int:article_id>`
-  - `/<lang>/briefs`
-  - `/<lang>/briefs/<YYYY-MM-DD>`
-  - `/<lang>/about`
-  - `/set-language/<lang>`
-- derives a compact source hostname from each validated Daily Brief `source_url` for display on the reading page, replacing exact allowlisted hostnames with official source labels without changing the strict schema v2 payload
-- renders the generator's explicit community-roundup summary format as a short introduction followed by a semantic project list, while storing the schema v2 `summary` as the original string
-- serves the public read-only JSON APIs:
-  - `GET /api/briefs`
-  - `GET /api/briefs/latest`
-  - `GET /api/briefs/<YYYY-MM-DD>`
-- exposes `POST /internal/reindex` for article sync and authenticated `POST /internal/briefs` for Daily Brief publishing
-- validates the language-switch `next=` target so `/set-language/...` only redirects to same-site absolute paths
-- builds the article TOC for the right-hand page navigation
-- injects shared template helpers for `asset_url(...)`, `t(...)`, language switching, and dynamic `html lang`
+`articles-sync → POST /internal/reindex → import/render → SQLite + HTML → pages`
 
-Start here when you want to change:
+SQLite stores article metadata; generated HTML and copied assets live separately.
+Article pages require both. The website has no public article JSON API.
+Article Markdown is trusted repository content: rendered HTML is inserted into
+templates without HTML sanitization. This pipeline is not an upload interface
+for untrusted Markdown.
 
-- application routing
-- language detection and switch behavior
-- API response shape for Daily Briefs
-- article page rendering context
-- the internal reindex trigger
-- Daily Brief route and publishing behavior
-- homepage or About page view wiring
+### Source Format
 
-### `daily_briefs.py`
+The importer discovers article directories containing `images/`, `assets/`, or
+`resources/images/`. It skips hidden and internal directories such as
+`__template__`. Once it finds an article directory, it processes its Markdown
+files rather than recursively treating its resource directories as articles.
 
-Daily Brief schema, validation, storage, and read helpers.
+A canonical article needs YAML frontmatter with `Title`, `Author`, `CoverImage`
+and `RolloutDate`, a fenced `BriefIntroduction:` block, and `<!-- split -->`
+before the body. For example, with a sibling `images/cover.png`:
 
-What it does:
+````markdown
+---
+Title: Example article
+Author: Example author
+CoverImage: images/cover.png
+RolloutDate: 2026-01-01
+---
 
-- accepts only strict schema version 2 with fixed `ai` and `non_ai_hot` sections
-- validates dates, timezone-aware generation timestamps, string bounds, item limits, HTTP(S) links, and non-negative statistics
-- requires `content_status` on every item and validates it against `ok`, `fetch_failed`, `summary_failed`, and `title_only`; schema v1 is intentionally unsupported
-- accepts optional per-item `provenance` only when it contains the exact five enumerated retrieval and summary-basis fields; legacy schema v2 items without it remain readable
-- requires every `hn_item_id` to match its Hacker News discussion URL
-- writes canonical per-date JSON with an atomic replace
-- atomically advances `current.json` without scanning historical payloads during public requests
-- atomically maintains `archive-index.json` with dates, generation timestamps, and section counts for the public archive
-- retains every successfully published schema v2 date payload without a time or count limit for now
-- treats same-date publishing as an idempotent create, unchanged write, or update
-- reads the homepage from `current.json`, the archive page from `archive-index.json`, and a dated page from its exact payload without falling back to a directory scan
+```text
+BriefIntroduction: A short introduction.
+```
 
-Daily Brief files live outside SQLite because the existing article database can be rebuilt from source. Production mounts the dedicated `daily_brief_data` volume at `/daily-briefs/data`.
+<!-- split -->
+# Article body
+````
 
-### `i18n.py`
+Categories and article identity derive from the source path. Optional English
+translations live at `resources/i18n/<basename>-en.md`, use the same introduction
+and body separators, and require `Title` in frontmatter. They provide translated
+body and display metadata without creating another database article. Missing
+English output falls back to the canonical Chinese content. If the English body
+has no leading image block, it inherits the source's leading images.
 
-Lightweight site i18n helpers.
-
-What it does:
-
-- defines supported public languages (`zh`, `en`)
-- parses `preferred_language` cookie and `Accept-Language`
-- provides translation lookups for fixed UI copy
-- builds language-aware public paths and language-switch URLs
-- maps site language to document `<html lang>` values
-
-Start here when you want to change:
-
-- supported language codes
-- default language selection behavior
-- fixed template copy translations
-- path switching logic between language namespaces
-
-### `article_views.py`
-
-Article presentation helpers.
-
-What it does:
-
-- resolves the rendered HTML path for an article, including optional English sidecars
-- loads translated sidecar metadata (`<id>.en.json`) when present
-- builds a localized article view model for docs pages and article detail pages
-- generates the article heading outline / TOC used by the right-hand article navigation
-
-Start here when you want to change:
-
-- article page TOC generation
-- how English sidecars override canonical article metadata at render time
-- how article list/detail routes choose rendered HTML files
-
-### `import_articles_scripts.py`
-
-Article import pipeline.
-
-What it does:
-
-- scans the source article tree
-- skips hidden/internal folders such as `__template__`
-- treats an article directory as publishable when it directly contains `images/` or `assets/`, or when it contains `resources/images/`
-- copies article assets into the rendered output directory
-- parses frontmatter and validates required metadata
-- computes a content hash to detect article changes
-- upserts `Article_Meta_Data` rows
-- re-renders HTML when article content changes or rendered output is missing
-- recognizes optional English sidecars at `resources/i18n/<basename>-en.md`
-- writes English rendered HTML (`<id>.en.html`) and English metadata sidecars (`<id>.en.json`) when those sidecars exist
-- removes database rows and rendered files for deleted source articles
-
-Current note:
-
-- the Chinese markdown file remains the canonical metadata source
-- English sidecars currently override only title, brief introduction, author, and body on `en` article/docs pages
-- when an English sidecar omits markdown images, the importer prepends the Chinese article's leading image block so bilingual pages keep the same hero/cover image
-- other metadata, such as rollout date, category, and cover image, still reuses the canonical Chinese article metadata
-
-Start here when you want to change:
-
-- metadata validation rules
-- article discovery behavior
-- image/asset copy behavior
-- article deletion cleanup
-
-### `markdown_render_scripts.py`
-
-Markdown-to-HTML rendering helper.
-
-What it does:
-
-- converts Markdown article bodies to HTML
-- applies custom Markdown extensions
-- converts LaTeX math delimiters into KaTeX-compatible placeholders
-- writes the rendered HTML into the per-article output directory
-
-Math rendering notes:
-
-- inline math supports `$...$` and `\(...\)`
-- block math supports `$$...$$` and `\[...\]`
-- Markdown rendering uses `pymdownx.arithmatex` with generic output, so article HTML contains `arithmatex` placeholders
-- the article detail template loads local KaTeX assets and `static/math-render.js` to typeset those placeholders in the browser
-- existing rendered HTML files are skipped when an article content hash is unchanged, so old articles need a re-render or reindex path when renderer-only behavior changes
-
-Start here when you want to change:
-
-- Markdown extension setup
-- renderer behavior
-- output generation details
-
-### `navigation.py`
-
-Docs-shell navigation builder.
-
-What it does:
-
-- builds the category tree from article metadata
-- generates breadcrumbs
-- humanizes category segments such as `gcp`, `ssh`, `llm`, and `waf`
-- prepares sidebar context for both the docs index and article detail pages
-
-Start here when you want to change:
-
-- left-hand section navigation
-- breadcrumb behavior
-- category labels
-- docs shell tree expansion rules
-
-## Data and Rendering Flow
-
-High-level flow:
-
-1. `articles-sync` updates the Markdown repository.
-2. `articles-sync` calls `POST /internal/reindex`.
-3. `app.py` routes that request to `import_articles(...)`.
-4. `import_articles_scripts.py` scans source folders, copies assets, validates metadata, and updates the database.
-5. `markdown_render_scripts.py` renders article bodies into HTML files under the rendered article directory.
-6. Public article routes read the rendered HTML file back from disk and combine it with database metadata for display.
-
-Important implication:
-
-- article metadata lives in SQLite
-- article body HTML lives in the rendered article directory
-- the public article page needs both
-- articles are exposed through HTML pages; there is no public article JSON API
-
-Daily Brief publishing follows a separate flow:
-
-1. The local `daily-brief` generator writes a schema-versioned public JSON file.
-2. Its publisher sends the file to `POST /internal/briefs` with `X-DAILY-BRIEF-TOKEN`.
-3. `daily_briefs.py` validates and atomically stores the normalized payload by date.
-4. The same locked write updates `archive-index.json` and advances `current.json` only to the newest successful date.
-5. The homepage reads the current pointer, the archive page reads the lightweight index, and dated pages read one exact payload.
-
-The stable `/<lang>/briefs` route lists every successfully published date, newest
-first. `/<lang>/briefs/<YYYY-MM-DD>` serves any retained strict schema v2 payload.
-Normal public requests never scan the storage directory. Same-date republishing
-overwrites that date and refreshes its archive metadata; explicit older backfills
-join the archive without moving the current pointer backward.
-
-The dated page opens with a centered date row: the brief date flanked by
-`‹ MM-DD` and `MM-DD ›` links to the nearest older and newer archived dates,
-which skip days without a brief and leave an inert placeholder at either end of
-the archive. When that row scrolls under the top bar, `static/brief-date-dock.js`
-docks a compact copy into the bar center: below 960px the brand text collapses
-into its dot to make room, the date becomes a capsule with a persistent `↑` that
-scrolls back to the top, and the neighbors shrink to `‹` / `›`, previewing their
-dates on hover or keyboard focus. The capsule shows `MM-DD` below 1024px; below 360px only the
-capsule remains in the bar. Without JavaScript the bar stays unchanged and the
-page date row still provides navigation; reduced-motion preferences disable the
-transitions.
-
-Each item has a native, initially collapsed **Details** disclosure containing
-its selection basis (`why`) and any recorded public provenance. Its text trigger
-uses a decorative chevron, a visible keyboard focus state, and a subtle inset
-rule for expanded content; it works without JavaScript and respects reduced
-motion preferences. Source or
-discussion attribution stays visible in the summary. Missing historical
-provenance is not inferred or backfilled. Retrieval describes the last recorded
-attempt and can fail even when a discussion summary succeeds; it is not a full
-retry trace. Deploy this accepting website before enabling the generator's
-optional provenance output.
-
-The endpoint is hidden with a 404 when `DAILY_BRIEF_PUBLISH_TOKEN` is unset. `DAILY_BRIEF_DATA_DIRECTORY` overrides the default `/daily-briefs/data` storage path.
+See [import tests](tests/test_import_articles_scripts.py) for accepted formats
+and edge cases. Markdown extension configuration lives in
+[markdown_render_scripts.py](markdown_render_scripts.py); math uses local KaTeX
+through [math-render.js](static/math-render.js).
 
 ### Reindex Authentication
 
-`POST /internal/reindex` requires the shared secret configured by
-`REIMPORT_ARTICLES_TOKEN`, sent in the `X-REIMPORT-ARTICLES-TOKEN` header.
+`POST /internal/reindex` requires `X-REIMPORT-ARTICLES-TOKEN` matching the web app's
+`REIMPORT_ARTICLES_TOKEN`. The sync service must use the same secret.
 
-- If the server token is unset or empty, the endpoint returns HTTP 404.
-- If the server token is configured but the request token is missing or incorrect,
-  the endpoint returns HTTP 403.
-- The sync service and web app must use the same reindex token. This credential
-  is separate from `DAILY_BRIEF_PUBLISH_TOKEN`, used for Daily Brief publishing.
+- Unset or empty server token: HTTP 404.
+- Missing or incorrect request token: HTTP 403.
+- Completed import: HTTP 200 with `{"status":"ok"}`.
+
+This credential is separate from the Daily Brief publishing token. The
+`/internal/` prefix does not itself provide network access control.
+
+### Rebuild Behavior
+
+- Production imports skip existing canonical HTML when the source hash is
+  unchanged. Missing HTML is regenerated; English sidecars are refreshed during
+  import. A normal reindex does **not** force canonical HTML regeneration after
+  renderer-only changes.
+- Development imports clear the rendered tree before rebuilding it.
+- Source files no longer discovered are removed from the article database and
+  their generated HTML is deleted. Verify the source tree before reindexing;
+  an empty scan can remove existing article records.
+- [scripts/init_db.py](scripts/init_db.py) **drops and recreates database tables**
+  before importing articles. It can change article IDs and is not a routine
+  rerender command. Deployment safeguards are described in the deploy guide.
+
+## Daily Briefs
+
+`external generator → POST /internal/briefs → JSON files → pages and public API`
+
+Briefs are stored separately from the rebuildable article database. Storage uses
+one `YYYY-MM-DD.json` payload per date, `current.json` for the latest date and
+`archive-index.json` for archive metadata. Writes are serialized with a file lock;
+each file is replaced atomically, but the files are not one database transaction.
+
+Same-date publishing replaces that date's content; older backfills join the
+archive without moving the current pointer backward. Published dates have no
+retention limit. Reads use the pointer/index or an exact date file, with no
+fallback directory scan. Preserve the entire brief data directory when backing
+up or moving the service.
+
+### Publishing API
+
+`POST /internal/briefs` takes JSON and requires `X-DAILY-BRIEF-TOKEN` matching
+`DAILY_BRIEF_PUBLISH_TOKEN`. The request body limit is 128 KiB in Flask and in the
+Nginx publishing location.
+
+Only strict schema v2 is accepted: `date`, timezone-aware `generated_at`,
+`timezone: "Asia/Singapore"`, and `ai` / `non_ai_hot` sections. Items contain
+summary, source/discussion links, counts, selection basis and content status;
+optional `provenance` records retrieval and summary basis. Unknown fields are
+rejected. Exact fields, limits and allowed values are defined in
+[daily_briefs.py](daily_briefs.py), with examples in
+[test_daily_briefs.py](tests/test_daily_briefs.py).
+
+| Result | HTTP response |
+| --- | --- |
+| Server token unset or empty | 404 |
+| Missing or incorrect request token | 403 |
+| Non-JSON content type | 415 |
+| Invalid JSON or schema | 400 with an `error` field |
+| Body exceeds the configured limit | 413 |
+| New date | 201 with `{"status":"created","date":"YYYY-MM-DD"}` |
+| Existing date | 200 with `status` of `updated` or `unchanged`, plus `date` |
+
+Nginx's WAF exception and compensating controls are documented in
+[nginx-modsecurity/README.md](../nginx-modsecurity/README.md#security-notes).
 
 ### Public Daily Brief API
 
-These read-only endpoints require no token and have no language prefix:
+These endpoints require no token and return published content only:
 
 | Endpoint | Response |
 | --- | --- |
-| `GET /api/briefs` | `{"items": [...]}` containing archive metadata, newest date first: `date`, `generated_at`, `ai_items`, `non_ai_hot_items`. An empty archive returns `{"items": []}`. |
-| `GET /api/briefs/latest` | The most recent successfully published schema v2 payload. Check its `date`: it may be earlier than today. |
-| `GET /api/briefs/YYYY-MM-DD` | The published schema v2 payload for exactly that date. |
+| `GET /api/briefs` | `{"items":[...]}` with `date`, `generated_at`, `ai_items` and `non_ai_hot_items`, newest first; an empty archive returns `{"items":[]}` |
+| `GET /api/briefs/latest` | Latest published schema v2 payload; its date may be earlier than today |
+| `GET /api/briefs/YYYY-MM-DD` | Published schema v2 payload for that date |
 
-Detail responses contain `schema_version`, `date`, `generated_at`, `timezone`
-(`Asia/Singapore`), and `sections`. Each section contains `note` and `items`;
-each item contains `hn_item_id`, `title`, `summary`, `content_status`, `why`,
-`source_url`, `discussion_url`, `points`, and `comments`, and may contain a
-strictly validated `provenance` object. `provenance` records the summary basis,
-retrieval method and status, material origin, and fallback reason; it contains no
-article text or full generator diagnostics. Its exact fields are `summary_basis`,
-`retrieval_method`, `retrieval_status`, `material_origin`, and `fallback_reason`;
-each accepts only its enumerated codes in `daily_briefs.py`. Unknown fields or
-codes are rejected. Summaries are Chinese;
-points and comment counts are publishing-time snapshots. This is the same
-validated public content used by the website, with no original article full text
-or raw generator diagnostics. Use the date and `hn_item_id` together to identify a
-specific brief item; item ordering can change on republishing.
+Missing, invalid or unreadable detail payloads return HTTP 404 with
+`{"error":"brief_not_found"}`. Writes return HTTP 405. Summaries are Chinese;
+responses contain neither original article full text nor private generator
+logs. Same-date content can change on republishing, so dated responses are not
+immutable. Use the date and `hn_item_id` together to identify an item.
 
-Missing/unreadable briefs and invalid dates return HTTP 404 with
-`{"error": "brief_not_found"}`. Writes to these public routes return HTTP 405.
-Same-date republishing replaces the content returned at that date, so dated
-responses must not be treated as immutable. Reads reuse the current pointer,
-archive index, and exact-date loader without scanning storage or calling the
-generator. The authenticated `/internal/briefs` publishing contract is unchanged.
+## Frontend Maintenance
 
-Example: fetch `/api/briefs/latest`, then use `/api/briefs/<date>` from its response
-when sharing a particular day's brief with an AI client. Public reachability
-must also be checked through Cloudflare with the intended client; rate limiting
-for `/api/briefs*` must be verified separately from the retired article API rules.
-
-## Directory Map
-
-### `templates/`
-
-Jinja templates used by the Flask app.
-
-Most important files:
-
-- `base.html`
-  - shared document shell and global asset loading
-- `_site_topbar.html`
-  - shared navigation; the brand is a blue dot mark (matching the favicon) followed by `hanjie site`, pages may pass a `topbar_center` block that renders centered in the bar, and bar pills and buttons share the `--nav-control-height` token (36px; the phone section toggle keeps a 44px touch target) and take their colors by role from `--pill-accent-border` (current location) or `--pill-neutral-*` (information such as the language switcher and the brief date capsule); at widths up to 768px, a single sticky row shows the brand and current section, with navigation links and language switching in a dropdown
-- `index.html`
-  - homepage / landing page
-- `about_me.html`
-  - profile / hiring page
-- `article_index.html`
-  - docs-style category and article index page
-- `article_details.html`
-  - article detail page with left section nav and right TOC
-- `brief_index.html` and `brief_detail.html`
-  - Daily Brief archive and per-date reading pages
-- `_docs_tree.html`
-  - recursive partial for the left docs sidebar tree
-- `404.html`
-  - not-found page
-
-### `static/`
-
-Frontend assets used by the templates.
-
-Commonly touched files:
-
-- `css/style.css`
-  - homepage styles
-- `css/about-me.css`
-  - About page styles
-- `css/docs-shell.css`
-  - docs index layout and docs shell styling
-- `css/article-details.css`
-  - article page layout, TOC card styling, and article-body presentation rules
-- `css/briefs.css`
-  - Daily Brief content-first reading layout, archive list, story hierarchy, and responsive presentation
-- `css/title.css`
-  - heading presentation inside rendered Markdown
-- `css/blockquote.css`
-  - blockquote styling
-- `article-toc.js`
-  - right-side TOC active/expand behavior
-- `brief-date-dock.js`
-  - docks the Daily Brief date and adjacent-brief steps into the top bar after the page date scrolls away, and handles the capsule's back-to-top action
-- `code-copy.js`
-  - copy button for code blocks
-- `math-render.js`
-  - initializes KaTeX auto-render for article body math delimiters
-- `search.js`
-  - search-related frontend behavior
-- `vendor/katex/`
-  - vendored KaTeX 0.17.0 browser assets, fonts, and license used by article math rendering
-
-There is also `StaticOverivew.md`, which can be helpful when mapping static assets at a lower level.
-
-Important font files:
-
-- `static/font/font.css`
-  - loads JetBrains Mono, the PingFang UI subset, the full PingFang fallback, and the system fallback chain
-- `static/font/PingFangSC/PingFang-SC-UI-subset.txt`
-  - generated character list for the UI-only PingFang SC subset
-- `static/font/PingFangSC/PingFang-SC-UI-subset.woff2`
-  - lightweight Chinese font subset used for fixed UI text before falling back to the full PingFang font
-
-### Asset versioning
-
-Templates load site-owned static assets through `asset_url(...)`, which is injected from `app.py`.
-
-What it does:
-
-- looks up the static file's last-modified timestamp with `os.path.getmtime(...)`
-- appends that timestamp as `?v=<mtime>` to the generated `/static/...` URL
-- keeps emitting the same version while the file is unchanged
-- emits a new version only after the file on disk changes
-
-Important implication:
-
-- this is a file-versioning mechanism, not a per-request random token
-- `/static/css/about-me.css?v=123` and `/static/css/about-me.css?v=456` are different cache keys
-- that lets browsers and Cloudflare keep caching old asset URLs safely while new page renders point to the new URL after a CSS/JS/image update
-- production currently relies on this versioned `/static/...?...` pattern to make Cloudflare edge caching safe for site-owned CSS, JS, fonts, and images
-- `base.html` loads the shared `style.css` once through `asset_url(...)`; subsystem styles must not re-import it via an unversioned CSS URL, which can load stale cached rules after the current stylesheet
-
-Start in `app.py` if you want to change:
-
-- how static asset version strings are generated
-- whether assets use mtime, content hash, or some other cache-busting strategy
-
-### `custom_md_extensions/`
-
-Custom Markdown extension implementations.
-
-This is where site-specific rendering behavior lives, such as:
-
-- image post-processing
-- GFM-style admonition handling
-
-Start here when you want to change rendered Markdown semantics rather than just page-level CSS.
-
-### `scripts/`
-
-Small helper scripts that support the web app but are not part of the Flask request path itself.
-
-Current scripts:
-
-- `init_db.py`
-  - initializes the SQLite schema used by the application
-- `build_pingfang_ui_subset.py`
-  - extracts fixed UI copy from templates and generates the character list used to build the lightweight PingFang UI subset font
-
-Start here when you want to change:
-
-- database bootstrap behavior
-- UI font subset generation inputs
-
-### `tests/`
-
-Pytest coverage for the Flask app and content pipeline.
-
-Important test files:
-
-- `test_smoke.py`
-  - high-level page content checks
-- `test_articles_routes.py`
-  - article and docs page route behavior
-- `test_article_toc.py`
-  - TOC structure expectations
-- `test_navigation.py`
-  - category tree and navigation behavior
-- `test_import_articles_scripts.py`
-  - import pipeline edge cases
-- `test_internal_reindex.py`
-  - auth behavior for the internal reindex endpoint
-- `test_daily_briefs.py`
-  - Daily Brief schema, authenticated publishing, storage isolation, route, language, and escaping behavior
-- `test_markdown_render.py`
-  - rendering helper behavior
-- `test_image_processor_extension.py`
-  - Markdown image processing behavior
-
-## Common Change Paths
-
-### Change the homepage
-
-Look at:
-
-- `templates/index.html`
-- `static/css/style.css`
-
-### Change Daily Brief publishing or pages
-
-Look at:
-
-- `daily_briefs.py` and `app.py`
-- `templates/brief_index.html` and `templates/brief_detail.html`
-- `static/css/briefs.css`
-
-### Change the About page
-
-Look at:
-
-- `templates/about_me.html`
-- `static/css/about-me.css`
-
-### Change docs index or category pages
-
-Look at:
-
-- `templates/article_index.html`
-- `static/css/docs-shell.css`
-- `navigation.py`
-
-### Change article detail layout
-
-Look at:
-
-- `templates/article_details.html`
-- `static/css/article-details.css`
-- `static/article-toc.js`
-- `navigation.py`
-
-### Change Markdown rendering behavior
-
-Look at:
-
-- `markdown_render_scripts.py`
-- `custom_md_extensions/`
-- `static/css/title.css`
-- `static/css/blockquote.css`
-- `static/css/md-css/` if you are changing code blocks, tables, or admonitions
-  - `gfm-admonition.css` styles note/tip/warning content as restrained rail notes so they stay distinct from code blocks without becoming heavy cards
-
-### Change article import rules
-
-Look at:
-
-- `import_articles_scripts.py`
-- `models.py`
-
-### Change article metadata model or database behavior
-
-Look at:
-
-- `models.py`
-- `app.py`
-- `import_articles_scripts.py`
+- [base.html](templates/base.html) and [_site_topbar.html](templates/_site_topbar.html)
+  own the shared shell. [style.css](static/css/style.css) provides global theme,
+  navigation and homepage styles; page-specific styles extend it.
+- UI translations live in `i18n.py`. Article translations use the sidecars above;
+  switching the page language does not translate Daily Brief summaries.
+- Use `asset_url(...)` for direct template references to site assets. It appends
+  integer-second file mtime, not a content hash. CSS-relative font/image URLs
+  are not automatically versioned. Load shared `style.css` through `base.html`;
+  do not re-import it with an unversioned CSS URL. Cloudflare cache policy is
+  managed separately.
+- Article math, code-copy, TOC and image-preview behavior belongs to the scripts
+  loaded by [article_details.html](templates/article_details.html). Brief date
+  navigation enhancement is loaded by [brief_detail.html](templates/brief_detail.html).
+  Keep basic navigation and Details disclosures usable without JavaScript.
+- Font configuration lives in [font.css](static/font/font.css). The PingFang UI
+  subset is preloaded; full fonts provide fallback coverage.
+  [build_pingfang_ui_subset.py](scripts/build_pingfang_ui_subset.py) extracts
+  characters from templates and Chinese translations into a `.txt` file; it
+  does not generate the `.woff2` font. A reproducible font-build command is not
+  currently documented in this repository.
 
 ## Running and Testing
 
-The usual local development/test workflow is driven from the repository root with Docker Compose.
-
-Common commands:
+Run these commands from the repository root with Docker Compose available:
 
 ```bash
 docker compose -f compose.yml -f compose.dev.yml build web-app
@@ -520,32 +214,12 @@ docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app r
 docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app ruff format --check .
 ```
 
-Ruff policy:
+These commands build and check the application without starting the full stack.
+Tests isolate the database and rendered/brief data from development state; see
+[tests/conftest.py](tests/conftest.py). Ruff targets Python 3.12 and uses its stable
+default rule set. CI adds coverage and full runtime checks; see
+[workflow documentation](../.github/workflows/README.md).
 
-- `ruff.toml` declares Python 3.12 as the lint target.
-- The project intentionally follows Ruff's stable default rule set instead of freezing an older hand-picked subset.
-- When a Ruff update enables new stable rules, review and fix the findings as part of that dependency update.
-
-## Font Notes
-
-The site uses a layered font loading strategy:
-
-1. `JetBrainsMono` for Latin, code-heavy UI, and the general site monospace look
-2. `PingFang-SC-UI-subset.woff2` for fixed Chinese UI copy
-3. `PingFang-SC-Regular.woff2` and `PingFang-SC-Regular.ttf` as broader Chinese fallbacks
-4. system Chinese fonts as the final fallback
-
-The UI subset is preloaded from `templates/base.html` so fixed labels, navigation text, and section headings can settle earlier on first paint.
-
-If template copy changes significantly, regenerate the UI subset character list and font artifact so the preload stays useful.
-
-## Related Files
-
-- [`../compose.yml`](../compose.yml)
-  - service wiring, environment variables, health checks, and shared volumes
-- [`../compose.dev.yml`](../compose.dev.yml)
-  - development overrides for local iteration
-- [`../articles-sync/README.md`](../articles-sync/README.md)
-  - explains how the Markdown source is cloned, synced, and reindexed
-- [`../scripts/deploy/README.md`](../scripts/deploy/README.md)
-  - explains deploy-time orchestration around this service
+A complete first-time local stack setup guide is still missing. Starting the
+whole stack also requires TLS material, source synchronization and database
+initialization; the commands above do not perform those steps.
