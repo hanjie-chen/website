@@ -127,9 +127,9 @@ variable "uptime_check_host" {
 }
 
 variable "uptime_check_path" {
-  description = "HTTP path monitored by the uptime check."
+  description = "Public homepage path monitored by the uptime check; redirects are followed."
   type        = string
-  default     = "/articles"
+  default     = "/"
 }
 
 variable "uptime_check_period" {
