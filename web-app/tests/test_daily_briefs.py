@@ -678,7 +678,52 @@ def test_homepage_shows_latest_brief_and_language_scoped_links(client, app):
 
     assert 'href="/zh/briefs/2026-07-25"' in chinese
     assert 'href="/en/briefs/2026-07-25"' in english
-    assert "最新一期： 2026-07-25" in chinese
+    assert (
+        '<time class="home-section-meta" datetime="2026-07-25">2026-07-25</time>'
+        in chinese
+    )
+    assert "查看全部 1 条 →" in chinese
+    assert "See all 1 →" in english
+
+
+def test_homepage_previews_first_two_items_in_display_order(client, app):
+    payload = brief_payload()
+    template = payload["sections"]["ai"]["items"][0]
+
+    def item(item_id, title, summary):
+        return {
+            **template,
+            "hn_item_id": item_id,
+            "title": title,
+            "summary": summary,
+            "source_url": f"https://example.com/{item_id}",
+            "discussion_url": f"https://news.ycombinator.com/item?id={item_id}",
+        }
+
+    payload["sections"]["ai"]["items"] = [item("1", "First", "第一条摘要")]
+    payload["sections"]["non_ai_hot"]["items"] = [
+        item("2", "Second", "第二条摘要\n\n- 换行也只占一行"),
+        item("3", "Third", "第三条摘要"),
+    ]
+    with app.app_context():
+        store_brief(app_module.Daily_Briefs_Directory, payload)
+
+    soup = BeautifulSoup(client.get("/zh/").get_data(as_text=True), "html.parser")
+    items = soup.select(".home-brief-item")
+
+    assert [entry.select_one(".home-brief-title").get_text() for entry in items] == [
+        "First",
+        "Second",
+    ]
+    assert items[0].select_one(".home-brief-title")["href"] == "https://example.com/1"
+    assert items[0].select_one(".home-brief-title")["rel"] == ["noopener", "noreferrer"]
+    assert (
+        items[1].select_one(".home-brief-summary").get_text().startswith("第二条摘要")
+    )
+    assert "Third" not in soup.get_text()
+    assert (
+        soup.select_one(".home-section-link").get_text(strip=True) == "查看全部 3 条 →"
+    )
 
 
 def test_empty_archive_still_returns_200(client):
@@ -688,15 +733,14 @@ def test_empty_archive_still_returns_200(client):
     assert "最近 14 天暂无简报" in response.get_data(as_text=True)
 
 
-def test_homepage_empty_brief_copy_describes_broader_selection(client):
-    chinese = client.get("/zh/").get_data(as_text=True)
-    english = client.get("/en/").get_data(as_text=True)
+def test_homepage_without_brief_points_to_archive(client):
+    chinese = BeautifulSoup(client.get("/zh/").get_data(as_text=True), "html.parser")
+    english = BeautifulSoup(client.get("/en/").get_data(as_text=True), "html.parser")
 
-    assert "每日筛选的计算与软件内容，以及少量圈外探索即将发布。" in chinese
-    assert (
-        "A daily selection of computing and software stories, plus a few "
-        "beyond-the-bubble discoveries, will appear here." in english
-    )
+    assert chinese.select(".home-brief-item") == []
+    assert chinese.select_one(".home-brief-empty").get_text() == "最近 14 天暂无简报"
+    assert chinese.select_one(".home-section-link")["href"] == "/zh/briefs"
+    assert english.select_one(".home-section-link")["href"] == "/en/briefs"
 
 
 @pytest.mark.parametrize(

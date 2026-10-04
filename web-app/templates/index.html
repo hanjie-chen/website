@@ -15,109 +15,33 @@
 {% block main_content%}
 <div class="main-content">
     <div class="content-wrapper home-page-shell">
-        <section class="home-hero">
-            <div class="home-hero-row">
-                <div class="home-hero-copy">
-                    <p class="home-overline">{{ t("home.hero.overline") }}</p>
-                    <h1 class="home-hero-title">{{ t("home.hero.title") }}</h1>
-                    <p class="home-hero-lead">
-                        {{ t("home.hero.lead") }}
-                    </p>
-                    <p class="home-hero-support">
-                        {{ t("home.hero.support") }}
-                    </p>
-                    <div class="home-hero-actions">
-                        <a href="{{ url_for('article_index', lang=current_lang) }}"
-                            class="home-cta home-cta-primary">
-                            {{ t("home.hero.primary_cta") }}
-                        </a>
-                        <a href="{{ url_for('about_me', lang=current_lang) }}"
-                            class="home-cta home-cta-secondary">
-                            {{ t("home.hero.secondary_cta") }}
-                        </a>
-                    </div>
-                </div>
-                <div class="home-hero-media">
-                    <div class="home-avatar-frame">
-                        <img alt="avatar" class="home-avatar"
-                            src="{{ asset_url('images/headavatar/head_avatar_problem.png') }}">
-                    </div>
-                </div>
-            </div>
-        </section>
+        <h1 class="visually-hidden">hanjie site</h1>
 
-        <section class="home-section">
-            <div class="home-card-grid home-entry-row">
-                <div class="home-section-heading">
-                    {% set start_overline = t("home.start.overline") %}
-                    {% if start_overline %}
-                    <p class="home-overline">{{ start_overline }}</p>
-                    {% endif %}
-                    <h2>{{ t("home.start.title") }}</h2>
-                </div>
-                <article class="home-entry-card">
-                    <h3>{{ t("home.start.articles_title") }}</h3>
-                    <p>{{ t("home.start.articles_desc") }}</p>
-                </article>
-                <article class="home-entry-card">
-                    <h3>{{ t("home.start.about_title") }}</h3>
-                    <p>{{ t("home.start.about_desc") }}</p>
-                </article>
-                <article class="home-entry-card home-brief-entry">
-                    <h3>{{ t("home.start.briefs_title") }}</h3>
-                    {% if current_brief %}
-                    <p>{{ t("home.start.briefs_latest") }} {{ current_brief.date }}</p>
-                    <a class="home-entry-link" href="{{ url_for('brief_detail', lang=current_lang, brief_date=current_brief.date) }}">
-                        {{ t("home.start.briefs_cta") }}
-                    </a>
-                    {% else %}
-                    <p>{{ t("home.start.briefs_empty") }}</p>
-                    <a class="home-entry-link" href="{{ url_for('brief_index', lang=current_lang) }}">
-                        {{ t("home.start.briefs_open") }}
-                    </a>
-                    {% endif %}
-                </article>
-            </div>
-        </section>
-
-        <section class="home-section">
-            <div class="home-card-grid home-focus-row">
-                <div class="home-section-heading">
-                    <h2>{{ t("home.focus.title") }}</h2>
-                </div>
-                <article class="home-focus-card">
-                    <h3>{{ t("home.focus.cloud_title") }}</h3>
-                    <p>{{ t("home.focus.cloud_desc") }}</p>
-                </article>
-                <article class="home-focus-card">
-                    <h3>{{ t("home.focus.fullstack_title") }}</h3>
-                    <p>{{ t("home.focus.fullstack_desc") }}</p>
-                </article>
-                <article class="home-focus-card">
-                    <h3>{{ t("home.focus.ai_title") }}</h3>
-                    <p>{{ t("home.focus.ai_desc") }}</p>
-                </article>
-            </div>
-        </section>
-
-        <section class="home-section home-note-card">
-            <div class="home-note-row">
-                <div class="home-section-heading">
-                    {% set note_overline = t("home.note.overline") %}
-                    {% if note_overline %}
-                    <p class="home-overline">{{ note_overline }}</p>
-                    {% endif %}
-                    <h2>{{ t("home.note.title") }}</h2>
-                </div>
-                <div class="home-note-copy">
-                    <p>
-                        {{ t("home.note.p1") }}
-                    </p>
-                    <p>
-                        {{ t("home.note.p2") }}
-                    </p>
-                </div>
-            </div>
+        <section class="home-section" aria-labelledby="home-brief-heading">
+            <header class="home-section-heading">
+                <h2 id="home-brief-heading">{{ t("briefs.page.heading") }}</h2>
+                {% if brief_preview %}
+                <time class="home-section-meta" datetime="{{ brief_preview.date }}">{{ brief_preview.date }}</time>
+                {% endif %}
+            </header>
+            {% if brief_preview %}
+            <ul class="home-brief-list">
+                {% for item in brief_preview["items"] %}
+                <li class="home-brief-item">
+                    <a class="home-brief-title" href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
+                    <p class="home-brief-summary">{{ item.summary }}</p>
+                </li>
+                {% endfor %}
+            </ul>
+            <a class="home-section-link" href="{{ url_for('brief_detail', lang=current_lang, brief_date=brief_preview.date) }}">
+                {{ t("home.brief.all").format(count=brief_preview.total) }}
+            </a>
+            {% else %}
+            <p class="home-brief-empty">{{ t("briefs.empty.title") }}</p>
+            <a class="home-section-link" href="{{ url_for('brief_index', lang=current_lang) }}">
+                {{ t("home.brief.archive") }}
+            </a>
+            {% endif %}
         </section>
     </div>
 </div>

@@ -132,6 +132,7 @@ OFFICIAL_SOURCE_LABELS = {
 }
 
 COMMUNITY_ROUNDUP_PREFIX = "根据 Hacker News 部分评论："
+HOME_BRIEF_PREVIEW_ITEMS = 2
 
 
 def _adjacent_brief_dates(date_label: str) -> tuple[str | None, str | None]:
@@ -140,6 +141,24 @@ def _adjacent_brief_dates(date_label: str) -> tuple[str | None, str | None]:
     older = max((date for date in dates if date < date_label), default=None)
     newer = min((date for date in dates if date > date_label), default=None)
     return older, newer
+
+
+def _brief_preview(brief: dict | None) -> dict | None:
+    """Return the homepage glimpse of a brief: its first items in display order."""
+    if brief is None:
+        return None
+    items = [
+        item
+        for section_name in ("ai", "non_ai_hot")
+        for item in brief["sections"][section_name]["items"]
+    ]
+    if not items:
+        return None
+    return {
+        "date": brief["date"],
+        "items": items[:HOME_BRIEF_PREVIEW_ITEMS],
+        "total": len(items),
+    }
 
 
 def _community_roundup_summary_view(summary: str) -> dict | None:
@@ -276,7 +295,7 @@ def index(lang):
     return render_template(
         "index.html",
         current_lang=current_lang,
-        current_brief=load_current_brief(Daily_Briefs_Directory),
+        brief_preview=_brief_preview(load_current_brief(Daily_Briefs_Directory)),
     )
 
 

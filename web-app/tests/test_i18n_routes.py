@@ -60,70 +60,26 @@ def test_homepage_accepts_canonical_language_paths(client, path):
     assert response.status_code == 200
 
 
-def test_chinese_homepage_uses_english_current_focus_heading_with_mixed_language_copy(
-    client,
-):
-    response = client.get("/zh/")
+@pytest.mark.parametrize("path", ["/zh/", "/en/"])
+def test_homepage_is_a_console_without_landing_page_sections(client, path):
+    response = client.get(path)
     html = response.get_data(as_text=True)
+    soup = BeautifulSoup(html, "html.parser")
 
     assert response.status_code == 200
-    assert "PERSONAL SITE / KNOWLEDGE BASE" in html
-    assert "Build, Learn, Document." in html
-    assert "这里记录我的工程实践、技术笔记，以及正在持续推进的项目。" in html
-    assert (
-        "我主要关注 Cloud、DevOps、Full-stack、Python 和 AI-assisted workflow。" in html
-    )
-    assert "Read Articles" in html
-    assert "About" in html
-    assert "START HERE" not in html
-    assert "What you&#39;ll find here" in html
-    assert (
-        "技术笔记、部署记录、实践文章，以及围绕 Cloud / DevOps / Full-stack 的持续整理。"
-        in html
-    )
-    assert "更完整的个人介绍、当前关注、工作方式，以及与求职相关的信息。" in html
-    assert html.count("<h2>Current Focus</h2>") == 1
-    assert "<h2>当前关注</h2>" not in html
-    assert '<p class="home-overline">当前关注</p>' not in html
-    assert "Cloud / DevOps" in html
-    assert "围绕 Terraform、GCP、Cloudflare 和 deployment workflow 持续实践。" in html
-    assert "Full-stack / Python" in html
-    assert "AI-assisted workflow" in html
-    assert html.count("<h2>Why This Site Exists</h2>") == 1
-    assert "<h2>为什么做这个网站</h2>" not in html
-    assert '<p class="home-overline">为什么做这个网站</p>' not in html
-    assert (
-        "这个网站既是我的技术知识库，也是我整理项目、验证理解和持续输出的地方。" in html
-    )
-    assert (
-        "我希望它是一份长期可维护、可复用、可迭代的工程记录，而不只是零散文章的集合。"
-        in html
-    )
-    assert '<div class="home-hero-row">' in html
-    assert html.count('<article class="home-entry-card') == 3
-    assert html.count('<article class="home-focus-card">') == 3
-    assert '<div class="home-note-row">' in html
-    assert "home-section-inner" not in html
-    assert "home-entry-grid" not in html
-    assert "home-focus-grid" not in html
-
-
-def test_english_homepage_keeps_single_current_focus_heading(client):
-    response = client.get("/en/")
-    html = response.get_data(as_text=True)
-
-    assert response.status_code == 200
-    assert html.count("<h2>Current Focus</h2>") == 1
-    assert "CURRENT FOCUS" not in html
-    assert "START HERE" not in html
-    assert "What you&#39;ll find here" in html
-    assert "Articles" in html
-    assert "Build, Learn, Document." in html
-    assert "Read Articles" in html
-    assert "About" in html
-    assert "About Me" not in html
-    assert html.count("<h2>Why This Site Exists</h2>") == 1
-    assert "WHY THIS SITE EXISTS" not in html
+    assert soup.select_one("h1").get_text(strip=True) == "hanjie site"
+    assert [heading.get_text(strip=True) for heading in soup.select("h2")] == [
+        "每日简报" if path == "/zh/" else "Daily Brief"
+    ]
+    for removed in (
+        "Build, Learn, Document.",
+        "PERSONAL SITE / KNOWLEDGE BASE",
+        "What you&#39;ll find here",
+        "Current Focus",
+        "Why This Site Exists",
+        "head_avatar_problem.png",
+    ):
+        assert removed not in html
 
 
 @pytest.mark.parametrize(
@@ -173,7 +129,7 @@ def test_shared_topbar_uses_fixed_brand_and_english_nav_on_chinese_homepage(clie
     assert brand["href"] == "/zh/"
     assert brand.select_one(".site-nav-brand-mark")["aria-hidden"] == "true"
     assert brand.get_text(strip=True) == "hanjie site"
-    assert ">Home<" in body
+    assert ">Home<" not in body
     assert ">Articles<" in body
     assert ">Brief<" in body
     assert ">About<" in body
@@ -181,17 +137,13 @@ def test_shared_topbar_uses_fixed_brand_and_english_nav_on_chinese_homepage(clie
     assert "🏡" not in body
 
 
-def test_homepage_marks_home_link_active(client):
+def test_homepage_marks_no_nav_link_active_and_labels_mobile_menu(client):
     response = client.get("/zh/")
-    body = response.get_data(as_text=True)
+    soup = BeautifulSoup(response.get_data(as_text=True), "html.parser")
 
     assert response.status_code == 200
-    links = BeautifulSoup(body, "html.parser").select("a.site-nav-link.is-active")
-    assert len(links) == 2
-    assert all(
-        link["href"] == "/zh/" and link["aria-current"] == "page" for link in links
-    )
-    assert all(link.get_text(strip=True) == "Home" for link in links)
+    assert soup.select("a.site-nav-link.is-active") == []
+    assert soup.select_one("#site-nav-toggle").get_text(strip=True) == "Menu"
 
 
 def test_about_page_marks_about_link_active(client):
@@ -239,12 +191,13 @@ def test_english_about_page_keeps_single_section_titles_after_overline_cleanup(c
 
 
 @pytest.mark.parametrize("path", ["/zh/", "/en/about"])
-def test_pages_render_shared_footer_site_name(client, path):
+def test_pages_render_without_footer(client, path):
     response = client.get(path)
     html = unescape(response.get_data(as_text=True))
 
     assert response.status_code == 200
-    assert "© 2026 hanjie site" in html
+    assert "<footer" not in html
+    assert "©" not in html
 
 
 def test_legacy_about_route_returns_404(client):
