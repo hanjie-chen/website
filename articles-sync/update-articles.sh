@@ -6,9 +6,19 @@ GITHUB_REPO="${GITHUB_REPO:-https://github.com/hanjie-chen/knowledge-base.git}"
 REPO_BRANCH="${REPO_BRANCH:-main}"
 WEB_APP_REINDEX_URL="${WEB_APP_REINDEX_URL:-}"
 REIMPORT_ARTICLES_TOKEN="${REIMPORT_ARTICLES_TOKEN:-}"
+# Content Sync sets this to 1: always reindex, and fail the run if reindexing fails.
+# Startup and cron runs keep it unset so a busy web app never stops the container.
+REQUIRE_REINDEX="${REQUIRE_REINDEX:-0}"
 
 log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S %z %Z')] [SYNC] $1"
+}
+
+reindex_failed() {
+    log_message "$1"
+    if [ "$REQUIRE_REINDEX" = "1" ]; then
+        exit 1
+    fi
 }
 
 reclone_repository() {
@@ -83,10 +93,14 @@ fi
 # check if repo changed
 after_head="$(/usr/bin/git rev-parse HEAD 2>/dev/null || true)"
 if [ -n "$before_head" ] && [ -n "$after_head" ] && [ "$before_head" = "$after_head" ]; then
-    log_message "No changes detected, skip reindex"
-    log_message "Articles synchronization completed"
-    echo "----------------------------------------"
-    exit 0
+    if [ "$REQUIRE_REINDEX" != "1" ]; then
+        log_message "No changes detected, skip reindex"
+        log_message "Articles synchronization completed"
+        echo "----------------------------------------"
+        exit 0
+    fi
+    # A rerun after a failed reindex sees the same HEAD, so it must still reindex.
+    log_message "No changes detected, reindexing because REQUIRE_REINDEX=1"
 fi
 
 if [ -n "$WEB_APP_REINDEX_URL" ]; then
@@ -95,17 +109,17 @@ if [ -n "$WEB_APP_REINDEX_URL" ]; then
         if curl -fsS -X POST -H "X-REIMPORT-ARTICLES-TOKEN: $REIMPORT_ARTICLES_TOKEN" "$WEB_APP_REINDEX_URL" >/dev/null; then
             log_message "Reindex triggered successfully"
         else
-            log_message "Reindex trigger failed"
+            reindex_failed "Reindex trigger failed"
         fi
     else
         if curl -fsS -X POST "$WEB_APP_REINDEX_URL" >/dev/null; then
             log_message "Reindex triggered successfully"
         else
-            log_message "Reindex trigger failed"
+            reindex_failed "Reindex trigger failed"
         fi
     fi
 else
-    log_message "WEB_APP_REINDEX_URL is not set, skip reindex"
+    reindex_failed "WEB_APP_REINDEX_URL is not set, skip reindex"
 fi
 
 log_message "Articles synchronization completed"

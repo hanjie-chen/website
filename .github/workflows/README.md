@@ -50,7 +50,8 @@ owned by [scripts/deploy/README.md](../../scripts/deploy/README.md).
 ## Content and Infrastructure Updates
 
 - **Content Sync** updates the website checkout on the production host to `main`
-  and invokes `articles-sync`. Dispatch inputs such as `source_sha` are log
+  and invokes `articles-sync`, which always requests a reindex; a reindex failure
+  fails the run. Dispatch inputs such as `source_sha` are log
   context, not a requested checkout revision. The sync service follows its
   configured source branch; see [articles-sync](../../articles-sync/README.md).
 - **Terraform Infra Sync** authenticates through GCP Workload Identity Federation

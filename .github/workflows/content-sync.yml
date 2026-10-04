@@ -51,6 +51,6 @@ jobs:
             git fetch --all --prune
             git checkout main
             git pull --ff-only origin main
-            docker compose exec -T articles-sync sh -lc 'su-exec appuser /usr/local/bin/update-articles.sh'
+            docker compose exec -T -e REQUIRE_REINDEX=1 articles-sync sh -lc 'su-exec appuser /usr/local/bin/update-articles.sh'
             ./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity
             ./scripts/deploy/smoke_check.sh

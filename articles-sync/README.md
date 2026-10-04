@@ -29,7 +29,8 @@ writable by that user (image build defaults: UID/GID 1000).
 - **Triggered update:** the website's [Content Sync workflow](../.github/workflows/content-sync.yml)
   runs the update inside the container over SSH. It can be dispatched by the
   knowledge-base publishing flow or manually; it follows the configured branch,
-  not the workflow's informational `source_sha` input.
+  not the workflow's informational `source_sha` input. This run must end with a
+  successful reindex; see [Reindex Trigger](#reindex-trigger).
 - **Scheduled update:** Compose sets a daily fallback at 03:00 UTC. Cron and sync
   messages include the timezone and are written to container logs.
 
@@ -54,11 +55,14 @@ Use the same non-empty `REIMPORT_ARTICLES_TOKEN` in both services. The client ca
 omit the header, but the web app rejects anonymous reindexing; see
 [Reindex Authentication](../web-app/README.md#reindex-authentication).
 
-A failed POST is logged but does not make the update command fail. There is no
-pending-reindex marker or retry queue: if the next run sees the same HEAD, it
-skips the request. Rerunning sync alone therefore does not guarantee recovery of
-a failed import. Resolve the endpoint/token problem and explicitly reindex using
-the web app's documented contract and rebuild precautions.
+Content Sync runs the script with `REQUIRE_REINDEX=1`: it reindexes even when HEAD
+is unchanged, and a failed POST or missing `WEB_APP_REINDEX_URL` fails the run.
+After fixing the endpoint or token, rerun Content Sync to recover; unchanged
+articles are skipped by the web app's incremental import.
+
+Startup and cron runs leave `REQUIRE_REINDEX` unset. They only log a failed POST,
+so a web app that is still starting cannot stop the container. There is no retry
+queue: a later cron run that sees the same HEAD skips the request.
 
 ## Configuration
 
@@ -74,6 +78,7 @@ read-only in the web app.
 | `TZ` | Compose sets `UTC` |
 | `WEB_APP_REINDEX_URL` | Unset in the script; Compose sets `http://web-app:5000/internal/reindex` |
 | `REIMPORT_ARTICLES_TOKEN` | Unset by default; must match the web app token for successful reindexing |
+| `REQUIRE_REINDEX` | Unset by default; Content Sync passes `1` to always reindex and fail on reindex errors |
 
 If changing the source mount path, update the Compose health check too: it
 currently checks the literal `/articles/src/.git` path.
