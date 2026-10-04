@@ -228,7 +228,8 @@ immutable. Use the date and `hn_item_id` together to identify an item.
 - Article math, code-copy, TOC and image-preview behavior belongs to the scripts
   loaded by [article_details.html](templates/article_details.html). Brief date
   navigation enhancement is loaded by [brief_detail.html](templates/brief_detail.html).
-  Keep basic navigation and Details disclosures usable without JavaScript.
+  Keep page links and Details disclosures usable without JavaScript; the mobile
+  navigation menu is the exception and needs `site-nav.js` to open.
 - Font configuration lives in [font.css](static/font/font.css). The PingFang UI
   subset is preloaded; full fonts provide fallback coverage.
   [build_pingfang_ui_subset.py](scripts/build_pingfang_ui_subset.py) extracts
