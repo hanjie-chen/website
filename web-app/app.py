@@ -94,6 +94,12 @@ def _asset_url(filename: str) -> str:
     return url_for("static", filename=filename, v=version)
 
 
+def _token_matches(request_token: str, expected_token: str) -> bool:
+    # Compare bytes in constant time: compare_digest rejects non-ASCII str, which
+    # would turn a malformed header into a 500 instead of a 403.
+    return hmac.compare_digest(request_token.encode(), expected_token.encode())
+
+
 def _safe_redirect_target(next_path: str | None, fallback_path: str) -> str:
     if not next_path:
         return fallback_path
@@ -464,7 +470,7 @@ def reindex_articles():
         abort(404)
 
     request_token = request.headers.get("X-REIMPORT-ARTICLES-TOKEN", "")
-    if request_token != REIMPORT_ARTICLES_TOKEN:
+    if not _token_matches(request_token, REIMPORT_ARTICLES_TOKEN):
         abort(403)
 
     with app.app_context():
@@ -478,7 +484,7 @@ def publish_brief():
         abort(404)
 
     request_token = request.headers.get("X-DAILY-BRIEF-TOKEN", "")
-    if not hmac.compare_digest(request_token, DAILY_BRIEF_PUBLISH_TOKEN):
+    if not _token_matches(request_token, DAILY_BRIEF_PUBLISH_TOKEN):
         abort(403)
     if not request.is_json:
         return {"error": "Content-Type must be application/json"}, 415

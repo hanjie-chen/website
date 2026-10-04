@@ -345,6 +345,7 @@ def test_publish_endpoint_rejects_wrong_token_and_non_json(client, monkeypatch):
     monkeypatch.setattr(app_module, "DAILY_BRIEF_PUBLISH_TOKEN", "secret-token")
 
     wrong = post_brief(client, brief_payload(), token="wrong")
+    non_ascii = post_brief(client, brief_payload(), token="été")
     non_json = client.post(
         "/internal/briefs",
         data="not json",
@@ -352,6 +353,7 @@ def test_publish_endpoint_rejects_wrong_token_and_non_json(client, monkeypatch):
     )
 
     assert wrong.status_code == 403
+    assert non_ascii.status_code == 403
     assert non_json.status_code == 415
 
 

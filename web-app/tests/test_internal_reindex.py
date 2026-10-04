@@ -1,3 +1,5 @@
+import pytest
+
 import app as app_module
 
 
@@ -8,15 +10,22 @@ def test_reindex_returns_404_when_token_not_configured(client, monkeypatch):
     assert response.status_code == 404
 
 
-def test_reindex_returns_403_on_wrong_token(client, monkeypatch):
-    # Wrong header token should be rejected.
+@pytest.mark.parametrize(
+    "headers",
+    [
+        {},
+        {"X-REIMPORT-ARTICLES-TOKEN": "wrong-token"},
+        {"X-REIMPORT-ARTICLES-TOKEN": "été"},
+    ],
+)
+def test_reindex_returns_403_on_missing_wrong_or_non_ascii_token(
+    client, monkeypatch, headers
+):
+    # Missing, wrong or non-ASCII header tokens should be rejected, never a 500.
     monkeypatch.setattr(app_module, "REIMPORT_ARTICLES_TOKEN", "secret-token")
     monkeypatch.setattr(app_module, "import_articles", lambda *_args, **_kwargs: None)
 
-    response = client.post(
-        "/internal/reindex",
-        headers={"X-REIMPORT-ARTICLES-TOKEN": "wrong-token"},
-    )
+    response = client.post("/internal/reindex", headers=headers)
     assert response.status_code == 403
 
 
