@@ -54,7 +54,7 @@ rollback_third_party() {
   rollback_service dozzle "${previous_dozzle_image}" || rollback_status=1
   rollback_service nginx-modsecurity "${previous_nginx_image}" || rollback_status=1
 
-  docker compose kill -s HUP nginx-modsecurity >/dev/null 2>&1 || true
+  docker compose exec -T nginx-modsecurity nginx -s reload >/dev/null 2>&1 || true
   ./scripts/deploy/wait_services_healthy.sh nginx-modsecurity dozzle || rollback_status=1
   ./scripts/deploy/smoke_check.sh || rollback_status=1
 
@@ -85,8 +85,10 @@ fi
 
 # nginx can keep stale upstream target after web-app container recreation.
 # Reload nginx so upstream DNS/cache state is refreshed to current container IPs.
+# Send the reload signal inside the container: Docker's kill API marks even HUP
+# as a manual stop, preventing an unless-stopped container from starting at boot.
 echo "[deploy] Reloading nginx-modsecurity..."
-if ! docker compose kill -s HUP nginx-modsecurity \
+if ! docker compose exec -T nginx-modsecurity nginx -s reload \
   && ! docker compose restart nginx-modsecurity; then
   fail_after_apply "Nginx reload/restart failed."
 fi

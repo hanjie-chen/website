@@ -54,6 +54,12 @@ image references, explicitly pulls all five service images, applies Compose,
 reloads Nginx, then checks database readiness,
 service health, HTTP smoke paths and third-party image references.
 
+Deployment and rollback reload Nginx with
+`docker compose exec -T nginx-modsecurity nginx -s reload`. This refreshes the
+active configuration without marking the container as manually stopped in
+Docker, preserving automatic startup under its `unless-stopped` restart policy.
+Deployment falls back to a container restart if the reload command fails.
+
 The cleanup service removes expired Daily Brief files immediately on startup
 and daily thereafter. Deploying retention therefore also removes existing briefs
 older than the rolling 14-day window. Data retention and manual cleanup are
