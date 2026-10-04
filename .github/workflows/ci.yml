@@ -212,9 +212,9 @@ jobs:
           docker compose -f compose.yml -f compose.dev.yml \
             run --rm --no-deps -T web-app python scripts/init_db.py
           docker compose -f compose.yml -f compose.dev.yml \
-            up -d --no-deps web-app dozzle nginx-modsecurity
+            up -d --no-deps web-app daily-brief-cleanup dozzle nginx-modsecurity
           COMPOSE_FILE=compose.yml:compose.dev.yml \
-            ./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity dozzle
+            ./scripts/deploy/wait_services_healthy.sh web-app daily-brief-cleanup nginx-modsecurity dozzle
           BASE_URL=https://127.0.0.1:8444 ./scripts/deploy/smoke_check.sh
 
       - name: Stop candidate runtime

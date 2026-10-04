@@ -5,6 +5,7 @@
 文章来自独立的 [knowledge-base](https://github.com/hanjie-chen/knowledge-base) 仓库，由本站提供中英文阅读页面。
 
 每日简报由 [Daily Brief](https://github.com/hanjie-chen/daily-brief) 项目生成，通过本站页面与公开只读 JSON API 提供。
+本站按 `Asia/Singapore` 日期滚动保留今天及此前 13 天的简报，过期内容停止提供并自动清理。
 
 核心技术栈：Flask + SQLite + Docker Compose + Nginx (ModSecurity) + GitHub Actions + GCP + Cloudflare
 

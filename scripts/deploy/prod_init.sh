@@ -26,6 +26,7 @@ docker compose -f compose.yml up -d
 
 # 4) Ensure core traffic path is healthy before smoke check.
 wait_for_service_state web-app healthy "${CORE_SERVICES_READY_TIMEOUT}" "3" "init"
+wait_for_service_state daily-brief-cleanup healthy "${CORE_SERVICES_READY_TIMEOUT}" "3" "init"
 wait_for_service_state nginx-modsecurity healthy "${CORE_SERVICES_READY_TIMEOUT}" "3" "init"
 
 # 5) Run smoke check.

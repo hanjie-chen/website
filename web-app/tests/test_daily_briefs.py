@@ -1,16 +1,31 @@
 import json
+from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
 
 import app as app_module
+import daily_briefs
 from daily_briefs import (
     BriefValidationError,
     load_brief,
     load_brief_archive,
     load_current_brief,
+    prune_briefs,
     store_brief,
 )
+from daily_briefs import (
+    _brief_today as real_brief_today,
+)
+
+
+@pytest.fixture(autouse=True)
+def brief_clock(monkeypatch):
+    clock = [date(2026, 7, 27)]
+    monkeypatch.setattr(daily_briefs, "_brief_today", lambda: clock[0])
+    return clock
 
 
 def brief_payload(date_label="2026-07-25", item_id="49038433"):
@@ -240,7 +255,7 @@ def test_store_brief_rejects_non_string_content_status(tmp_path, invalid_status)
         store_brief(tmp_path, payload)
 
 
-def test_store_brief_retains_and_indexes_every_published_payload(tmp_path):
+def test_store_brief_retains_and_indexes_every_payload_in_window(tmp_path):
     for day in range(18, 28):
         store_brief(tmp_path, brief_payload(f"2026-07-{day}", str(day)))
 
@@ -668,7 +683,7 @@ def test_empty_archive_still_returns_200(client):
     response = client.get("/zh/briefs")
 
     assert response.status_code == 200
-    assert "第一期简报尚未发布" in response.get_data(as_text=True)
+    assert "最近 14 天暂无简报" in response.get_data(as_text=True)
 
 
 def test_homepage_empty_brief_copy_describes_broader_selection(client):
@@ -680,3 +695,170 @@ def test_homepage_empty_brief_copy_describes_broader_selection(client):
         "A daily selection of computing and software stories, plus a few "
         "beyond-the-bubble discoveries, will appear here." in english
     )
+
+
+@pytest.mark.parametrize(
+    "today", [date(2026, 10, 4), date(2027, 1, 5), date(2028, 3, 5)]
+)
+def test_retention_includes_exactly_fourteen_calendar_dates(
+    tmp_path, brief_clock, today
+):
+    brief_clock[0] = today
+    dates = [(today - timedelta(days=offset)).isoformat() for offset in range(14)]
+    for date_label in dates:
+        store_brief(tmp_path, brief_payload(date_label))
+    assert [entry["date"] for entry in load_brief_archive(tmp_path)] == dates
+    assert load_current_brief(tmp_path)["date"] == today.isoformat()
+    for outside in (today - timedelta(days=14), today + timedelta(days=1)):
+        with pytest.raises(BriefValidationError, match="latest 14 calendar days"):
+            store_brief(tmp_path, brief_payload(outside.isoformat()))
+        assert not (tmp_path / f"{outside}.json").exists()
+
+
+@pytest.mark.parametrize("date_label", ["2026-07-13", "2026-07-28"])
+def test_outside_window_publish_is_rejected_even_when_generated_today(
+    client, monkeypatch, date_label
+):
+    monkeypatch.setattr(app_module, "DAILY_BRIEF_PUBLISH_TOKEN", "secret-token")
+    payload = brief_payload(date_label)
+    payload["generated_at"] = "2026-07-27T08:00:00+08:00"
+    response = post_brief(client, payload)
+    assert response.status_code == 400
+    assert "latest 14 calendar days" in response.get_json()["error"]
+    assert load_brief_archive(app_module.Daily_Briefs_Directory) == []
+
+
+def test_reads_expire_without_upload_or_cleanup(client, brief_clock):
+    root = app_module.Daily_Briefs_Directory
+    store_brief(root, brief_payload("2026-07-14"))
+    assert client.get("/api/briefs/latest").status_code == 200
+    brief_clock[0] = date(2026, 7, 28)
+
+    assert load_current_brief(root) is None
+    assert load_brief(root, "2026-07-14") is None
+    assert load_brief_archive(root) == []
+    assert client.get("/api/briefs").get_json() == {"items": []}
+    for path in ("/api/briefs/latest", "/api/briefs/2026-07-14"):
+        response = client.get(path)
+        assert response.status_code == 404
+        assert response.get_json() == {"error": "brief_not_found"}
+    for lang in ("zh", "en"):
+        assert client.get(f"/{lang}/briefs/2026-07-14").status_code == 404
+        assert "/briefs/2026-07-14" not in client.get(f"/{lang}/").get_data(
+            as_text=True
+        )
+    assert "最近 14 天暂无简报" in client.get("/zh/briefs").get_data(as_text=True)
+    assert "No briefs in the last 14 days" in client.get("/en/briefs").get_data(
+        as_text=True
+    )
+    # Reads hide the expired file even before physical cleanup runs.
+    assert (Path(root) / "2026-07-14.json").exists()
+
+
+def test_publish_cleans_expired_files_and_index(tmp_path, brief_clock):
+    brief_clock[0] = date(2026, 7, 25)
+    for day in (12, 13, 14, 25):
+        store_brief(tmp_path, brief_payload(f"2026-07-{day}"))
+    brief_clock[0] = date(2026, 7, 27)
+    store_brief(tmp_path, brief_payload())
+
+    assert sorted(path.stem for path in tmp_path.glob("2026-*.json")) == [
+        "2026-07-14",
+        "2026-07-25",
+    ]
+    assert [entry["date"] for entry in load_brief_archive(tmp_path)] == [
+        "2026-07-25",
+        "2026-07-14",
+    ]
+    assert json.loads((tmp_path / "current.json").read_text()) == {"date": "2026-07-25"}
+
+
+def test_date_navigation_and_archive_drop_expired_briefs(client, brief_clock):
+    for date_label in ("2026-07-14", "2026-07-15"):
+        store_brief(app_module.Daily_Briefs_Directory, brief_payload(date_label))
+    brief_clock[0] = date(2026, 7, 28)
+    for lang in ("zh", "en"):
+        detail = client.get(f"/{lang}/briefs/2026-07-15")
+        assert detail.status_code == 200
+        assert "/briefs/2026-07-14" not in detail.get_data(as_text=True)
+        index = client.get(f"/{lang}/briefs").get_data(as_text=True)
+        assert "2026-07-15" in index
+        assert "2026-07-14" not in index
+    assert [
+        entry["date"] for entry in client.get("/api/briefs").get_json()["items"]
+    ] == ["2026-07-15"]
+
+
+def test_cleanup_removes_orphans_and_clears_empty_current(tmp_path, brief_clock):
+    store_brief(tmp_path, brief_payload())
+    (tmp_path / "2026-07-01.json").write_text("{broken")
+    (tmp_path / "2026-12-01.json").write_text("{}")
+    (tmp_path / "settings.json").write_text("{}")
+    (tmp_path / "2026-7-01.json").write_text("{}")
+    brief_clock[0] = date(2026, 8, 8)
+    assert prune_briefs(tmp_path) == 3
+    assert not (tmp_path / "current.json").exists()
+    assert not (tmp_path / "2026-12-01.json").exists()
+    assert load_brief_archive(tmp_path) == []
+    assert json.loads((tmp_path / "archive-index.json").read_text())["briefs"] == []
+    assert (tmp_path / "settings.json").exists()
+    assert (tmp_path / "2026-7-01.json").exists()
+    assert prune_briefs(tmp_path) == 0
+
+
+def test_republishing_does_not_extend_date_retention(tmp_path, brief_clock):
+    store_brief(tmp_path, brief_payload("2026-07-14"))
+    assert store_brief(tmp_path, brief_payload("2026-07-14"))[0] == "unchanged"
+    brief_clock[0] = date(2026, 7, 28)
+    with pytest.raises(BriefValidationError, match="latest 14 calendar days"):
+        store_brief(tmp_path, brief_payload("2026-07-14"))
+    assert prune_briefs(tmp_path) == 1
+
+
+def test_cleanup_preserves_boundary_and_repairs_stale_pointer(tmp_path):
+    store_brief(tmp_path, brief_payload("2026-07-14"))
+    (tmp_path / "current.json").write_text('{"date":"2026-07-01"}')
+    (tmp_path / "2026-07-01.json").write_text("{}")
+    assert prune_briefs(tmp_path) == 1
+    assert load_current_brief(tmp_path)["date"] == "2026-07-14"
+    assert (tmp_path / "2026-07-14.json").exists()
+
+
+def test_cleanup_refuses_corrupt_archive_before_deleting_files(tmp_path):
+    (tmp_path / "2026-07-01.json").write_text("{}")
+    (tmp_path / "archive-index.json").write_text("{broken")
+    with pytest.raises(BriefValidationError, match="valid JSON"):
+        prune_briefs(tmp_path)
+    assert (tmp_path / "2026-07-01.json").exists()
+
+
+def test_publishing_and_cleanup_share_lock(tmp_path):
+    def publish(day):
+        store_brief(tmp_path, brief_payload(f"2026-07-{day}"))
+        prune_briefs(tmp_path)
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(publish, range(14, 28)))
+    assert [entry["date"] for entry in load_brief_archive(tmp_path)] == [
+        f"2026-07-{day}" for day in range(27, 13, -1)
+    ]
+    assert load_current_brief(tmp_path)["date"] == "2026-07-27"
+    assert len(list(tmp_path.glob("2026-*.json"))) == 14
+    assert not list(tmp_path.glob("*.tmp"))
+
+
+@pytest.mark.parametrize(
+    "instant,expected",
+    [
+        (datetime(2026, 7, 27, 15, 59, 59, tzinfo=UTC), date(2026, 7, 27)),
+        (datetime(2026, 7, 27, 16, 0, 0, tzinfo=UTC), date(2026, 7, 28)),
+    ],
+)
+def test_brief_today_uses_singapore_midnight(monkeypatch, instant, expected):
+    class FixedDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return instant.astimezone(tz)
+
+    monkeypatch.setattr(daily_briefs, "datetime", FixedDatetime)
+    assert real_brief_today() == expected

@@ -6,15 +6,18 @@ import logging
 import os
 import tempfile
 from contextlib import contextmanager
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
+from zoneinfo import ZoneInfo
 
 LOGGER = logging.getLogger(__name__)
 SCHEMA_VERSION = 2
 CURRENT_POINTER_NAME = "current.json"
 ARCHIVE_INDEX_NAME = "archive-index.json"
 ARCHIVE_INDEX_VERSION = 1
+RETENTION_DAYS = 14
+BRIEF_TIMEZONE = ZoneInfo("Asia/Singapore")
 SECTION_LIMITS = {"ai": 5, "non_ai_hot": 2}
 ROOT_KEYS = {"schema_version", "date", "generated_at", "timezone", "sections"}
 SECTION_KEYS = {"note", "items"}
@@ -150,6 +153,11 @@ def store_brief(directory, payload) -> tuple[str, dict]:
     ).encode("utf-8")
 
     with _store_lock(target_directory):
+        today = _brief_today()
+        if not _within_retention(normalized["date"], today):
+            raise BriefValidationError(
+                "date must be within the latest 14 calendar days (Asia/Singapore)"
+            )
         archive_entries = _load_archive_entries(target_directory)
         target = target_directory / f"{normalized['date']}.json"
         try:
@@ -163,22 +171,14 @@ def store_brief(directory, payload) -> tuple[str, dict]:
             _atomic_write(target, content)
 
         archive_entries = _update_archive_entries(archive_entries, normalized)
-        _write_archive_index(target_directory, archive_entries)
-
-        current_date = _load_current_date(target_directory)
-        newest_archive_date = archive_entries[0]["date"]
-        if current_date is None or newest_archive_date >= current_date:
-            pointer = (
-                json.dumps({"date": newest_archive_date}, sort_keys=True) + "\n"
-            ).encode("utf-8")
-            _atomic_write(target_directory / CURRENT_POINTER_NAME, pointer)
+        _prune_locked(target_directory, archive_entries, today)
     return status, normalized
 
 
 def load_current_brief(directory) -> dict | None:
     root = Path(directory)
     current_date = _load_current_date(root)
-    if current_date is None:
+    if current_date is None or not _within_retention(current_date, _brief_today()):
         return None
     return _load_valid_file(root / f"{current_date}.json")
 
@@ -188,13 +188,20 @@ def load_brief(directory, date_label: str) -> dict | None:
         canonical_date = _validate_date(date_label)
     except BriefValidationError:
         return None
+    if not _within_retention(canonical_date, _brief_today()):
+        return None
     return _load_valid_file(Path(directory) / f"{canonical_date}.json")
 
 
 def load_brief_archive(directory) -> list[dict]:
     root = Path(directory)
     try:
-        return _load_archive_entries(root)
+        today = _brief_today()
+        return [
+            entry
+            for entry in _load_archive_entries(root)
+            if _within_retention(entry["date"], today)
+        ]
     except BriefValidationError as exc:
         LOGGER.error(
             "component=daily_brief_store status=invalid_archive_index file=%s error=%s",
@@ -202,6 +209,56 @@ def load_brief_archive(directory) -> list[dict]:
             exc,
         )
         return []
+
+
+def _brief_today() -> date:
+    return datetime.now(BRIEF_TIMEZONE).date()
+
+
+def _within_retention(date_label: str, today: date) -> bool:
+    return (
+        today - timedelta(days=RETENTION_DAYS - 1)
+        <= date.fromisoformat(date_label)
+        <= today
+    )
+
+
+def prune_briefs(directory) -> int:
+    """Remove expired dated files and refresh metadata under the publishing lock."""
+    root = Path(directory)
+    root.mkdir(parents=True, exist_ok=True)
+    with _store_lock(root):
+        return _prune_locked(root, _load_archive_entries(root), _brief_today())
+
+
+def _prune_locked(directory: Path, entries: list[dict], today: date) -> int:
+    retained = [entry for entry in entries if _within_retention(entry["date"], today)]
+    # Publish metadata before deleting payloads. Readers also enforce retention,
+    # so a delayed or interrupted cleanup cannot expose expired briefs.
+    _write_archive_index(directory, retained)
+    pointer_path = directory / CURRENT_POINTER_NAME
+    if retained:
+        pointer = (
+            json.dumps({"date": retained[0]["date"]}, sort_keys=True) + "\n"
+        ).encode("utf-8")
+        if _load_current_date(directory) != retained[0]["date"]:
+            _atomic_write(pointer_path, pointer)
+    else:
+        pointer_path.unlink(missing_ok=True)
+
+    removed = 0
+    # Scan dated filenames here to remove out-of-window orphan files as well.
+    # Legacy future-dated payloads also fall outside the retention window. Public
+    # reads continue to use the index/pointer without a directory scan.
+    for path in directory.glob("*.json"):
+        try:
+            date_label = _validate_date(path.stem)
+        except BriefValidationError:
+            continue
+        if not _within_retention(date_label, today) and path.is_file():
+            path.unlink(missing_ok=True)
+            removed += 1
+    return removed
 
 
 def _load_current_date(directory: Path) -> str | None:

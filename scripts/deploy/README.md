@@ -30,7 +30,8 @@ On a prepared new host:
 
 [prod_init.sh](prod_init.sh) starts `articles-sync`, waits for its health check,
 runs the application database initializer, then starts the full stack and checks
-web-app/Nginx health plus HTTP smoke paths. Images use the tags resolved from
+web-app/brief-cleanup/Nginx health plus HTTP smoke paths. Images use the tags
+resolved from
 Compose and the environment, defaulting to `latest` for application images.
 
 **Initialization drops and recreates article database tables before importing
@@ -48,9 +49,15 @@ DEPLOY_SHA=<commit_sha>
 ```
 
 [prod_deploy.sh](prod_deploy.sh) selects the `web-app` and `articles-sync` image
-tags, records running third-party image references, explicitly pulls all four
-service images, applies Compose, reloads Nginx, then checks database readiness,
+tags (`daily-brief-cleanup` shares the web-app tag), records running third-party
+image references, explicitly pulls all five service images, applies Compose,
+reloads Nginx, then checks database readiness,
 service health, HTTP smoke paths and third-party image references.
+
+The cleanup service removes expired Daily Brief files immediately on startup
+and daily thereafter. Deploying retention therefore also removes existing briefs
+older than the rolling 14-day window. Data retention and manual cleanup are
+documented in the [web app guide](../../web-app/README.md#daily-briefs).
 
 The script does not check out Git revisions. CD updates the host checkout to
 latest `main` before invoking it with the successful CI run's SHA; host scripts,
@@ -113,9 +120,9 @@ COMPOSE_FILE=compose.yml:compose.dev.yml BASE_URL=https://127.0.0.1:8444 ./scrip
 ```
 
 Setting `BRIEF_INGEST_TEST_TOKEN` enables additional publishing, 128 KiB body-limit
-and WAF-blocking probes. **The publishing probe writes or replaces the brief dated
-`2026-07-25` and does not clean it up.** Use it with disposable test data, as CI
-does; do not treat it as a read-only production check.
+and WAF-blocking probes. **The publishing probe writes or replaces today's brief
+in `Asia/Singapore` and does not clean it up.** Use it with disposable test data,
+as CI does; do not treat it as a read-only production check.
 
 ## Image Cleanup
 

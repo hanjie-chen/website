@@ -27,6 +27,8 @@ CI runs application/runtime checks and the container security gate independently
 The runtime job covers Compose, ShellCheck, Ruff, application and security-helper
 tests, coverage, Nginx configuration, service health and smoke checks. Python
 `pip-audit` is advisory and does not block publication.
+Runtime health checks include the daily brief cleanup service, which shares the
+candidate web-app image and enforces retention independently of uploads.
 
 The container gate normally scans changed pinned third-party image references.
 Policy changes or lack of a usable comparison revision cause a full tracked-image

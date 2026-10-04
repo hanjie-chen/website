@@ -16,6 +16,7 @@ submitted through an authenticated publishing endpoint.
 | [markdown_render_scripts.py](markdown_render_scripts.py), [custom_md_extensions/](custom_md_extensions/) | Markdown rendering, image processing and admonitions |
 | [article_views.py](article_views.py), [navigation.py](navigation.py) | Localized article views, TOC, category tree and breadcrumbs |
 | [daily_briefs.py](daily_briefs.py) | Brief validation, JSON storage, current pointer and archive index |
+| [daily_brief_cleanup.py](daily_brief_cleanup.py) | One-off cleanup and daily retention worker |
 | [i18n.py](i18n.py) | Supported languages, UI translations and language-aware URLs |
 | [templates/](templates/), [static/](static/) | Jinja pages, styles and browser scripts |
 | [scripts/](scripts/), [tests/](tests/) | Maintenance helpers and automated checks |
@@ -134,10 +135,36 @@ one `YYYY-MM-DD.json` payload per date, `current.json` for the latest date and
 each file is replaced atomically, but the files are not one database transaction.
 
 Same-date publishing replaces that date's content; older backfills join the
-archive without moving the current pointer backward. Published dates have no
-retention limit. Reads use the pointer/index or an exact date file, with no
-fallback directory scan. Preserve the entire brief data directory when backing
-up or moving the service.
+archive without moving the current pointer backward. Retention is a rolling
+14-calendar-day window in `Asia/Singapore`: today and the previous 13 days,
+based on the payload's `date`, not its upload time or `generated_at`. Publishing
+dates outside this window (including future dates) returns HTTP 400. Republishing
+does not extend a date's retention.
+
+Pages, homepage links and public APIs enforce this window on every read, even
+if no new brief is uploaded or physical cleanup is delayed. Reads use the
+pointer/index or an exact date file, with no fallback directory scan. Expired
+detail URLs return HTTP 404; an expired current brief produces the empty state.
+
+Successful publishing also cleans expired files and refreshes the archive index
+and current pointer under the same file lock. The `daily-brief-cleanup` Compose
+service reuses the web-app image and brief volume: it cleans immediately on
+startup (including existing historical data), then within a minute after each
+Singapore date changes. It scans canonical dated filenames to also remove
+expired orphan files and legacy future-dated files, and removes `current.json`
+when the archive becomes empty.
+Unrelated files are left alone. Failed cleanup exits the worker for Docker to
+restart; its health check requires a successful cleanup in the last 26 hours.
+Corrupt archive metadata causes cleanup to fail rather than discard metadata.
+
+For a one-off cleanup using the deployed application image:
+
+```bash
+docker compose run --rm --no-deps -T daily-brief-cleanup python -m daily_brief_cleanup
+```
+
+Cleanup deletes expired JSON payloads permanently from the active volume. Backups
+and the external generator's own storage are outside this retention policy.
 
 ### Publishing API
 
@@ -158,7 +185,7 @@ rejected. Exact fields, limits and allowed values are defined in
 | Server token unset or empty | 404 |
 | Missing or incorrect request token | 403 |
 | Non-JSON content type | 415 |
-| Invalid JSON or schema | 400 with an `error` field |
+| Invalid JSON/schema, expired date or future date | 400 with an `error` field |
 | Body exceeds the configured limit | 413 |
 | New date | 201 with `{"status":"created","date":"YYYY-MM-DD"}` |
 | Existing date | 200 with `status` of `updated` or `unchanged`, plus `date` |
