@@ -5,7 +5,7 @@ pymdown-extensions
 python-frontmatter
 sqlalchemy
 jinja2 >= 3.1.6
-werkzeug>=3.1.6
+werkzeug>=3.1.9
 pygments
 # used to html paser
 beautifulsoup4
