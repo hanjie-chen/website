@@ -1,65 +1,86 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Cleanup runs on the production VM after a successful deploy.
-# Goal: keep the current release, keep latest, optionally keep a small rollback
-# buffer, and delete older first-party images so disk usage does not grow forever.
+# Run only after deployment validation succeeds. Keep container-referenced images;
+# no historical release or latest-tag cache is retained.
 CURRENT_DEPLOY_SHA="${1:-}"
-# Keep one previous SHA by default so we still have a fast rollback target on-host.
-# Set KEEP_PREVIOUS_RELEASES=0 if you prefer maximum disk savings over rollback cache.
-KEEP_PREVIOUS_RELEASES="${KEEP_PREVIOUS_RELEASES:-1}"
-
 if [[ -z "${CURRENT_DEPLOY_SHA}" ]]; then
   echo "Usage: $0 <deploy_sha>" >&2
-  exit 2
-fi
-
-if ! [[ "${KEEP_PREVIOUS_RELEASES}" =~ ^[0-9]+$ ]]; then
-  echo "KEEP_PREVIOUS_RELEASES must be a non-negative integer" >&2
   exit 2
 fi
 
 IMAGE_REPOS=(
   "ghcr.io/hanjie-chen/website-web-app"
   "ghcr.io/hanjie-chen/website-articles-sync"
+  "amir20/dozzle"
+  "owasp/modsecurity-crs"
 )
-
+declare -A managed_repos=() protected_images=() protected_digests=()
 for repo in "${IMAGE_REPOS[@]}"; do
-  echo "[cleanup] Inspecting ${repo}..."
-
-  # docker image ls returns newest-first for a repository. We use that order to
-  # preserve the current deploy plus a small number of recent historical tags.
-  mapfile -t ordered_tags < <(
-    docker image ls "${repo}" --format '{{.Tag}}' \
-      | awk '!seen[$0]++'
-  )
-
-  if [[ "${#ordered_tags[@]}" -eq 0 ]]; then
-    echo "[cleanup] No local tags found for ${repo}, skipping."
-    continue
-  fi
-
-  # latest and the active deploy tag should never be removed by this script.
-  keep_tags=("latest" "${CURRENT_DEPLOY_SHA}")
-  previous_kept=0
-
-  # Keep a limited number of older SHA tags as rollback cache, then delete the rest.
-  for tag in "${ordered_tags[@]}"; do
-    if [[ "${tag}" == "<none>" || "${tag}" == "latest" || "${tag}" == "${CURRENT_DEPLOY_SHA}" ]]; then
-      continue
-    fi
-
-    if (( previous_kept < KEEP_PREVIOUS_RELEASES )); then
-      keep_tags+=("${tag}")
-      ((previous_kept += 1))
-      continue
-    fi
-
-    echo "[cleanup] Removing ${repo}:${tag}"
-    docker image rm "${repo}:${tag}" >/dev/null || {
-      echo "[cleanup] Warning: failed to remove ${repo}:${tag}" >&2
-    }
-  done
-
-  echo "[cleanup] Keeping tags for ${repo}: ${keep_tags[*]}"
+  managed_repos["${repo}"]=1
 done
+
+# Include stopped containers, and fail before any removal if inspection fails.
+# Command substitutions preserve Docker failures that process substitutions hide.
+container_ids="$(docker container ls --all --quiet)"
+if [[ -z "${container_ids}" ]]; then
+  echo "[cleanup] No containers found; refusing cleanup without an active deployment." >&2
+  exit 1
+fi
+mapfile -t containers <<< "${container_ids}"
+container_images="$(docker container inspect --format '{{.Image}} {{.Config.Image}}' "${containers[@]}")"
+while read -r image_id image_ref; do
+  protected_images["${image_id}"]=1
+  if [[ "${image_ref}" == *@* ]]; then
+    # A pinned tag@digest is immutable; a plain tag may have moved since creation.
+    repo="${image_ref%@*}"
+    if [[ "${repo##*/}" == *:* ]]; then
+      repo="${repo%:*}"
+    fi
+    protected_digests["${repo}@${image_ref##*@}"]=1
+  fi
+done <<< "${container_images}"
+
+cleanup_status=0
+for phase in tags digests; do
+  # Rescan after tag removals: deleting the last tag can also delete its digests.
+  images="$(docker image ls --digests --no-trunc --format '{{.Repository}} {{.Tag}} {{.Digest}} {{.ID}}')"
+
+  # Containerd may list an index ID instead of the container's image ID. Match
+  # immutable digest references too, protecting every alias of that listed image.
+  while read -r repo tag digest image_id; do
+    [[ -n "${repo}" ]] || continue
+    if [[ -n "${protected_digests["${repo}@${digest}"]:-}" ]]; then
+      protected_images["${image_id}"]=1
+    fi
+  done <<< "${images}"
+
+  declare -A processed_refs=()
+  while read -r repo tag digest image_id; do
+    [[ -n "${repo}" ]] || continue
+    [[ -n "${managed_repos["${repo}"]:-}" ]] || continue
+    if [[ -n "${protected_images["${image_id}"]:-}" ]]; then
+      continue
+    fi
+
+    if [[ "${phase}" == tags && "${tag}" != '<none>' ]]; then
+      image_ref="${repo}:${tag}"
+    elif [[ "${phase}" == digests && "${tag}" == '<none>' && "${digest}" != '<none>' ]]; then
+      image_ref="${repo}@${digest}"
+    else
+      continue
+    fi
+    [[ -z "${processed_refs["${image_ref}"]:-}" ]] || continue
+    processed_refs["${image_ref}"]=1
+
+    echo "[cleanup] Removing ${image_ref}"
+    # Never force removal or prune anonymous parents outside the managed repos.
+    if ! docker image rm --no-prune "${image_ref}"; then
+      echo "[cleanup] Warning: failed to remove ${image_ref}" >&2
+      cleanup_status=1
+    fi
+  done <<< "${images}"
+done
+
+echo "[cleanup] Finished for deployment ${CURRENT_DEPLOY_SHA}; container-referenced images retained."
+exit "${cleanup_status}"

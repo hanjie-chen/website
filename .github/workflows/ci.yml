@@ -147,6 +147,9 @@ jobs:
       - name: Run shellcheck
         run: shellcheck -x scripts/deploy/*.sh articles-sync/*.sh
 
+      - name: Test deployment image cleanup
+        run: python3 -m unittest discover -s scripts/deploy/tests -p 'test_*.py' -v
+
       # 跑 web-app tests.
       - name: Build web-app (test)
         run: docker compose -f compose.yml -f compose.dev.yml build web-app

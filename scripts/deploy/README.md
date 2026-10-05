@@ -132,15 +132,25 @@ as CI does; do not treat it as a read-only production check.
 
 ## Image Cleanup
 
-[cleanup_old_images.sh](cleanup_old_images.sh) handles only the hardcoded
-`website-web-app` and `website-articles-sync` GHCR repositories. Supply the actual
-active release SHA. It keeps that tag, `latest` and one additional recent tag per
-repository by default. `KEEP_PREVIOUS_RELEASES` changes the additional tag count.
+[cleanup_old_images.sh](cleanup_old_images.sh) manages four repositories:
+`ghcr.io/hanjie-chen/website-web-app`,
+`ghcr.io/hanjie-chen/website-articles-sync`, `amir20/dozzle` and
+`owasp/modsecurity-crs`. Supply the actual active release SHA for deployment log
+context. Retention follows actual container image IDs and immutable digest
+references, including stopped containers; neither historical releases nor an
+unused `latest` image are retained. Multiple tags pointing to a retained image
+remain, since they do not occupy additional image storage.
 
-Cleanup does not prune volumes, build cache, dangling images or third-party
-images. Failed removals produce warnings and do not fail the script, so a
-successful exit does not guarantee that disk space was reclaimed. Retained tags
-are a local image cache, not a complete application rollback mechanism.
+Run cleanup only after deployment validation succeeds. Failed deployment rollback
+can therefore still use the previous third-party images; after successful cleanup,
+manual rollback requires pulling the old image again from its registry.
+
+Cleanup removes unused tags first, then rescans for unused digest-only references.
+It does not force removals or prune volumes, build cache, other repositories or
+fully anonymous `<none>:<none>` images whose repository cannot be identified.
+Container inspection failure or an empty container list aborts cleanup. Failed
+removals produce warnings and a nonzero exit status so CD reports incomplete
+cleanup. `KEEP_PREVIOUS_RELEASES` is no longer used.
 
 ## Configuration Reference
 
@@ -153,8 +163,10 @@ are a local image cache, not a complete application rollback mechanism.
 | `BASE_URL`, `HOST_HEADER` | Smoke target: `https://127.0.0.1`, `hanjie-chen.com` |
 | `SMOKE_TIMEOUT_SECONDS`, `SMOKE_INTERVAL_SECONDS` | Basic smoke-path retries: 60 / 2 seconds per path |
 | `BRIEF_INGEST_TEST_TOKEN` | Unset; enables probes that include a persistent test write |
-| `KEEP_PREVIOUS_RELEASES` | `1`; additional local application image tags to retain |
 
 Database-specific wait settings are defined at the top of `ensure_db_ready.sh`.
 When editing scripts, run the repository's ShellCheck command and validate the
 relevant deployment behavior; see the root [AGENTS.md](../../AGENTS.md).
+Run the isolated image cleanup tests with
+`python3 -m unittest discover -s scripts/deploy/tests -p 'test_*.py' -v`.
+These tests replace the Docker CLI with a fixture and do not touch host images.
