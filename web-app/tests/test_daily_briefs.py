@@ -756,6 +756,13 @@ def test_reads_expire_without_upload_or_cleanup(client, brief_clock):
     # Reads hide the expired file even before physical cleanup runs.
     assert (Path(root) / "2026-07-14.json").exists()
 
+    # Publishing after a long pause clears old files without a background worker.
+    brief_clock[0] = date(2026, 9, 1)
+    store_brief(root, brief_payload("2026-09-01"))
+    assert not (Path(root) / "2026-07-14.json").exists()
+    assert client.get("/api/briefs/latest").get_json()["date"] == "2026-09-01"
+    assert [entry["date"] for entry in load_brief_archive(root)] == ["2026-09-01"]
+
 
 def test_publish_cleans_expired_files_and_index(tmp_path, brief_clock):
     brief_clock[0] = date(2026, 7, 25)

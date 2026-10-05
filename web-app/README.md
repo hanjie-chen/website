@@ -16,7 +16,7 @@ submitted through an authenticated publishing endpoint.
 | [markdown_render_scripts.py](markdown_render_scripts.py), [custom_md_extensions/](custom_md_extensions/) | Markdown rendering, image processing and admonitions |
 | [article_views.py](article_views.py), [navigation.py](navigation.py) | Localized article views, TOC, category tree and breadcrumbs |
 | [daily_briefs.py](daily_briefs.py) | Brief validation, JSON storage, current pointer and archive index |
-| [daily_brief_cleanup.py](daily_brief_cleanup.py) | One-off cleanup and daily retention worker |
+| [daily_brief_cleanup.py](daily_brief_cleanup.py) | Optional one-off retention cleanup |
 | [i18n.py](i18n.py) | Supported languages, UI translations and language-aware URLs |
 | [templates/](templates/), [static/](static/) | Jinja pages, styles and browser scripts |
 | [scripts/](scripts/), [tests/](tests/) | Maintenance helpers and automated checks |
@@ -147,20 +147,19 @@ pointer/index or an exact date file, with no fallback directory scan. Expired
 detail URLs return HTTP 404; an expired current brief produces the empty state.
 
 Successful publishing also cleans expired files and refreshes the archive index
-and current pointer under the same file lock. The `daily-brief-cleanup` Compose
-service reuses the web-app image and brief volume: it cleans immediately on
-startup (including existing historical data), then within a minute after each
-Singapore date changes. It scans canonical dated filenames to also remove
-expired orphan files and legacy future-dated files, and removes `current.json`
-when the archive becomes empty.
-Unrelated files are left alone. Failed cleanup exits the worker for Docker to
-restart; its health check requires a successful cleanup in the last 26 hours.
-Corrupt archive metadata causes cleanup to fail rather than discard metadata.
+and current pointer under the same file lock. Cleanup scans canonical dated
+filenames to also remove expired orphan files and legacy future-dated files;
+unrelated files are left alone. Corrupt archive metadata causes cleanup to fail
+rather than discard metadata.
 
-For a one-off cleanup using the deployed application image:
+There is no scheduled cleanup service. When publishing pauses, expired files may
+remain on disk but are never served; the next successful publish removes them.
+Without new uploads, the stored brief count does not grow.
+
+For an optional one-off cleanup using the deployed application image:
 
 ```bash
-docker compose run --rm --no-deps -T daily-brief-cleanup python -m daily_brief_cleanup
+docker compose run --rm --no-deps -T web-app python -m daily_brief_cleanup
 ```
 
 Cleanup deletes expired JSON payloads permanently from the active volume. Backups

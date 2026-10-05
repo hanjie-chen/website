@@ -67,23 +67,6 @@ services:
       start_period: 30s
     restart: unless-stopped
     logging: *default-logging
-  # Daily Brief retention, independent of publishing and web traffic.
-  daily-brief-cleanup:
-    container_name: daily-brief-cleanup
-    image: ghcr.io/hanjie-chen/website-web-app:${WEB_APP_IMAGE_TAG:-latest}
-    command: ["python", "-m", "daily_brief_cleanup", "--watch"]
-    volumes:
-      - daily_brief_data:/daily-briefs/data
-    environment:
-      - DAILY_BRIEF_DATA_DIRECTORY=/daily-briefs/data
-    healthcheck:
-      test: ["CMD", "python", "-m", "daily_brief_cleanup", "--healthcheck"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
-    logging: *default-logging
   # reserve proxy
   nginx-modsecurity:
     # Production third-party images use a human-readable stable tag plus an

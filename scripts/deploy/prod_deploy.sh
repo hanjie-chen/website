@@ -73,7 +73,7 @@ fail_after_apply() {
 
 # Pull every production image explicitly. First-party services resolve to the
 # deploy SHA; third-party services resolve to immutable digests from compose.yml.
-if ! docker compose pull --policy always web-app daily-brief-cleanup articles-sync nginx-modsecurity dozzle; then
+if ! docker compose pull --policy always web-app articles-sync nginx-modsecurity dozzle; then
   echo "[deploy] Image pull failed before applying Compose changes." >&2
   exit 1
 fi
@@ -97,7 +97,7 @@ if ! ./scripts/deploy/ensure_db_ready.sh "${DEPLOY_SHA}"; then
   fail_after_apply "Database readiness check failed."
 fi
 
-if ! ./scripts/deploy/wait_services_healthy.sh web-app daily-brief-cleanup nginx-modsecurity dozzle; then
+if ! ./scripts/deploy/wait_services_healthy.sh web-app nginx-modsecurity dozzle; then
   fail_after_apply "Service health validation failed."
 fi
 

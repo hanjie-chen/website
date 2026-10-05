@@ -20,13 +20,6 @@ services:
       - SQLALCHEMY_DATABASE_URI=sqlite:///project_test.db
     command: ["flask", "run", "--host=0.0.0.0", "--debug"]
 
-  daily-brief-cleanup:
-    build:
-      context: ./web-app
-      dockerfile: Dockerfile
-    volumes:
-      - ./web-app:/app
-
   nginx-modsecurity:
     ports: !override
       - "8081:80"
