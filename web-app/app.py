@@ -1,5 +1,6 @@
 import hmac
 import os
+from datetime import datetime
 from urllib.parse import quote, urlsplit, urlunsplit
 
 from flask import (
@@ -28,6 +29,7 @@ from config import (
     Rendered_Articles,
 )
 from daily_briefs import (
+    BRIEF_TIMEZONE,
     BriefValidationError,
     load_brief,
     load_brief_archive,
@@ -38,6 +40,7 @@ from i18n import (
     DEFAULT_LANGUAGE,
     LANG_COOKIE_NAME,
     alternate_language,
+    format_day,
     get_language_from_path,
     html_lang_code,
     resolve_preferred_language,
@@ -141,6 +144,26 @@ def _adjacent_brief_dates(date_label: str) -> tuple[str | None, str | None]:
     older = max((date for date in dates if date < date_label), default=None)
     newer = min((date for date in dates if date > date_label), default=None)
     return older, newer
+
+
+def _console_now() -> datetime:
+    # Share the brief's day boundary so "today" means the same date on both.
+    return datetime.now(BRIEF_TIMEZONE)
+
+
+def _console_greeting(now: datetime, lang: str) -> dict:
+    """Return the homepage's opening line: a time-of-day greeting and the date."""
+    if 5 <= now.hour < 12:
+        period = "morning"
+    elif 12 <= now.hour < 18:
+        period = "afternoon"
+    else:
+        period = "evening"
+    return {
+        "text": translate(lang, f"home.greeting.{period}"),
+        "date": now.date().isoformat(),
+        "date_label": format_day(now.date(), lang),
+    }
 
 
 def _brief_preview(brief: dict | None) -> dict | None:
@@ -295,6 +318,7 @@ def index(lang):
     return render_template(
         "index.html",
         current_lang=current_lang,
+        greeting=_console_greeting(_console_now(), current_lang),
         brief_preview=_brief_preview(load_current_brief(Daily_Briefs_Directory)),
     )
 

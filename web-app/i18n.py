@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 SUPPORTED_LANGUAGES = ("zh", "en")
 DEFAULT_LANGUAGE = "zh"
 LANG_COOKIE_NAME = "preferred_language"
@@ -17,6 +19,9 @@ TRANSLATIONS = {
         "nav.briefs": "Brief",
         "nav.about": "About",
         "nav.menu": "Menu",
+        "home.greeting.morning": "早上好，hanjie",
+        "home.greeting.afternoon": "下午好，hanjie",
+        "home.greeting.evening": "晚上好，hanjie",
         "home.brief.all": "查看全部 {count} 条 →",
         "home.brief.archive": "查看简报归档 →",
         "docs.sidebar.browse": "浏览",
@@ -167,6 +172,9 @@ TRANSLATIONS = {
         "nav.briefs": "Brief",
         "nav.about": "About",
         "nav.menu": "Menu",
+        "home.greeting.morning": "Good morning, hanjie",
+        "home.greeting.afternoon": "Good afternoon, hanjie",
+        "home.greeting.evening": "Good evening, hanjie",
         "home.brief.all": "See all {count} →",
         "home.brief.archive": "Open the archive →",
         "docs.sidebar.browse": "Browse",
@@ -418,3 +426,28 @@ def translate(lang: str | None, key: str, fallback: str | None = None) -> str:
     return TRANSLATIONS.get(normalized, {}).get(
         key, fallback if fallback is not None else key
     )
+
+
+ZH_WEEKDAYS = "一二三四五六日"
+EN_WEEKDAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+EN_MONTHS = (
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+)
+
+
+def format_day(day: date, lang: str | None) -> str:
+    """Return a short calendar label such as "10月6日 星期一" or "Mon, Oct 6"."""
+    if normalize_language(lang) == "en":
+        return f"{EN_WEEKDAYS[day.weekday()]}, {EN_MONTHS[day.month - 1]} {day.day}"
+    return f"{day.month}月{day.day}日 星期{ZH_WEEKDAYS[day.weekday()]}"

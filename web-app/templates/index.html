@@ -15,7 +15,9 @@
 {% block main_content%}
 <div class="main-content">
     <div class="content-wrapper home-page-shell">
-        <h1 class="visually-hidden">hanjie site</h1>
+        <h1 class="home-greeting">
+            {{ greeting.text }} · <time datetime="{{ greeting.date }}">{{ greeting.date_label }}</time>
+        </h1>
 
         <section class="home-section" aria-labelledby="home-brief-heading">
             <header class="home-section-heading">

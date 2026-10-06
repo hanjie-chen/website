@@ -246,6 +246,15 @@ body {
     padding-top: 1.15rem;
 }
 
+.home-greeting {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.home-greeting time {
+    color: var(--text-secondary-color);
+}
+
 .home-section {
     padding: 1.65rem 1.8rem;
     background: linear-gradient(

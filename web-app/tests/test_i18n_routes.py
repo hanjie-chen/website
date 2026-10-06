@@ -1,8 +1,11 @@
+from datetime import datetime
 from html import unescape
 
 import pytest
 from bs4 import BeautifulSoup
 
+import app as app_module
+from daily_briefs import BRIEF_TIMEZONE
 from i18n import get_language_from_header
 
 
@@ -67,7 +70,7 @@ def test_homepage_is_a_console_without_landing_page_sections(client, path):
     soup = BeautifulSoup(html, "html.parser")
 
     assert response.status_code == 200
-    assert soup.select_one("h1").get_text(strip=True) == "hanjie site"
+    assert soup.select_one("h1.home-greeting") is not None
     assert [heading.get_text(strip=True) for heading in soup.select("h2")] == [
         "每日简报" if path == "/zh/" else "Daily Brief"
     ]
@@ -294,3 +297,45 @@ def test_localized_404_page_uses_chinese_copy(client):
     assert response.status_code == 404
     assert "页面不存在" in html
     assert "你访问的地址不存在" in html
+
+
+@pytest.mark.parametrize(
+    ("hour", "minute", "zh_greeting", "en_greeting"),
+    [
+        (4, 59, "晚上好，hanjie", "Good evening, hanjie"),
+        (5, 0, "早上好，hanjie", "Good morning, hanjie"),
+        (11, 59, "早上好，hanjie", "Good morning, hanjie"),
+        (12, 0, "下午好，hanjie", "Good afternoon, hanjie"),
+        (17, 59, "下午好，hanjie", "Good afternoon, hanjie"),
+        (18, 0, "晚上好，hanjie", "Good evening, hanjie"),
+    ],
+)
+def test_console_greeting_follows_time_of_day(hour, minute, zh_greeting, en_greeting):
+    now = datetime(2026, 10, 5, hour, minute, tzinfo=BRIEF_TIMEZONE)
+
+    assert app_module._console_greeting(now, "zh")["text"] == zh_greeting
+    assert app_module._console_greeting(now, "en")["text"] == en_greeting
+
+
+@pytest.mark.parametrize(
+    ("path", "expected"),
+    [
+        ("/zh/", "下午好，hanjie · 10月5日 星期一"),
+        ("/en/", "Good afternoon, hanjie · Mon, Oct 5"),
+    ],
+)
+def test_homepage_opens_with_greeting_and_date(client, monkeypatch, path, expected):
+    monkeypatch.setattr(
+        app_module,
+        "_console_now",
+        lambda: datetime(2026, 10, 5, 14, 30, tzinfo=BRIEF_TIMEZONE),
+    )
+    soup = BeautifulSoup(client.get(path).get_data(as_text=True), "html.parser")
+    greeting = soup.select_one("h1.home-greeting")
+
+    assert " ".join(greeting.get_text().split()) == expected
+    assert greeting.select_one("time")["datetime"] == "2026-10-05"
+
+
+def test_console_time_uses_the_brief_day_boundary():
+    assert app_module._console_now().tzinfo == BRIEF_TIMEZONE
