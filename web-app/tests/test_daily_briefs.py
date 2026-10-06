@@ -678,12 +678,43 @@ def test_homepage_shows_latest_brief_and_language_scoped_links(client, app):
 
     assert 'href="/zh/briefs/2026-07-25"' in chinese
     assert 'href="/en/briefs/2026-07-25"' in english
-    assert (
-        '<time class="home-section-meta" datetime="2026-07-25">2026-07-25</time>'
-        in chinese
-    )
     assert "查看全部 1 条 →" in chinese
     assert "See all 1 →" in english
+
+
+@pytest.mark.parametrize(
+    ("console_day", "path", "expected_label"),
+    [
+        (date(2026, 7, 25), "/zh/", None),
+        (date(2026, 7, 26), "/zh/", "7月25日"),
+        (date(2026, 7, 26), "/en/", "Jul 25"),
+    ],
+)
+def test_homepage_labels_brief_date_only_when_it_is_not_today(
+    client, app, monkeypatch, console_day, path, expected_label
+):
+    monkeypatch.setattr(
+        app_module,
+        "_console_now",
+        lambda: datetime(
+            console_day.year,
+            console_day.month,
+            console_day.day,
+            9,
+            tzinfo=daily_briefs.BRIEF_TIMEZONE,
+        ),
+    )
+    with app.app_context():
+        store_brief(app_module.Daily_Briefs_Directory, brief_payload())
+
+    soup = BeautifulSoup(client.get(path).get_data(as_text=True), "html.parser")
+    label = soup.select_one(".home-section-heading time")
+
+    if expected_label is None:
+        assert label is None
+    else:
+        assert label.get_text() == expected_label
+        assert label["datetime"] == "2026-07-25"
 
 
 def test_homepage_previews_first_two_items_in_display_order(client, app):

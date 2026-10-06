@@ -446,8 +446,10 @@ EN_MONTHS = (
 )
 
 
-def format_day(day: date, lang: str | None) -> str:
-    """Return a short calendar label such as "10月6日 星期一" or "Mon, Oct 6"."""
+def format_day(day: date, lang: str | None, *, weekday: bool = True) -> str:
+    """Return a short calendar label such as "10月6日 星期二" or "Tue, Oct 6"."""
     if normalize_language(lang) == "en":
-        return f"{EN_WEEKDAYS[day.weekday()]}, {EN_MONTHS[day.month - 1]} {day.day}"
-    return f"{day.month}月{day.day}日 星期{ZH_WEEKDAYS[day.weekday()]}"
+        label = f"{EN_MONTHS[day.month - 1]} {day.day}"
+        return f"{EN_WEEKDAYS[day.weekday()]}, {label}" if weekday else label
+    label = f"{day.month}月{day.day}日"
+    return f"{label} 星期{ZH_WEEKDAYS[day.weekday()]}" if weekday else label

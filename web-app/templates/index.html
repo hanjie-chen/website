@@ -22,8 +22,8 @@
         <section class="home-section" aria-labelledby="home-brief-heading">
             <header class="home-section-heading">
                 <h2 id="home-brief-heading">{{ t("briefs.page.heading") }}</h2>
-                {% if brief_preview %}
-                <time class="home-section-meta" datetime="{{ brief_preview.date }}">{{ brief_preview.date }}</time>
+                {% if brief_preview and brief_preview.date_label %}
+                <time class="home-section-meta" datetime="{{ brief_preview.date }}">{{ brief_preview.date_label }}</time>
                 {% endif %}
             </header>
             {% if brief_preview %}

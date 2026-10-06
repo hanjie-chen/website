@@ -1,6 +1,6 @@
 import hmac
 import os
-from datetime import datetime
+from datetime import date, datetime
 from urllib.parse import quote, urlsplit, urlunsplit
 
 from flask import (
@@ -166,8 +166,12 @@ def _console_greeting(now: datetime, lang: str) -> dict:
     }
 
 
-def _brief_preview(brief: dict | None) -> dict | None:
-    """Return the homepage glimpse of a brief: its first items in display order."""
+def _brief_preview(brief: dict | None, today: date, lang: str) -> dict | None:
+    """Return the homepage glimpse of a brief: its first items in display order.
+
+    The greeting already shows today's date, so the brief only labels its own
+    date when it is not today's, which also flags that today's has not landed.
+    """
     if brief is None:
         return None
     items = [
@@ -179,6 +183,11 @@ def _brief_preview(brief: dict | None) -> dict | None:
         return None
     return {
         "date": brief["date"],
+        "date_label": (
+            None
+            if brief["date"] == today.isoformat()
+            else format_day(date.fromisoformat(brief["date"]), lang, weekday=False)
+        ),
         "items": items[:HOME_BRIEF_PREVIEW_ITEMS],
         "total": len(items),
     }
@@ -315,11 +324,14 @@ def index_without_trailing_slash(lang):
 @app.route("/<lang>/")
 def index(lang):
     current_lang = _require_supported_language(lang)
+    now = _console_now()
     return render_template(
         "index.html",
         current_lang=current_lang,
-        greeting=_console_greeting(_console_now(), current_lang),
-        brief_preview=_brief_preview(load_current_brief(Daily_Briefs_Directory)),
+        greeting=_console_greeting(now, current_lang),
+        brief_preview=_brief_preview(
+            load_current_brief(Daily_Briefs_Directory), now.date(), current_lang
+        ),
     )
 
 
