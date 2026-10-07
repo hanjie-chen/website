@@ -1,4 +1,6 @@
-{% set nav_items = [('home', 'index'), ('articles', 'article_index'), ('briefs', 'brief_index'), ('about', 'about_me')] %}
+{# The brand links home, so the menu lists only the other sections. #}
+{% set nav_items = [('articles', 'article_index'), ('briefs', 'brief_index'), ('about', 'about_me')] %}
+{% set nav_pages = nav_items | map('first') | list %}
 {% macro nav_links() %}
     {% for page, endpoint in nav_items %}
     <li class="site-nav-item">
@@ -25,7 +27,7 @@
         <div class="site-nav-mobile" data-site-nav-menu>
             <button class="site-nav-toggle" type="button" id="site-nav-toggle"
                 aria-expanded="false" aria-controls="site-nav-dropdown">
-                {{ t("nav." ~ active_page) }}
+                {{ t("nav." ~ active_page) if active_page in nav_pages else t("nav.menu") }}
             </button>
             <div class="site-nav-dropdown" id="site-nav-dropdown" aria-labelledby="site-nav-toggle" hidden>
                 <ul class="site-nav-list">

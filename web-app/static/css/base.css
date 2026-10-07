@@ -223,7 +223,7 @@ summary {
     display: none !important;
 }
 
-/* Page shell: header, a growing content area, then the footer. */
+/* Page shell: header, then a growing content area. */
 .site-main {
     display: flex;
     flex-direction: column;

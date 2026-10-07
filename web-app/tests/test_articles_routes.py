@@ -83,7 +83,6 @@ def test_articles_index_uses_shared_english_topbar_and_marks_articles_active(cli
         navigation = soup.select_one(selector)
         links = navigation.select("a.site-nav-link")
         assert [(link["href"], link.get_text(strip=True)) for link in links] == [
-            ("/zh/", "Home"),
             ("/zh/articles", "Articles"),
             ("/zh/briefs", "Brief"),
             ("/zh/about", "About"),

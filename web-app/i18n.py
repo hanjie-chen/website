@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 SUPPORTED_LANGUAGES = ("zh", "en")
 DEFAULT_LANGUAGE = "zh"
 LANG_COOKIE_NAME = "preferred_language"
@@ -13,40 +15,15 @@ TRANSLATIONS = {
         "language.short.en": "EN",
         "language.zh": "中文",
         "language.en": "English",
-        "nav.home": "Home",
         "nav.articles": "Articles",
         "nav.briefs": "Brief",
         "nav.about": "About",
-        "footer.copy": "hanjie site",
-        "home.hero.overline": "PERSONAL SITE / KNOWLEDGE BASE",
-        "home.hero.title": "Build, Learn, Document.",
-        "home.hero.lead": "这里记录我的工程实践、技术笔记，以及正在持续推进的项目。",
-        "home.hero.support": "我主要关注 Cloud、DevOps、Full-stack、Python 和 AI-assisted workflow。",
-        "home.hero.primary_cta": "Read Articles",
-        "home.hero.secondary_cta": "About",
-        "home.start.overline": "",
-        "home.start.title": "What you'll find here",
-        "home.start.articles_title": "Articles",
-        "home.start.articles_desc": "技术笔记、部署记录、实践文章，以及围绕 Cloud / DevOps / Full-stack 的持续整理。",
-        "home.start.about_title": "About",
-        "home.start.about_desc": "更完整的个人介绍、当前关注、工作方式，以及与求职相关的信息。",
-        "home.start.briefs_title": "Daily Brief",
-        "home.start.briefs_latest": "最新一期：",
-        "home.start.briefs_cta": "阅读今日简报 →",
-        "home.start.briefs_empty": "每日筛选的计算与软件内容，以及少量圈外探索即将发布。",
-        "home.start.briefs_open": "查看简报入口 →",
-        "home.focus.overline": "当前关注",
-        "home.focus.title": "Current Focus",
-        "home.focus.cloud_title": "Cloud / DevOps",
-        "home.focus.cloud_desc": "围绕 Terraform、GCP、Cloudflare 和 deployment workflow 持续实践。",
-        "home.focus.fullstack_title": "Full-stack / Python",
-        "home.focus.fullstack_desc": "围绕 Flask、后端服务和容器化应用持续构建。",
-        "home.focus.ai_title": "AI-assisted workflow",
-        "home.focus.ai_desc": "使用 LLM 和 agent 工具辅助调试、重构与文档整理。",
-        "home.note.overline": "",
-        "home.note.title": "Why This Site Exists",
-        "home.note.p1": "这个网站既是我的技术知识库，也是我整理项目、验证理解和持续输出的地方。",
-        "home.note.p2": "我希望它是一份长期可维护、可复用、可迭代的工程记录，而不只是零散文章的集合。",
+        "nav.menu": "Menu",
+        "home.greeting.morning": "早上好，hanjie",
+        "home.greeting.afternoon": "下午好，hanjie",
+        "home.greeting.evening": "晚上好，hanjie",
+        "home.brief.all": "查看全部 {count} 条 →",
+        "home.brief.archive": "查看简报归档 →",
         "docs.sidebar.browse": "浏览",
         "docs.overline.documentation": "",
         "docs.overline.section": "章节",
@@ -191,40 +168,15 @@ TRANSLATIONS = {
         "language.short.en": "EN",
         "language.zh": "中文",
         "language.en": "English",
-        "nav.home": "Home",
         "nav.articles": "Articles",
         "nav.briefs": "Brief",
         "nav.about": "About",
-        "footer.copy": "hanjie site",
-        "home.hero.overline": "PERSONAL SITE / KNOWLEDGE BASE",
-        "home.hero.title": "Build, Learn, Document.",
-        "home.hero.lead": "This site is where I document engineering practice, technical notes, and projects that are still actively being built.",
-        "home.hero.support": "Most of the content revolves around cloud, DevOps, full-stack work, Python, and AI-assisted workflow.",
-        "home.hero.primary_cta": "Read Articles",
-        "home.hero.secondary_cta": "About",
-        "home.start.overline": "",
-        "home.start.title": "What you'll find here",
-        "home.start.articles_title": "Articles",
-        "home.start.articles_desc": "Technical notes, deployment records, hands-on articles, and an ongoing body of work around Cloud / DevOps / Full-stack.",
-        "home.start.about_title": "About",
-        "home.start.about_desc": "A fuller personal profile, current focus areas, how I work, and job-search related context.",
-        "home.start.briefs_title": "Daily Brief",
-        "home.start.briefs_latest": "Latest edition:",
-        "home.start.briefs_cta": "Read today's brief →",
-        "home.start.briefs_empty": "A daily selection of computing and software stories, plus a few beyond-the-bubble discoveries, will appear here.",
-        "home.start.briefs_open": "Open Daily Brief →",
-        "home.focus.overline": "CURRENT FOCUS",
-        "home.focus.title": "Current Focus",
-        "home.focus.cloud_title": "Cloud / DevOps",
-        "home.focus.cloud_desc": "Terraform, GCP, Cloudflare, and deployment workflows.",
-        "home.focus.fullstack_title": "Full-stack / Python",
-        "home.focus.fullstack_desc": "Flask, backend services, and containerized applications.",
-        "home.focus.ai_title": "AI-assisted workflow",
-        "home.focus.ai_desc": "Using LLM and agent tools to support debugging, refactoring, and documentation.",
-        "home.note.overline": "",
-        "home.note.title": "Why This Site Exists",
-        "home.note.p1": "This site is both my technical knowledge base and a place where I organize projects, validate understanding, and keep shipping written output.",
-        "home.note.p2": "I want it to be a long-lived engineering record that is maintainable, reusable, and iterative, not just a pile of disconnected articles.",
+        "nav.menu": "Menu",
+        "home.greeting.morning": "Good morning, hanjie",
+        "home.greeting.afternoon": "Good afternoon, hanjie",
+        "home.greeting.evening": "Good evening, hanjie",
+        "home.brief.all": "See all {count} →",
+        "home.brief.archive": "Open the archive →",
         "docs.sidebar.browse": "Browse",
         "docs.overline.documentation": "",
         "docs.overline.section": "Section",
@@ -474,3 +426,30 @@ def translate(lang: str | None, key: str, fallback: str | None = None) -> str:
     return TRANSLATIONS.get(normalized, {}).get(
         key, fallback if fallback is not None else key
     )
+
+
+ZH_WEEKDAYS = "一二三四五六日"
+EN_WEEKDAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+EN_MONTHS = (
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+)
+
+
+def format_day(day: date, lang: str | None, *, weekday: bool = True) -> str:
+    """Return a short calendar label such as "10月6日 星期二" or "Tue, Oct 6"."""
+    if normalize_language(lang) == "en":
+        label = f"{EN_MONTHS[day.month - 1]} {day.day}"
+        return f"{EN_WEEKDAYS[day.weekday()]}, {label}" if weekday else label
+    label = f"{day.month}月{day.day}日"
+    return f"{label} 星期{ZH_WEEKDAYS[day.weekday()]}" if weekday else label
