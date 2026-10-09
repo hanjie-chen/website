@@ -6,6 +6,7 @@
 
 .brief-detail-shell {
     width: min(100%, 860px);
+    padding-top: 1.5rem;
 }
 
 .briefs-hero {
@@ -22,11 +23,20 @@
 }
 
 /* Detail hero: ‹ older   date   newer › */
+.brief-detail-shell .briefs-hero {
+    padding: 1.25rem 0 1.5rem;
+}
+
 .brief-date-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 1.25rem;
+}
+
+.brief-date-row h1 {
+    font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+    letter-spacing: -0.04em;
 }
 
 .brief-date-row h1:focus {
@@ -455,26 +465,40 @@ a.brief-date-step:focus-visible {
     margin-top: 0.55rem;
 }
 
+.brief-item-footer {
+    --brief-disclosure-width: 7.75rem;
+    position: relative;
+    margin-top: 1rem;
+}
+
+:lang(en) .brief-item-footer {
+    --brief-disclosure-width: 11rem;
+}
+
 .brief-details {
-    max-width: 46rem;
-    margin-top: 0.7rem;
+    margin: 0;
     color: var(--text-secondary-color);
     font-size: 0.84rem;
     line-height: 1.65;
 }
 
 .brief-details summary {
+    position: absolute;
+    top: 0;
+    right: 0;
     display: flex;
     align-items: center;
     gap: 0.6rem;
     width: fit-content;
     min-height: 32px;
     padding: 0.25rem 0.5rem;
-    margin-left: -0.5rem;
+    margin: 0;
     border-radius: 5px;
     color: #aeb4c2;
     cursor: pointer;
     list-style: none;
+    white-space: nowrap;
+    font-size: 0.82rem;
 }
 
 .brief-details summary::-webkit-details-marker {
@@ -512,7 +536,8 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-details dl {
-    margin: 0.55rem 0 0;
+    max-width: 46rem;
+    margin: 0.65rem 0 0;
     padding-left: 0.9rem;
     border-left: 1px solid rgba(174, 180, 194, 0.25);
 }
@@ -534,13 +559,36 @@ a.brief-date-step:focus-visible {
 
 .brief-details dd {
     margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.brief-material-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.brief-material-list li + li {
+    margin-top: 0.15rem;
+}
+
+.brief-generation-note {
+    color: var(--text-secondary-color);
 }
 
 .brief-item-meta {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
+    min-height: 32px;
     gap: 0.45rem 1.25rem;
-    margin: 1rem 0 0;
+    margin: 0;
+    padding-right: var(--brief-disclosure-width);
+}
+
+.brief-source-name {
+    overflow-wrap: anywhere;
 }
 
 .brief-item-meta a {
@@ -598,12 +646,16 @@ a.brief-date-step:focus-visible {
         padding: 1.5rem 0 1.9rem;
     }
 
+    .brief-detail-shell .briefs-hero {
+        padding: 1rem 0 1.25rem;
+    }
+
     .brief-date-row {
         gap: 0.25rem;
     }
 
     .brief-date-row h1 {
-        font-size: clamp(2rem, 10vw, 2.6rem);
+        font-size: clamp(1.5rem, 7vw, 1.75rem);
     }
 
     .brief-date-row .brief-date-step {
@@ -633,6 +685,18 @@ a.brief-date-step:focus-visible {
 
     .brief-item-card {
         padding-block: 1.35rem;
+    }
+
+    .brief-item-meta {
+        padding-right: 0;
+        gap: 0.25rem 1.25rem;
+    }
+
+    .brief-source-name {
+        flex-basis: 100%;
+        min-height: 32px;
+        padding-top: 0.35rem;
+        padding-right: var(--brief-disclosure-width);
     }
 
     .brief-archive-row {

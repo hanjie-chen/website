@@ -4,6 +4,7 @@ import fcntl
 import json
 import logging
 import os
+import re
 import tempfile
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
@@ -32,7 +33,7 @@ ITEM_KEYS = {
     "points",
     "comments",
 }
-OPTIONAL_ITEM_KEYS = {"provenance"}
+OPTIONAL_ITEM_KEYS = {"provenance", "generation_info"}
 PROVENANCE_KEYS = {
     "summary_basis",
     "retrieval_method",
@@ -88,6 +89,20 @@ FALLBACK_REASONS = {
     "unknown",
 }
 CONTENT_STATUSES = {"ok", "fetch_failed", "summary_failed", "title_only"}
+MATERIAL_STATUSES = RETRIEVAL_STATUSES | {"empty"}
+GENERATION_STATUSES = {"success", "insufficient", "failed", "not_attempted", "unknown"}
+SUMMARY_SOURCES = {"web_metadata", "web_body", "hn_post", "hn_comments"}
+GENERATION_REASONS = FALLBACK_REASONS | {
+    "network_error",
+    "http_error",
+    "extraction_failed",
+    "rate_limited",
+    "authentication_failed",
+    "provider_unavailable",
+    "invalid_response",
+    "no_materials",
+}
+MODEL_IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/@+\-]{0,127}")
 ARCHIVE_INDEX_KEYS = {"index_version", "briefs"}
 ARCHIVE_ENTRY_KEYS = {
     "date",
@@ -443,6 +458,10 @@ def _validate_item(item) -> dict:
     }
     if "provenance" in item:
         normalized["provenance"] = _validate_provenance(item["provenance"])
+    if "generation_info" in item:
+        normalized["generation_info"] = _validate_generation_info(
+            item["generation_info"]
+        )
     return normalized
 
 
@@ -464,6 +483,81 @@ def _validate_provenance(provenance) -> dict:
             raise BriefValidationError(f"unsupported provenance {field}")
         normalized[field] = value
     return normalized
+
+
+def _validate_generation_info(info) -> dict:
+    info = _validate_exact_object(
+        info, "generation_info", {"materials", "summary_sources", "generation"}
+    )
+    materials = _validate_exact_object(
+        info["materials"],
+        "generation_info.materials",
+        {"webpage", "hn_post", "hn_comments"},
+    )
+    normalized_materials = {}
+    for source in ("webpage", "hn_post", "hn_comments"):
+        field = f"generation_info.materials.{source}"
+        enums = {"status": MATERIAL_STATUSES, "reason": GENERATION_REASONS}
+        if source == "webpage":
+            enums.update(method=RETRIEVAL_METHODS, origin=MATERIAL_ORIGINS)
+        material = _validate_exact_object(materials[source], field, set(enums))
+        normalized_materials[source] = {
+            key: _validate_enum(material[key], f"{field}.{key}", values)
+            for key, values in enums.items()
+        }
+
+    sources = info["summary_sources"]
+    if sources is not None:
+        if not isinstance(sources, list) or len(sources) > len(SUMMARY_SOURCES):
+            raise BriefValidationError(
+                "generation_info.summary_sources must be null or a list of up to four sources"
+            )
+        sources = [
+            _validate_enum(source, "generation_info.summary_sources", SUMMARY_SOURCES)
+            for source in sources
+        ]
+        if len(sources) != len(set(sources)):
+            raise BriefValidationError("generation_info.summary_sources must be unique")
+
+    generation = _validate_exact_object(
+        info["generation"], "generation_info.generation", {"status", "model", "reason"}
+    )
+    model = generation["model"]
+    if model is not None and (
+        not isinstance(model, str) or MODEL_IDENTIFIER.fullmatch(model) is None
+    ):
+        raise BriefValidationError(
+            "generation_info.generation.model must be null or an ASCII model identifier of up to 128 characters"
+        )
+    return {
+        "materials": normalized_materials,
+        "summary_sources": sources,
+        "generation": {
+            "status": _validate_enum(
+                generation["status"],
+                "generation_info.generation.status",
+                GENERATION_STATUSES,
+            ),
+            "model": model,
+            "reason": _validate_enum(
+                generation["reason"],
+                "generation_info.generation.reason",
+                GENERATION_REASONS,
+            ),
+        },
+    }
+
+
+def _validate_exact_object(value, field, keys) -> dict:
+    if not isinstance(value, dict) or set(value) != keys:
+        raise BriefValidationError(f"{field} must contain the exact fields")
+    return value
+
+
+def _validate_enum(value, field, allowed) -> str:
+    if not isinstance(value, str) or value not in allowed:
+        raise BriefValidationError(f"unsupported {field}")
+    return value
 
 
 def _validate_date(value) -> str:

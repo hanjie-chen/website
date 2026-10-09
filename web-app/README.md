@@ -173,9 +173,10 @@ Nginx publishing location.
 
 Only strict schema v2 is accepted: `date`, timezone-aware `generated_at`,
 `timezone: "Asia/Singapore"`, and `ai` / `non_ai_hot` sections. Items contain
-summary, source/discussion links, counts, selection basis and content status;
-optional `provenance` records retrieval and summary basis. Unknown fields are
-rejected. Exact fields, limits and allowed values are defined in
+summary, source/discussion links, counts, selection basis and content status.
+Optional `generation_info` records per-source acquisition, model-declared summary
+sources and the generation outcome; legacy `provenance` remains supported.
+Unknown fields are rejected. Exact fields, limits and allowed values are defined in
 [daily_briefs.py](daily_briefs.py), with examples in
 [test_daily_briefs.py](tests/test_daily_briefs.py).
 
@@ -191,6 +192,44 @@ rejected. Exact fields, limits and allowed values are defined in
 
 Nginx's WAF exception and compensating controls are documented in
 [nginx-modsecurity/README.md](../nginx-modsecurity/README.md#security-notes).
+
+### Generation Information
+
+`generation_info` is an optional additive schema v2 item field. Its exact shape is:
+
+```json
+{
+  "materials": {
+    "webpage": {"status": "success", "method": "direct", "origin": "original", "reason": "none"},
+    "hn_post": {"status": "empty", "reason": "none"},
+    "hn_comments": {"status": "success", "reason": "none"}
+  },
+  "summary_sources": ["web_body", "hn_comments"],
+  "generation": {"status": "success", "model": "provider/model-id", "reason": "none"}
+}
+```
+
+- Acquisition distinguishes `success`, `empty`, `failed`, `not_attempted`,
+  `not_needed` and `unknown`. A webpage failure can coexist with a successful
+  summary based on HN material. A recovered webpage retains its final method and
+  material origin, with the original failure reason as recovery context.
+- `summary_sources` contains unique model-declared source codes: `web_metadata`,
+  `web_body`, `hn_post`, `hn_comments`. It is not the input material inventory or
+  independently verified attribution. `null` means usage was not recorded; an
+  empty list records no sources used for a summary that was not produced.
+- Generation distinguishes `success`, `insufficient`, `failed`, `not_attempted`
+  and `unknown`. `model` is the actual last model identifier, or `null` if not
+  recorded. Reasons are allowlisted public codes; raw errors, prompts and
+  provider responses remain in the generator's private audit.
+
+The disclosure shows acquisition, summary sources, generation and the existing
+selection basis, using `generation_info` when present. Historical items fall back
+to their recorded `provenance` or just selection basis; missing diagnostics are
+never reconstructed from `content_status` or other legacy fields.
+
+Deploy this accepting website version **before** enabling the corresponding
+Daily Brief generator output: older website validators reject the new field.
+Readers and publishers continue to accept historical schema v2 items without it.
 
 ### Public Daily Brief API
 
@@ -227,7 +266,9 @@ immutable. Use the date and `hn_item_id` together to identify an item.
 - Article math, code-copy, TOC and image-preview behavior belongs to the scripts
   loaded by [article_details.html](templates/article_details.html). Brief date
   navigation enhancement is loaded by [brief_detail.html](templates/brief_detail.html).
-  Keep page links and Details disclosures usable without JavaScript; the mobile
+  Brief items place the "Generation info" disclosure beside source and discussion
+  metadata, with its contents below that row. It uses native `details` / `summary`.
+  Keep page links and disclosures usable without JavaScript; the mobile
   navigation menu is the exception and needs `site-nav.js` to open.
 - Font configuration lives in [font.css](static/font/font.css). The PingFang UI
   subset is preloaded; full fonts provide fallback coverage.

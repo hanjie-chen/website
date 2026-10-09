@@ -274,6 +274,86 @@ def _brief_provenance_view(provenance: dict | None, language: str) -> list[dict]
     return details
 
 
+def _brief_generation_view(item: dict, language: str) -> list[dict]:
+    """Keep material acquisition separate from declared use and summary outcome."""
+    info = item.get("generation_info")
+    if info is None:
+        return _brief_provenance_view(item.get("provenance"), language)
+
+    def label(key):
+        return translate(language, f"briefs.generation.{key}")
+
+    materials = []
+    for source in ("webpage", "hn_post", "hn_comments"):
+        material = info["materials"][source]
+        notes = []
+        status = material["status"]
+        if source == "webpage":
+            method = material["method"]
+            if method not in {"none", "unknown"}:
+                method_label = translate(language, f"briefs.provenance.method.{method}")
+                notes.append(
+                    method_label
+                    if status == "success"
+                    else label("last_attempt").format(method=method_label)
+                )
+            origin = material["origin"]
+            if origin not in {"original", "unknown"}:
+                notes.append(
+                    translate(language, f"briefs.provenance.summary.article.{origin}")
+                )
+        reason = material["reason"]
+        if reason != "none" and not (status == "unknown" and reason == "unknown"):
+            reason_label = label(f"reason.{reason}")
+            if source == "webpage" and status == "success":
+                reason_label = label("recovery_reason").format(reason=reason_label)
+            notes.append(reason_label)
+        materials.append(
+            {
+                "value": label("material_result").format(
+                    source=label(f"source.{source}"),
+                    status=label(f"material_status.{status}"),
+                ),
+                "note": " · ".join(notes),
+            }
+        )
+
+    sources = info["summary_sources"]
+    if sources is None:
+        source_value = label("unrecorded")
+    elif sources:
+        source_value = label("source_separator").join(
+            label(f"source.{key}") for key in sources
+        )
+    else:
+        source_value = label("no_sources")
+    generation = info["generation"]
+    outcome = label(f"status.{generation['status']}")
+    if generation["model"]:
+        outcome += " · " + generation["model"]
+    return [
+        {"label": label("materials"), "entries": materials},
+        {
+            "label": label("sources"),
+            "value": source_value,
+            "note": label("model_reported") if sources else "",
+        },
+        {
+            "label": label("outcome"),
+            "value": outcome,
+            "note": (
+                label(f"reason.{generation['reason']}")
+                if generation["reason"] != "none"
+                and not (
+                    generation["status"] == "unknown"
+                    and generation["reason"] == "unknown"
+                )
+                else ""
+            ),
+        },
+    ]
+
+
 @app.context_processor
 def inject_template_helpers():
     # Keep template logic shallow: routes decide the language namespace, and
@@ -403,8 +483,7 @@ def brief_detail(lang, brief_date):
     }
     provenance_views = {
         section_name: [
-            _brief_provenance_view(item.get("provenance"), current_lang)
-            for item in section["items"]
+            _brief_generation_view(item, current_lang) for item in section["items"]
         ]
         for section_name, section in brief["sections"].items()
     }

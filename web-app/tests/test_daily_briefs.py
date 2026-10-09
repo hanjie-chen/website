@@ -630,7 +630,7 @@ def test_brief_detail_keeps_provenance_collapsed_and_summary_attribution_visible
     assert response.status_code == 200
     assert details.name == "details"
     assert not details.has_attr("open")
-    assert details.select_one("summary").get_text(strip=True) == "详情"
+    assert details.select_one("summary").get_text(strip=True) == "生成信息"
     assert "入选依据：" in details.get_text()
     assert "推荐理由：" not in soup.get_text()
     assert not soup.select(".brief-why")

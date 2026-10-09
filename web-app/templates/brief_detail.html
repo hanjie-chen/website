@@ -88,32 +88,44 @@
                     <p class="brief-summary">{{ item.summary }}</p>
                     {% endif %}
                     {% set provenance_view = provenance_views[section_name][loop.index0] %}
-                    <details class="brief-details">
-                        <summary>{{ t("briefs.details") }}<span class="brief-details-chevron" aria-hidden="true"></span></summary>
-                        <dl>
-                            {% for detail in provenance_view %}
-                            <div>
-                                <dt>{{ detail.label }}</dt>
-                                <dd>{{ detail.value }}</dd>
-                            </div>
-                            {% endfor %}
-                            <div>
-                                <dt>{{ t("briefs.selection_basis") }}</dt>
-                                <dd>{{ item.why }}</dd>
-                            </div>
-                        </dl>
-                    </details>
-                    <p class="brief-item-meta">
-                        {% set source_name = source_display_name(item.source_url) %}
-                        {% if source_name %}
-                        <span class="brief-source-name">{{ source_name }}</span>
-                        {% endif %}
-                        <span>{{ item.points }} {{ t("briefs.points") }}</span>
-                        <a href="{{ item.discussion_url }}" target="_blank" rel="noopener noreferrer"
-                            aria-label="{{ item.comments }} {{ t('briefs.comments') }} — {{ t('briefs.discussion') }}">
-                            {{ item.comments }} {{ t("briefs.comments") }} ↗
-                        </a>
-                    </p>
+                    <div class="brief-item-footer">
+                        <p class="brief-item-meta">
+                            {% set source_name = source_display_name(item.source_url) %}
+                            {% if source_name %}
+                            <span class="brief-source-name">{{ source_name }}</span>
+                            {% endif %}
+                            <span>{{ item.points }} {{ t("briefs.points") }}</span>
+                            <a href="{{ item.discussion_url }}" target="_blank" rel="noopener noreferrer"
+                                aria-label="{{ item.comments }} {{ t('briefs.comments') }} — {{ t('briefs.discussion') }}">
+                                {{ item.comments }} {{ t("briefs.comments") }} ↗
+                            </a>
+                        </p>
+                        <details class="brief-details">
+                            <summary>{{ t("briefs.details") }}<span class="brief-details-chevron" aria-hidden="true"></span></summary>
+                            <dl>
+                                {% for detail in provenance_view %}
+                                <div>
+                                    <dt>{{ detail.label }}</dt>
+                                    <dd>
+                                        {% if detail.entries is defined %}
+                                        <ul class="brief-material-list">
+                                            {% for entry in detail.entries %}
+                                            <li>{{ entry.value }}{% if entry.note %}<span class="brief-generation-note"> · {{ entry.note }}</span>{% endif %}</li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        {{ detail.value }}{% if detail.note %}<span class="brief-generation-note"> · {{ detail.note }}</span>{% endif %}
+                                        {% endif %}
+                                    </dd>
+                                </div>
+                                {% endfor %}
+                                <div>
+                                    <dt>{{ t("briefs.selection_basis") }}</dt>
+                                    <dd>{{ item.why }}</dd>
+                                </div>
+                            </dl>
+                        </details>
+                    </div>
                 </article>
                 {% endfor %}
             </div>
