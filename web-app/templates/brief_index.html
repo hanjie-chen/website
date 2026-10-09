@@ -13,11 +13,10 @@
 
 {% block main_content %}
 <div class="main-content">
-    <div class="content-wrapper briefs-page-shell">
+    <div class="content-wrapper briefs-page-shell brief-archive-shell">
         <header class="briefs-hero">
             <h1>{{ t("briefs.page.heading") }}</h1>
-            <p class="briefs-lead">{{ t("briefs.page.description") }}</p>
-            <p class="briefs-language-note">{{ t("briefs.retention_note") }}</p>
+            <p class="brief-archive-caption">{% if archive_year %}{{ archive_year }} · {% endif %}{{ t("briefs.archive.window") }}</p>
             {% if current_lang == "en" %}
             <p class="briefs-language-note">{{ t("briefs.language_note") }}</p>
             {% endif %}
@@ -27,12 +26,10 @@
         <ol class="brief-archive-list" aria-label="{{ t('briefs.archive.title') }}">
             {% for brief in briefs %}
             <li>
-                <a class="brief-archive-row" href="{{ url_for('brief_detail', lang=current_lang, brief_date=brief.date) }}">
-                    <time class="brief-date" datetime="{{ brief.date }}">{{ brief.date }}</time>
-                    <span class="brief-archive-meta">
-                        {{ brief.ai_items }} {{ t("briefs.archive.ai") }} ·
-                        {{ brief.non_ai_hot_items }} {{ t("briefs.archive.non_ai") }}
-                    </span>
+                <a class="brief-archive-row" data-brief-archive-date="{{ brief.date }}"
+                    href="{{ url_for('brief_detail', lang=current_lang, brief_date=brief.date) }}">
+                    <time class="brief-date" datetime="{{ brief.date }}">{{ brief.label }}</time>
+                    <span class="brief-archive-weekday">{{ brief.weekday }}</span>
                 </a>
             </li>
             {% endfor %}
@@ -45,4 +42,8 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script src="{{ asset_url('brief-opened.js') }}"></script>
 {% endblock %}

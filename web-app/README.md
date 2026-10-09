@@ -276,6 +276,14 @@ immutable. Use the date and `hn_item_id` together to identify an item.
   characters from templates and Chinese translations into a `.txt` file; it
   does not generate the `.woff2` font. A reproducible font-build command is not
   currently documented in this repository.
+- The brief archive uses a centered 560px directory with localized dates and
+  weekdays. The header shows the archive year (a range across New Year); rows
+  include their year when the archive spans two years. Counts stay in the public
+  API but are omitted from the directory. [brief-opened.js](static/brief-opened.js)
+  subtly dims dates whose detail page has been opened in this browser, including
+  direct visits from the homepage. This is not reading progress: it uses local
+  storage shared across languages, keeps at most 14 date keys, and does not sync
+  across devices. Navigation remains usable with JavaScript or storage disabled.
 
 ## Running and Testing
 

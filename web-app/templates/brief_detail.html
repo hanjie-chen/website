@@ -45,7 +45,7 @@
 
 {% block main_content %}
 <div class="main-content">
-    <article class="content-wrapper briefs-page-shell brief-detail-shell">
+    <article class="content-wrapper briefs-page-shell brief-detail-shell" data-brief-opened-date="{{ brief.date }}">
         <header class="briefs-hero" id="brief-top">
             <div class="brief-date-row" data-brief-hero-date>
                 {{ date_step(older_date, "older") }}
@@ -140,4 +140,5 @@
 
 {% block script %}
 <script src="{{ asset_url('brief-date-dock.js') }}"></script>
+<script src="{{ asset_url('brief-opened.js') }}"></script>
 {% endblock %}

@@ -52,6 +52,7 @@ TRANSLATIONS = {
         "briefs.language_note": "Daily Brief 正文目前仅提供中文。",
         "briefs.retention_note": "仅保留最近 14 天的简报。",
         "briefs.archive.title": "历史归档",
+        "briefs.archive.window": "最近 14 天",
         "briefs.archive.ai": "技术精选",
         "briefs.archive.non_ai": "圈外",
         "briefs.items": "条内容",
@@ -248,6 +249,7 @@ TRANSLATIONS = {
         "briefs.language_note": "Daily Brief entries are currently published in Chinese only.",
         "briefs.retention_note": "Only briefs from the last 14 days are retained.",
         "briefs.archive.title": "Archive",
+        "briefs.archive.window": "Last 14 days",
         "briefs.archive.ai": "Tech picks",
         "briefs.archive.non_ai": "Beyond",
         "briefs.items": "items",
@@ -539,3 +541,10 @@ def format_day(day: date, lang: str | None, *, weekday: bool = True) -> str:
         return f"{EN_WEEKDAYS[day.weekday()]}, {label}" if weekday else label
     label = f"{day.month}月{day.day}日"
     return f"{label} 星期{ZH_WEEKDAYS[day.weekday()]}" if weekday else label
+
+
+def format_weekday(day: date, lang: str | None) -> str:
+    """Return a compact weekday label for a date directory."""
+    if normalize_language(lang) == "en":
+        return EN_WEEKDAYS[day.weekday()]
+    return f"周{ZH_WEEKDAYS[day.weekday()]}"

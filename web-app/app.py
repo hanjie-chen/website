@@ -41,6 +41,7 @@ from i18n import (
     LANG_COOKIE_NAME,
     alternate_language,
     format_day,
+    format_weekday,
     get_language_from_path,
     html_lang_code,
     resolve_preferred_language,
@@ -461,10 +462,30 @@ def about_me(lang):
 @app.route("/<lang>/briefs")
 def brief_index(lang):
     current_lang = _require_supported_language(lang)
+    archive = load_brief_archive(Daily_Briefs_Directory)
+    years = sorted({entry["date"][:4] for entry in archive})
+    briefs = []
+    for entry in archive:
+        day = date.fromisoformat(entry["date"])
+        label = format_day(day, current_lang, weekday=False)
+        if len(years) > 1:
+            label = (
+                f"{label}, {day.year}"
+                if current_lang == "en"
+                else f"{day.year}年{label}"
+            )
+        briefs.append(
+            {
+                "date": entry["date"],
+                "label": label,
+                "weekday": format_weekday(day, current_lang),
+            }
+        )
     return render_template(
         "brief_index.html",
         current_lang=current_lang,
-        briefs=load_brief_archive(Daily_Briefs_Directory),
+        briefs=briefs,
+        archive_year="–".join(years),
     )
 
 

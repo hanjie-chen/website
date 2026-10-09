@@ -388,8 +388,7 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-count,
-.brief-item-meta,
-.brief-archive-meta {
+.brief-item-meta {
     color: var(--text-secondary-color);
     font-size: 0.82rem;
 }
@@ -596,6 +595,29 @@ a.brief-date-step:focus-visible {
     text-decoration: none;
 }
 
+.briefs-page-shell.brief-archive-shell {
+    width: min(100%, 560px);
+    margin-inline: auto;
+    padding-top: 1.5rem;
+}
+
+.brief-archive-shell .briefs-hero {
+    padding: 1.5rem 0 1.6rem;
+}
+
+.brief-archive-shell .briefs-hero h1 {
+    font-size: 2rem;
+    line-height: 1.3;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+}
+
+.brief-archive-caption {
+    margin: 0.65rem 0 0;
+    color: var(--text-secondary-color);
+    font-size: 0.85rem;
+}
+
 .brief-archive-list {
     margin: 0;
     padding: 0;
@@ -603,24 +625,35 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-archive-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 1rem;
-    min-height: 72px;
+    display: flex;
+    align-items: baseline;
+    gap: 0.85rem;
+    padding: 1rem 0;
     border-bottom: 1px solid var(--brief-border);
     color: var(--text-primary-color);
     text-decoration: none;
 }
 
-.brief-archive-row:hover {
+.brief-archive-row.is-opened .brief-date {
+    color: var(--text-secondary-color);
+}
+
+.brief-archive-row:hover .brief-date {
     color: #a6d1ff;
 }
 
 .brief-archive-row .brief-date {
-    font-size: clamp(1.05rem, 2.2vw, 1.25rem);
-    font-weight: 700;
+    min-width: 5.5rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: -0.025em;
     font-variant-numeric: tabular-nums;
+}
+
+.brief-archive-weekday {
+    flex-shrink: 0;
+    color: var(--text-secondary-color);
+    font-size: 0.8rem;
 }
 
 .briefs-empty-state,
@@ -699,10 +732,16 @@ a.brief-date-step:focus-visible {
         padding-right: var(--brief-disclosure-width);
     }
 
-    .brief-archive-row {
-        grid-template-columns: 1fr;
-        gap: 0.25rem;
-        padding-block: 0.9rem;
+    .briefs-page-shell.brief-archive-shell {
+        padding: 0.5rem 1.25rem 1.5rem;
+    }
+
+    .brief-archive-shell .briefs-hero {
+        padding: 1.4rem 0;
+    }
+
+    .brief-archive-shell .briefs-hero h1 {
+        font-size: 1.75rem;
     }
 
 }
