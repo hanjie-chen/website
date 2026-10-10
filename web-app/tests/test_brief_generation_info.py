@@ -55,13 +55,16 @@ def fixed_brief_clock(monkeypatch):
 @pytest.mark.parametrize(
     "model", [None, "x", "a" * 128, "provider/model:v2@revision+test"]
 )
+@pytest.mark.parametrize("effort", ["omitted", None, "medium"])
 def test_generation_info_survives_storage_and_public_api(
-    client, monkeypatch, sources, model
+    client, monkeypatch, sources, model, effort
 ):
     monkeypatch.setattr(app_module, "DAILY_BRIEF_PUBLISH_TOKEN", "secret-token")
     info = generation_info()
     info["summary_sources"] = sources
     info["generation"]["model"] = model
+    if effort != "omitted":
+        info["generation"]["reasoning_effort"] = effort
     payload = payload_with_info(info)
     response = client.post(
         "/internal/briefs",
@@ -198,6 +201,22 @@ def test_rejects_invalid_or_duplicate_summary_sources(sources):
 def test_rejects_unsafe_or_overlong_model_identifier(model):
     info = generation_info()
     info["generation"]["model"] = model
+    with pytest.raises(BriefValidationError):
+        validate_brief_payload(payload_with_info(info))
+
+
+@pytest.mark.parametrize("effort", sorted(daily_briefs.REASONING_EFFORTS) + [None])
+def test_recorded_reasoning_effort_is_preserved(effort):
+    info = generation_info()
+    info["generation"]["reasoning_effort"] = effort
+    payload = payload_with_info(info)
+    assert validate_brief_payload(payload) == payload
+
+
+@pytest.mark.parametrize("effort", ["", "unknown", "Medium", True, 1, [], {}])
+def test_invalid_reasoning_effort_is_rejected(effort):
+    info = generation_info()
+    info["generation"]["reasoning_effort"] = effort
     with pytest.raises(BriefValidationError):
         validate_brief_payload(payload_with_info(info))
 

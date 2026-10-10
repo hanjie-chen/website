@@ -205,7 +205,7 @@ Nginx's WAF exception and compensating controls are documented in
     "hn_comments": {"status": "success", "reason": "none"}
   },
   "summary_sources": ["web_body", "hn_comments"],
-  "generation": {"status": "success", "model": "provider/model-id", "reason": "none"}
+  "generation": {"status": "success", "model": "provider/model-id", "reason": "none", "reasoning_effort": "medium"}
 }
 ```
 
@@ -221,8 +221,13 @@ Nginx's WAF exception and compensating controls are documented in
   and `unknown`. `model` is the actual last model identifier, or `null` if not
   recorded. Reasons are allowlisted public codes; raw errors, prompts and
   provider responses remain in the generator's private audit.
+- Optional `generation.reasoning_effort` records the requested configuration for
+  that summary call: `none`, `minimal`, `low`, `medium`, `high` or `xhigh`.
+  Missing or `null` means unrecorded and is not displayed; historical payloads
+  are never assigned a default. It does not measure actual reasoning usage.
 
-The disclosure shows acquisition, summary sources, generation and the existing
+The "About this summary" disclosure shows acquisition, model-reported summary
+sources, generation (including recorded reasoning effort) and the existing
 selection basis, using `generation_info` when present. Historical items fall back
 to their recorded `provenance` or just selection basis; missing diagnostics are
 never reconstructed from `content_status` or other legacy fields.
@@ -266,8 +271,10 @@ immutable. Use the date and `hn_item_id` together to identify an item.
 - Article math, code-copy, TOC and image-preview behavior belongs to the scripts
   loaded by [article_details.html](templates/article_details.html). Brief date
   navigation enhancement is loaded by [brief_detail.html](templates/brief_detail.html).
-  Brief items place the "Generation info" disclosure beside source and discussion
-  metadata, with its contents below that row. It uses native `details` / `summary`.
+  Brief items place the "About this summary" disclosure beside source and discussion
+  metadata, with its contents below that row. Material sources, statuses and
+  retrieval notes align in an indented group; notes wrap below the status on
+  narrow screens. It uses native `details` / `summary`.
   Keep page links and disclosures usable without JavaScript; the mobile
   navigation menu is the exception and needs `site-nav.js` to open.
 - Font configuration lives in [font.css](static/font/font.css). The PingFang UI

@@ -465,13 +465,13 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-item-footer {
-    --brief-disclosure-width: 7.75rem;
+    --brief-disclosure-width: 9rem;
     position: relative;
     margin-top: 1rem;
 }
 
 :lang(en) .brief-item-footer {
-    --brief-disclosure-width: 11rem;
+    --brief-disclosure-width: 13rem;
 }
 
 .brief-details {
@@ -562,14 +562,34 @@ a.brief-date-step:focus-visible {
     overflow-wrap: anywhere;
 }
 
+.brief-details .brief-materials {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.brief-materials dd {
+    margin: 0.25rem 0 0 1em;
+}
+
 .brief-material-list {
+    display: grid;
+    grid-template-columns: max-content max-content minmax(0, 1fr);
+    gap: 0.1rem 0.6em;
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.brief-material-list li + li {
-    margin-top: 0.15rem;
+.brief-material-list li {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 600px) {
+    .brief-material-note {
+        grid-column: 2 / -1;
+    }
 }
 
 .brief-generation-note {

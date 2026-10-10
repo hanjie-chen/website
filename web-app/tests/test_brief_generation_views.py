@@ -57,16 +57,16 @@ def test_acquisition_failure_does_not_hide_successful_comment_summary(
     assert "keywords: Claude" in text  # Selection basis is retained.
     assert "briefs.generation." not in text
     if lang == "zh":
-        assert "网页：获取失败" in text
-        assert "HN 帖子：无内容" in text
-        assert "HN 评论：成功" in text
-        assert "模型报告" in text
+        assert "网页内容 获取失败" in text
+        assert "HN 帖子 无内容" in text
+        assert "HN 评论 已获取" in text
+        assert "模型自述" in text
         assert "生成情况： 成功" in text
-        assert "摘要依据：" not in text
+        assert "摘要依据：" in text
     else:
-        assert "Generation info" in text
+        assert "About this summary" in text
         assert "Generation: Succeeded" in text
-        assert "Reported by the model" in text
+        assert "model-reported" in text
 
 
 @pytest.mark.parametrize("sources", [None, ["web_metadata", "web_body", "hn_post"]])
@@ -74,12 +74,12 @@ def test_sources_are_not_inferred_from_available_comments(client, monkeypatch, s
     info = generation_info()
     info["summary_sources"] = sources
     soup = render_info(client, monkeypatch, info)
-    row = soup.find("dt", string="摘要来源：").find_next_sibling("dd")
+    row = soup.find("dt", string="摘要依据：").find_next_sibling("dd")
     text = row.get_text(" ", strip=True)
     assert "HN 评论" not in text
     if sources is None:
         assert text == "未记录"
-        assert "模型报告" not in text
+        assert "模型自述" not in text
     else:
         assert "网页元信息、网页正文、HN 帖子" in text
 
@@ -111,7 +111,22 @@ def test_recovery_reason_is_not_reported_as_final_fetch_failure(client, monkeypa
     info["summary_sources"] = ["web_body", "hn_comments"]
     soup = render_info(client, monkeypatch, info)
     webpage = soup.select_one(".brief-material-list li").get_text(" ", strip=True)
-    assert "网页：成功" in webpage
+    assert "网页内容 已获取" in webpage
     assert "同一篇文章" in webpage
     assert "替代获取原因：Cloudflare 验证" in webpage
     assert "最后尝试" not in webpage
+
+
+@pytest.mark.parametrize("lang", ["zh", "en"])
+@pytest.mark.parametrize("effort", ["omitted", None, "medium", "none"])
+def test_reasoning_effort_only_shown_when_recorded(client, monkeypatch, lang, effort):
+    info = generation_info()
+    if effort != "omitted":
+        info["generation"]["reasoning_effort"] = effort
+    soup = render_info(client, monkeypatch, info, lang)
+    text = soup.select_one(".brief-details").get_text(" ", strip=True)
+    label = "reasoning effort: "
+    if effort in {"omitted", None}:
+        assert label not in text
+    else:
+        assert label + effort in text

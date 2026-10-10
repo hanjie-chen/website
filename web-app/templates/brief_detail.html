@@ -104,17 +104,21 @@
                             <summary>{{ t("briefs.details") }}<span class="brief-details-chevron" aria-hidden="true"></span></summary>
                             <dl>
                                 {% for detail in provenance_view %}
-                                <div>
+                                <div{% if detail.entries is defined %} class="brief-materials"{% endif %}>
                                     <dt>{{ detail.label }}</dt>
                                     <dd>
                                         {% if detail.entries is defined %}
                                         <ul class="brief-material-list">
                                             {% for entry in detail.entries %}
-                                            <li>{{ entry.value }}{% if entry.note %}<span class="brief-generation-note"> · {{ entry.note }}</span>{% endif %}</li>
+                                            <li>
+                                                <span>{{ entry.source }}</span>
+                                                <span>{{ entry.status }}</span>
+                                                {% if entry.note %}<span class="brief-material-note brief-generation-note">{{ entry.note }}</span>{% endif %}
+                                            </li>
                                             {% endfor %}
                                         </ul>
                                         {% else %}
-                                        {{ detail.value }}{% if detail.note %}<span class="brief-generation-note"> · {{ detail.note }}</span>{% endif %}
+                                        {{ detail.value }}{% if detail.qualifier %}<span class="brief-generation-note">{{ detail.qualifier }}</span>{% endif %}{% if detail.note %}<span class="brief-generation-note"> · {{ detail.note }}</span>{% endif %}
                                         {% endif %}
                                     </dd>
                                 </div>

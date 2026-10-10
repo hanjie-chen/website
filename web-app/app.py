@@ -311,10 +311,8 @@ def _brief_generation_view(item: dict, language: str) -> list[dict]:
             notes.append(reason_label)
         materials.append(
             {
-                "value": label("material_result").format(
-                    source=label(f"source.{source}"),
-                    status=label(f"material_status.{status}"),
-                ),
+                "source": label(f"source.{source}"),
+                "status": label(f"material_status.{status}"),
                 "note": " · ".join(notes),
             }
         )
@@ -332,12 +330,16 @@ def _brief_generation_view(item: dict, language: str) -> list[dict]:
     outcome = label(f"status.{generation['status']}")
     if generation["model"]:
         outcome += " · " + generation["model"]
+    if generation.get("reasoning_effort") is not None:
+        outcome += " · " + label("reasoning_effort").format(
+            effort=generation["reasoning_effort"]
+        )
     return [
         {"label": label("materials"), "entries": materials},
         {
             "label": label("sources"),
             "value": source_value,
-            "note": label("model_reported") if sources else "",
+            "qualifier": label("model_reported") if sources else "",
         },
         {
             "label": label("outcome"),
