@@ -45,7 +45,6 @@
     --border-subtle: light-dark(rgba(60, 50, 30, 0.08), rgba(255, 245, 230, 0.06));
     --border: light-dark(rgba(60, 50, 30, 0.12), rgba(255, 245, 230, 0.1));
     --border-strong: light-dark(rgba(60, 50, 30, 0.2), rgba(255, 245, 230, 0.16));
-    --border-pill: light-dark(rgba(60, 50, 30, 0.18), rgba(255, 245, 230, 0.22));
     --border-rail: light-dark(rgba(106, 102, 94, 0.3), rgba(162, 157, 146, 0.3));
 
     /* Text, from most to least prominent */
