@@ -91,6 +91,7 @@ FALLBACK_REASONS = {
 CONTENT_STATUSES = {"ok", "fetch_failed", "summary_failed", "title_only"}
 MATERIAL_STATUSES = RETRIEVAL_STATUSES | {"empty"}
 GENERATION_STATUSES = {"success", "insufficient", "failed", "not_attempted", "unknown"}
+REASONING_EFFORTS = {"none", "minimal", "low", "medium", "high", "xhigh"}
 SUMMARY_SOURCES = {"web_metadata", "web_body", "hn_post", "hn_comments"}
 GENERATION_REASONS = FALLBACK_REASONS | {
     "network_error",
@@ -519,9 +520,24 @@ def _validate_generation_info(info) -> dict:
         if len(sources) != len(set(sources)):
             raise BriefValidationError("generation_info.summary_sources must be unique")
 
-    generation = _validate_exact_object(
-        info["generation"], "generation_info.generation", {"status", "model", "reason"}
-    )
+    generation = info["generation"]
+    required = {"status", "model", "reason"}
+    if (
+        not isinstance(generation, dict)
+        or not required <= set(generation)
+        or set(generation) - required - {"reasoning_effort"}
+    ):
+        raise BriefValidationError("generation_info.generation has invalid fields")
+    optional = {}
+    if "reasoning_effort" in generation:
+        effort = generation["reasoning_effort"]
+        optional["reasoning_effort"] = (
+            _validate_enum(
+                effort, "generation_info.generation.reasoning_effort", REASONING_EFFORTS
+            )
+            if effort is not None
+            else None
+        )
     model = generation["model"]
     if model is not None and (
         not isinstance(model, str) or MODEL_IDENTIFIER.fullmatch(model) is None
@@ -539,6 +555,7 @@ def _validate_generation_info(info) -> dict:
                 GENERATION_STATUSES,
             ),
             "model": model,
+            **optional,
             "reason": _validate_enum(
                 generation["reason"],
                 "generation_info.generation.reason",
