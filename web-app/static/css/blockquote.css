@@ -1,8 +1,8 @@
 .article-body blockquote {
   margin: 1.6rem 0;
   padding: 0.2rem 0 0.2rem 1rem;
-  border-left: 2px solid rgba(121, 184, 255, 0.42);
-  color: rgba(203, 213, 225, 0.94);
+  border-left: 2px solid var(--accent-line-strong);
+  color: var(--text-prose);
   background: transparent;
   box-shadow: none;
 }

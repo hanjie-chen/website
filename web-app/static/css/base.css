@@ -116,12 +116,12 @@ sub { bottom: -0.25em; }
 sup { top: -0.5em; }
 
 a {
-    color: #0d6efd;
+    color: var(--accent);
     text-decoration: underline;
 }
 
 a:hover {
-    color: #0a58ca;
+    color: var(--accent-hover);
 }
 
 pre,
@@ -145,7 +145,7 @@ pre code {
 
 code {
     font-size: 0.875em;
-    color: #d63384;
+    color: var(--code-inline-text);
     overflow-wrap: break-word;
 }
 
@@ -156,8 +156,8 @@ a > code {
 kbd {
     padding: 0.1875rem 0.375rem;
     font-size: 0.875em;
-    color: #fff;
-    background-color: #212529;
+    color: var(--text-strong);
+    background-color: var(--code-inline-bg);
     border-radius: 0.25rem;
 }
 

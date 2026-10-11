@@ -1,0 +1,17 @@
+{# Language and theme rows, shared by the top-bar settings panel and the mobile menu. #}
+<div class="site-settings-list">
+    <div class="site-settings-row">
+        <span class="site-settings-label">{{ t('settings.language') }}</span>
+        {% include "_language_switcher.html" %}
+    </div>
+    {# theme-switcher.js reveals this row and marks the saved choice; without scripts the page follows the system theme. #}
+    <div class="site-settings-row" data-theme-switcher hidden>
+        <span class="site-settings-label">{{ t('theme.label') }}</span>
+        <div class="site-theme-switcher" role="group" aria-label="{{ t('theme.label') }}">
+            {% for option in ("light", "dark", "system") %}
+            {% if not loop.first %}<span class="site-option-separator" aria-hidden="true">/</span>{% endif %}
+            <button class="site-theme-option" type="button" data-theme-option="{{ option }}" aria-pressed="false">{{ t("theme." ~ option) }}</button>
+            {% endfor %}
+        </div>
+    </div>
+</div>

@@ -1,11 +1,11 @@
 :root {
-    --ad-rail-color: rgba(148, 163, 184, 0.28);
+    --ad-rail-color: var(--border-rail);
     --ad-margin: 1.2rem 0 1.35rem;
     --ad-padding-left: 1rem;
     --ad-rail-width: 2.5px;
     --title-font-size: 0.82em;
-    --ad-title-color: rgba(224, 231, 239, 0.94);
-    --ad-body-color: rgba(203, 213, 225, 0.96);
+    --ad-title-color: var(--text-emphasis);
+    --ad-body-color: var(--text-prose);
 }
 
 /* 基础 admonition 样式 */
@@ -31,10 +31,10 @@
     border-radius: 999px;
     background: linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.16) 0%,
+        var(--border-strong) 0%,
         var(--ad-rail-color) 14%,
         var(--ad-rail-color) 86%,
-        rgba(255, 255, 255, 0.08) 100%
+        var(--border) 100%
     );
 }
 
@@ -50,7 +50,7 @@
     font-size: var(--title-font-size);
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--border);
 }
 
 .admonition .admonition-title::before {
@@ -87,26 +87,26 @@
 
 /* 针对不同类型设置 rail 和标题颜色 */
 .admonition.note {
-    --ad-title-color: rgba(191, 219, 254, 0.94);
-    --ad-rail-color: rgba(96, 165, 250, 0.46);
+    --ad-title-color: var(--admonition-note-title);
+    --ad-rail-color: var(--admonition-note-rail);
 }
 
 .admonition.tip {
-    --ad-title-color: rgba(167, 243, 208, 0.94);
-    --ad-rail-color: rgba(52, 211, 153, 0.44);
+    --ad-title-color: var(--admonition-tip-title);
+    --ad-rail-color: var(--admonition-tip-rail);
 }
 
 .admonition.warning {
-    --ad-title-color: rgba(253, 224, 71, 0.94);
-    --ad-rail-color: rgba(245, 158, 11, 0.46);
+    --ad-title-color: var(--admonition-warning-title);
+    --ad-rail-color: var(--admonition-warning-rail);
 }
 
 .admonition.important {
-    --ad-title-color: rgba(186, 230, 253, 0.94);
-    --ad-rail-color: rgba(56, 189, 248, 0.46);
+    --ad-title-color: var(--admonition-important-title);
+    --ad-rail-color: var(--admonition-important-rail);
 }
 
 .admonition.caution {
-    --ad-title-color: rgba(254, 202, 202, 0.94);
-    --ad-rail-color: rgba(248, 113, 113, 0.46);
+    --ad-title-color: var(--admonition-caution-title);
+    --ad-rail-color: var(--admonition-caution-rail);
 }
