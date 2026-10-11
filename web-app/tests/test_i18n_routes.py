@@ -221,9 +221,7 @@ def test_homepage_sets_dynamic_html_lang_attribute(client):
     assert '<html lang="zh-CN">' in html
 
 
-def test_homepage_renders_left_aligned_segmented_language_switcher_in_fixed_order(
-    client,
-):
+def test_homepage_puts_language_switcher_in_settings_after_navigation(client):
     response = client.get("/en/")
     html = response.get_data(as_text=True)
 
@@ -237,12 +235,13 @@ def test_homepage_renders_left_aligned_segmented_language_switcher_in_fixed_orde
     assert ">EN</span>" in html
     assert (
         html.index('class="site-nav-brand"')
-        < html.index('class="site-language-switcher"')
         < html.index('class="site-nav-list site-nav-menu"')
+        < html.index('<details class="site-settings"')
+        < html.index('class="site-language-switcher"')
     )
 
 
-def test_chinese_homepage_marks_current_language_inside_segmented_switcher(client):
+def test_chinese_homepage_marks_current_language_in_switcher(client):
     response = client.get("/zh/")
     html = response.get_data(as_text=True)
 

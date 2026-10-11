@@ -37,3 +37,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// Settings disclosure: like the mobile menu, an outside click, Escape or tabbing
+// away closes it. Without scripts it still opens and closes natively.
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("[data-site-settings]").forEach((settings) => {
+    const summary = settings.querySelector("summary");
+
+    document.addEventListener("click", (event) => {
+      if (settings.open && !settings.contains(event.target)) {
+        settings.open = false;
+      }
+    });
+
+    settings.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && settings.open) {
+        settings.open = false;
+        summary.focus();
+      }
+    });
+
+    settings.addEventListener("focusout", (event) => {
+      if (settings.open && event.relatedTarget && !settings.contains(event.relatedTarget)) {
+        settings.open = false;
+      }
+    });
+  });
+});

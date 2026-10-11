@@ -172,36 +172,92 @@ body {
     font-weight: 700;
 }
 
-/*
- * Top-bar settings are segmented controls: every option stays visible and the
- * current one is highlighted.
- */
-.site-nav-settings {
+/* Settings: one quiet button at the end of the bar opens language and theme. */
+.site-settings {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    margin-left: 0.45rem;
+    padding-left: 0.75rem;
 }
 
+/* A short rule sets the settings apart from the page navigation. */
+.site-settings::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 1.1rem;
+    border-left: 1px solid var(--border);
+    transform: translateY(-50%);
+}
+
+.site-settings-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--nav-control-height);
+    height: var(--nav-control-height);
+    border-radius: 999px;
+    color: var(--text-muted);
+    list-style: none;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.site-settings-toggle::-webkit-details-marker {
+    display: none;
+}
+
+.site-settings-toggle:hover,
+.site-settings[open] > .site-settings-toggle {
+    color: var(--text-strong);
+    background: var(--surface-pill);
+}
+
+.site-settings-icon,
+.site-theme-icon {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.site-settings-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.site-settings-panel {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    z-index: 1000;
+    min-width: 12.5rem;
+    padding: 0.55rem 0.6rem 0.55rem 0.95rem;
+    background: var(--surface-popover);
+    border: 1px solid var(--border-strong);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 24px var(--shadow-color-strong);
+}
+
+.site-settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.site-settings-label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Each row lists both options as quiet text; the current one is bold. */
 .site-language-switcher,
 .site-theme-switcher {
     display: inline-flex;
     align-items: center;
-    gap: 0.2rem;
-    padding: 0.2rem;
-    border-radius: 999px;
-    background: var(--surface-pill);
-    border: 1px solid var(--border-pill);
-}
-
-.site-nav-settings > .site-language-switcher,
-.site-nav-settings > .site-theme-switcher {
-    align-items: stretch;
-    height: var(--nav-control-height);
-}
-
-.site-nav-settings .site-language-option,
-.site-nav-settings .site-theme-option {
-    min-height: 0;
 }
 
 .site-language-option,
@@ -209,15 +265,26 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 2.35rem;
-    min-height: 1.95rem;
-    padding: 0.26rem 0.68rem;
-    border-radius: 999px;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0 0.35rem;
+    border: 0;
+    border-radius: 0.4rem;
+    background: transparent;
     color: var(--text-muted);
-    font-size: 0.82rem;
+    font: inherit;
+    font-size: 0.88rem;
     line-height: 1;
     text-decoration: none;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    transition: color 0.2s ease;
+}
+
+.site-language-option + .site-language-option::before,
+.site-theme-option + .site-theme-option::before {
+    content: "/";
+    margin-right: 0.7rem;
+    color: var(--text-faint);
+    font-weight: 400;
 }
 
 .site-language-option:hover,
@@ -228,29 +295,23 @@ body {
 .site-language-option.is-active,
 .site-theme-option[aria-pressed="true"] {
     color: var(--text-strong);
-    background: var(--current-tint-strong);
-    box-shadow: inset 0 0 0 1px var(--current-border-faint);
+    font-weight: 700;
 }
 
-.site-theme-option {
-    border: 0;
-    background: transparent;
-    font: inherit;
+.site-theme-option[aria-pressed="true"] .site-theme-icon {
+    stroke-width: 2.2;
 }
 
+.site-settings-toggle:focus-visible,
+.site-language-option:focus-visible,
 .site-theme-option:focus-visible {
     outline: 2px solid var(--current);
     outline-offset: 2px;
 }
 
 .site-theme-icon {
-    width: 0.95rem;
-    height: 0.95rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    width: 1rem;
+    height: 1rem;
 }
 
 /* main-contnet hight */
@@ -379,12 +440,6 @@ body {
         padding: 0.35rem 0.45rem;
         font-size: 0.84rem;
     }
-
-    .site-language-option,
-    .site-theme-option {
-        min-width: 1.8rem;
-        padding-inline: 0.45rem;
-    }
 }
 
 .site-nav-mobile {
@@ -457,18 +512,14 @@ body {
     font-size: 0.95rem;
 }
 
-.site-nav-languages {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+.site-nav-dropdown-settings {
     margin-top: 0.5rem;
-    padding: 0.5rem 0.5rem 0;
+    padding: 0.35rem 0.25rem 0 0.75rem;
     border-top: 1px solid var(--border);
 }
 
-.site-nav-languages .site-language-option,
-.site-nav-languages .site-theme-option {
+.site-nav-dropdown-settings .site-language-option,
+.site-nav-dropdown-settings .site-theme-option {
     min-width: 44px;
     min-height: 44px;
 }
@@ -488,7 +539,7 @@ body {
         gap: 0;
     }
 
-    .site-nav-identity > .site-nav-settings,
+    .site-nav-shell > .site-settings,
     .site-nav-menu {
         display: none;
     }

@@ -27,7 +27,7 @@ def test_pages_load_theme_tokens_first_and_render_theme_switchers(client):
     theme_css = html.index("/static/css/theme.css?v=")
     assert theme_css < html.index("/static/css/base.css?v=")
     assert 'localStorage.getItem("theme")' in html
-    # One switcher in the top bar, one in the mobile menu, both revealed by script.
+    # One theme row in the settings panel, one in the mobile menu, both revealed by script.
     assert html.count("data-theme-switcher hidden") == 2
     assert html.count('data-theme-option="light"') == 2
     assert 'aria-label="浅色模式"' in html
@@ -37,6 +37,7 @@ def test_pages_load_theme_tokens_first_and_render_theme_switchers(client):
 def test_theme_switcher_labels_follow_page_language(client):
     html = client.get("/en/").get_data(as_text=True)
 
-    assert 'aria-label="Theme"' in html
+    assert 'aria-label="Settings"' in html
+    assert 'aria-label="Appearance"' in html
     assert 'aria-label="Light mode"' in html
     assert 'aria-label="Dark mode"' in html
