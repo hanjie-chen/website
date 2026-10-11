@@ -21,20 +21,22 @@ def test_component_styles_use_theme_color_tokens():
             assert not COLOR_LITERAL.search(line), f"{location}: {line.strip()}"
 
 
-def test_pages_load_theme_tokens_first_and_render_theme_toggles(client):
+def test_pages_load_theme_tokens_first_and_render_theme_switchers(client):
     html = client.get("/zh/").get_data(as_text=True)
 
     theme_css = html.index("/static/css/theme.css?v=")
     assert theme_css < html.index("/static/css/base.css?v=")
     assert 'localStorage.getItem("theme")' in html
-    # One toggle in the top bar, one in the mobile menu, both revealed by script.
-    assert html.count("data-theme-toggle hidden") == 2
-    assert 'data-label-light="切换到浅色模式"' in html
-    assert "/static/theme-toggle.js?v=" in html
+    # One switcher in the top bar, one in the mobile menu, both revealed by script.
+    assert html.count("data-theme-switcher hidden") == 2
+    assert html.count('data-theme-option="light"') == 2
+    assert 'aria-label="浅色模式"' in html
+    assert "/static/theme-switcher.js?v=" in html
 
 
-def test_theme_toggle_labels_follow_page_language(client):
+def test_theme_switcher_labels_follow_page_language(client):
     html = client.get("/en/").get_data(as_text=True)
 
-    assert 'data-label-light="Switch to light mode"' in html
-    assert 'data-label-dark="Switch to dark mode"' in html
+    assert 'aria-label="Theme"' in html
+    assert 'aria-label="Light mode"' in html
+    assert 'aria-label="Dark mode"' in html

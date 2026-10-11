@@ -1,4 +1,4 @@
-// Theme toggle: the page follows the system theme until the visitor picks one.
+// Theme switcher: the page follows the system theme until the visitor picks one.
 // The <head> script in base.html applies a saved choice before the first paint.
 (() => {
   const root = document.documentElement;
@@ -18,30 +18,30 @@
     }
   };
 
-  // Each button shows and names the theme a click switches to.
+  // Mark the theme in effect, whether picked or inherited from the system.
   const render = () => {
-    const target = currentTheme() === "dark" ? "light" : "dark";
-    document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
-      const label = target === "light" ? button.dataset.labelLight : button.dataset.labelDark;
-      button.dataset.target = target;
-      button.setAttribute("aria-label", label);
-      button.title = label;
-      button.hidden = false;
+    const theme = currentTheme();
+    document.querySelectorAll("[data-theme-switcher]").forEach((group) => {
+      group.hidden = false;
+    });
+    document.querySelectorAll("[data-theme-option]").forEach((option) => {
+      option.setAttribute("aria-pressed", String(option.dataset.themeOption === theme));
     });
   };
 
   document.addEventListener("click", (event) => {
-    if (!event.target.closest("[data-theme-toggle]")) {
+    const option = event.target.closest("[data-theme-option]");
+    if (!option) {
       return;
     }
-    const next = currentTheme() === "dark" ? "light" : "dark";
+    const theme = option.dataset.themeOption;
     // Picking the system's own theme goes back to following the system.
-    if (next === systemTheme()) {
+    if (theme === systemTheme()) {
       delete root.dataset.theme;
       save(null);
     } else {
-      root.dataset.theme = next;
-      save(next);
+      root.dataset.theme = theme;
+      save(theme);
     }
     render();
   });

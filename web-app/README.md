@@ -281,7 +281,7 @@ immutable. Use the date and `hn_item_id` together to identify an item.
   retrieval notes align in an indented group; notes wrap below the status on
   narrow screens. It uses native `details` / `summary`.
   Keep page links and disclosures usable without JavaScript; the mobile
-  navigation menu needs `site-nav.js` to open, and the theme toggle stays
+  navigation menu needs `site-nav.js` to open, and the theme switcher stays
   hidden without scripts while the page follows the system theme.
 - Font configuration lives in [font.css](static/font/font.css). The PingFang UI
   subset is preloaded; full fonts provide fallback coverage.
@@ -343,9 +343,12 @@ token groups in `theme.css`.
 ### Theme Switching
 
 Each token holds `light-dark(light, dark)` values. Pages follow the system
-theme; `data-theme="light"` or `"dark"` on `<html>` overrides it. The top-bar
-toggle ([theme-toggle.js](static/theme-toggle.js)) saves a choice in
-`localStorage["theme"]`, and choosing the system's own theme clears it. An
+theme; `data-theme="light"` or `"dark"` on `<html>` overrides it. Language and
+theme sit together in the top bar as segmented controls that show every option
+and highlight the current one; the theme switcher
+([theme-switcher.js](static/theme-switcher.js)) highlights the theme in effect,
+saves a choice in `localStorage["theme"]`, and choosing the system's own theme
+clears it. An
 inline script in `base.html` applies the saved choice before first paint.
 Browsers without `light-dark()` support (released before mid-2024) show the
 browser's default black on white; the site accepts this rather than keeping a

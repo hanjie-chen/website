@@ -16,8 +16,10 @@
                 <span class="site-nav-brand-mark" aria-hidden="true"></span>
                 <span class="site-nav-brand-text"><span>hanjie site</span></span>
             </a>
-            {% include "_language_switcher.html" %}
-            {% include "_theme_toggle.html" %}
+            <div class="site-nav-settings">
+                {% include "_language_switcher.html" %}
+                {% include "_theme_switcher.html" %}
+            </div>
         </div>
         {% if topbar_center is defined %}
         <div class="site-nav-center">{{ topbar_center }}</div>
@@ -36,7 +38,7 @@
                 </ul>
                 <div class="site-nav-languages">
                     {% include "_language_switcher.html" %}
-                    {% include "_theme_toggle.html" %}
+                    {% include "_theme_switcher.html" %}
                 </div>
             </div>
         </div>

@@ -283,13 +283,14 @@ a.brief-date-step:focus-visible {
 
 /*
  * Between the phone layout and wide bars, the true center would collide with the
- * desktop navigation, so center the dock in the gap between the collapsed brand,
- * language switcher and theme toggle on one side and the navigation on the
- * other. Offsets match the fixed-width bar controls.
+ * desktop navigation, so center the dock in the gap between the collapsed brand
+ * and settings on one side and the navigation on the other. Offsets match the
+ * fixed-width bar controls.
  */
 @media (min-width: 769px) and (max-width: 959.98px) {
     .site-nav-center {
-        left: calc(11rem + 1.15rem + var(--nav-control-height));
+        /* 11rem as before, plus the settings gap and the two-option theme switcher. */
+        left: calc(11rem + 0.5rem + 5.3rem + 2px);
         right: 21.5rem;
         display: flex;
         justify-content: center;

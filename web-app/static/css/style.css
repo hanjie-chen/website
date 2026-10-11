@@ -172,7 +172,18 @@ body {
     font-weight: 700;
 }
 
-.site-language-switcher {
+/*
+ * Top-bar settings are segmented controls: every option stays visible and the
+ * current one is highlighted.
+ */
+.site-nav-settings {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.site-language-switcher,
+.site-theme-switcher {
     display: inline-flex;
     align-items: center;
     gap: 0.2rem;
@@ -182,16 +193,19 @@ body {
     border: 1px solid var(--border-pill);
 }
 
-.site-nav-identity > .site-language-switcher {
+.site-nav-settings > .site-language-switcher,
+.site-nav-settings > .site-theme-switcher {
     align-items: stretch;
     height: var(--nav-control-height);
 }
 
-.site-nav-identity > .site-language-switcher .site-language-option {
+.site-nav-settings .site-language-option,
+.site-nav-settings .site-theme-option {
     min-height: 0;
 }
 
-.site-language-option {
+.site-language-option,
+.site-theme-option {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -206,54 +220,37 @@ body {
     transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-.site-language-option:hover {
+.site-language-option:hover,
+.site-theme-option:hover {
     color: var(--text);
 }
 
-.site-language-option.is-active {
+.site-language-option.is-active,
+.site-theme-option[aria-pressed="true"] {
     color: var(--text-strong);
     background: var(--current-tint-strong);
     box-shadow: inset 0 0 0 1px var(--current-border-faint);
 }
 
-/* Theme toggle: the icon shows the theme a click switches to. */
-.site-theme-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: var(--nav-control-height);
-    height: var(--nav-control-height);
-    padding: 0;
-    border: 1px solid var(--border-pill);
-    border-radius: 999px;
-    background: var(--surface-pill);
-    color: var(--text-soft);
-    transition: color 0.2s ease;
+.site-theme-option {
+    border: 0;
+    background: transparent;
+    font: inherit;
 }
 
-.site-theme-toggle:hover {
-    color: var(--text-strong);
-}
-
-.site-theme-toggle:focus-visible {
+.site-theme-option:focus-visible {
     outline: 2px solid var(--current);
     outline-offset: 2px;
 }
 
 .site-theme-icon {
-    width: 1rem;
-    height: 1rem;
+    width: 0.95rem;
+    height: 0.95rem;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
-}
-
-.site-theme-toggle[data-target="light"] .site-theme-icon--moon,
-.site-theme-toggle[data-target="dark"] .site-theme-icon--sun {
-    display: none;
 }
 
 /* main-contnet hight */
@@ -383,7 +380,8 @@ body {
         font-size: 0.84rem;
     }
 
-    .site-language-option {
+    .site-language-option,
+    .site-theme-option {
         min-width: 1.8rem;
         padding-inline: 0.45rem;
     }
@@ -469,14 +467,10 @@ body {
     border-top: 1px solid var(--border);
 }
 
-.site-nav-languages .site-language-option {
+.site-nav-languages .site-language-option,
+.site-nav-languages .site-theme-option {
     min-width: 44px;
     min-height: 44px;
-}
-
-.site-nav-languages .site-theme-toggle {
-    width: 44px;
-    height: 44px;
 }
 
 /* Responsive design */
@@ -494,8 +488,7 @@ body {
         gap: 0;
     }
 
-    .site-nav-identity > .site-language-switcher,
-    .site-nav-identity > .site-theme-toggle,
+    .site-nav-identity > .site-nav-settings,
     .site-nav-menu {
         display: none;
     }
