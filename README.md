@@ -1,6 +1,7 @@
 # Personal Dashboard
 
 [hanjie-chen.com](https://hanjie-chen.com) 是一个公开的个人网站和个人信息中枢，聚合技术知识库、Daily Brief、个人项目与介绍。
+首页是我与个人系统之间的界面：由系统向我交付需要我知道或处理的事情，而不是新闻页或网站介绍，详见 [web-app README](./web-app/README.md#homepage)。
 
 文章来自独立的 [knowledge-base](https://github.com/hanjie-chen/knowledge-base) 仓库，由本站提供中英文阅读页面。
 

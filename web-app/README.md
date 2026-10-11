@@ -252,6 +252,23 @@ responses contain neither original article full text nor private generator
 logs. Same-date content can change on republishing, so dated responses are not
 immutable. Use the date and `hn_item_id` together to identify an item.
 
+## Homepage
+
+The homepage is the interface between the site's owner and their personal
+system: the system speaking to its owner. It is not a news page and not an
+introduction to the site. The time-of-day greeting opens that voice.
+
+Today the system is the Daily Brief workflow (a scheduled pipeline with fixed
+LLM steps, not an agent), the knowledge base and the site itself. A module
+belongs on the homepage only when the system has something to hand the owner,
+or something the owner needs to know or act on; for now that is the Daily
+Brief alone. Navigation covers everything else. Add modules as the system
+grows, one at a time, never to fill the page.
+
+For direction only, not as planned work: the owner might later leave ideas
+here, let agents claim the ones they can do, and be reminded of the ones only
+the owner can do, such as writing down their own experience.
+
 ## Frontend Maintenance
 
 - [base.html](templates/base.html) and [_site_topbar.html](templates/_site_topbar.html)
