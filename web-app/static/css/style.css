@@ -279,12 +279,9 @@ body {
     transition: color 0.2s ease;
 }
 
-.site-language-option + .site-language-option::before,
-.site-theme-option + .site-theme-option::before {
-    content: "/";
-    margin-right: 0.7rem;
+.site-option-separator {
     color: var(--text-faint);
-    font-weight: 400;
+    font-size: 0.88rem;
 }
 
 .site-language-option:hover,

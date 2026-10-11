@@ -6,6 +6,15 @@
   const systemTheme = () => (systemDark.matches ? "dark" : "light");
   const currentTheme = () => root.dataset.theme || systemTheme();
 
+  const saved = () => {
+    try {
+      const theme = localStorage.getItem("theme");
+      return theme === "light" || theme === "dark" ? theme : null;
+    } catch {
+      return null;
+    }
+  };
+
   const save = (theme) => {
     try {
       if (theme) {
@@ -18,15 +27,27 @@
     }
   };
 
+  const apply = (theme) => {
+    if (theme) {
+      root.dataset.theme = theme;
+    } else {
+      delete root.dataset.theme;
+    }
+  };
+
   // Mark the theme in effect, whether picked or inherited from the system.
   const render = () => {
     const theme = currentTheme();
-    document.querySelectorAll("[data-theme-switcher]").forEach((group) => {
-      group.hidden = false;
-    });
     document.querySelectorAll("[data-theme-option]").forEach((option) => {
       option.setAttribute("aria-pressed", String(option.dataset.themeOption === theme));
     });
+  };
+
+  // Pick up a choice made elsewhere: in another tab, or after this page was
+  // restored from the back/forward cache.
+  const sync = () => {
+    apply(saved());
+    render();
   };
 
   document.addEventListener("click", (event) => {
@@ -36,16 +57,26 @@
     }
     const theme = option.dataset.themeOption;
     // Picking the system's own theme goes back to following the system.
-    if (theme === systemTheme()) {
-      delete root.dataset.theme;
-      save(null);
-    } else {
-      root.dataset.theme = theme;
-      save(theme);
-    }
+    const choice = theme === systemTheme() ? null : theme;
+    apply(choice);
+    save(choice);
     render();
   });
 
   systemDark.addEventListener("change", render);
+  window.addEventListener("storage", (event) => {
+    if (event.key === "theme" || event.key === null) {
+      sync();
+    }
+  });
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      sync();
+    }
+  });
+
+  document.querySelectorAll("[data-theme-switcher]").forEach((row) => {
+    row.hidden = false;
+  });
   render();
 })();

@@ -265,7 +265,8 @@ immutable. Use the date and `hn_item_id` together to identify an item.
   [pygment-style.css](static/css/md-css/pygment-style.css); a test enforces
   this. Lay out pages with CSS grid or flexbox in the component's stylesheet
   rather than utility classes. [site-nav.js](static/site-nav.js) drives the
-  mobile navigation menu.
+  mobile navigation menu and closes it and the settings panel on an outside
+  click, Escape or tabbing away.
 - UI translations live in `i18n.py`. Article translations use the sidecars above;
   switching the page language does not translate Daily Brief summaries.
 - Use `asset_url(...)` for direct template references to site assets. It appends

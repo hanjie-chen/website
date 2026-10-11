@@ -234,6 +234,8 @@
 
 /* Full-viewport dialog so a click outside the content lands on the dialog itself. */
 .image-preview {
+  /* Images read best on a dark surround in both themes. */
+  color-scheme: dark;
   width: 100vw;
   height: 100dvh;
   max-width: none;
@@ -320,7 +322,7 @@ html:has(.image-preview[open]) {
 .image-preview-caption {
   margin: 0.9rem 0 0;
   text-align: center;
-  color: var(--lightbox-text);
+  color: var(--text-emphasis);
 }
 
 @media (min-width: 1200px) {

@@ -11,6 +11,8 @@
             const theme = localStorage.getItem("theme");
             if (theme === "light" || theme === "dark") {
                 document.documentElement.dataset.theme = theme;
+                // Let the browser paint its first canvas in the saved theme too.
+                document.querySelector('meta[name="color-scheme"]').content = theme;
             }
         } catch {
             // Without storage the page follows the system theme.

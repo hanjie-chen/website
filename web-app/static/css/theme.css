@@ -37,9 +37,8 @@
     --surface-pill: light-dark(rgba(60, 50, 30, 0.06), rgba(255, 248, 235, 0.08));
     /* Opaque because it covers the text beneath a dock step. */
     --surface-current: light-dark(#e3e7e1, #252b27);
-    /* The image preview stays dark in both themes. */
+    /* Used under color-scheme: dark, so only one value. */
     --surface-lightbox: rgba(14, 13, 11, 0.94);
-    --lightbox-text: #e9e5dc;
     --backdrop: rgba(0, 0, 0, 0.5);
 
     /* Borders and rules */
