@@ -13,6 +13,8 @@
     <link rel="icon" href="{{ asset_url('icon/favicon_point.ico') }}" type="image/x-icon">
 
 
+    <!-- color tokens: load first so every stylesheet can use them -->
+    <link rel="stylesheet" href="{{ asset_url('css/theme.css') }}">
     <link rel="stylesheet" href="{{ asset_url('css/base.css') }}">
     <!-- preload the lightweight Chinese UI subset so fixed labels can settle earlier -->
     <link rel="preload" href="{{ asset_url('font/PingFangSC/PingFang-SC-UI-subset.woff2') }}" as="font"

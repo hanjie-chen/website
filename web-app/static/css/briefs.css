@@ -1,5 +1,4 @@
 .briefs-page-shell {
-    --brief-border: rgba(255, 255, 255, 0.095);
     width: min(100%, 900px);
     padding-top: 2rem;
 }
@@ -11,7 +10,7 @@
 
 .briefs-hero {
     padding: 2rem 0 2.5rem;
-    border-bottom: 1px solid var(--brief-border);
+    border-bottom: 1px solid var(--border);
 }
 
 .briefs-hero h1 {
@@ -64,7 +63,7 @@
     min-height: 2.25rem;
     border: 1px solid transparent;
     border-radius: 999px;
-    color: var(--text-secondary-color);
+    color: var(--text-muted);
     font-size: 0.95rem;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -90,18 +89,18 @@
 
 a.brief-date-step:hover,
 a.brief-date-step:focus-visible {
-    color: var(--accent-color);
+    color: var(--accent);
 }
 
 .brief-date-row a.brief-date-step:hover,
 .brief-date-row a.brief-date-step:focus-visible {
-    border-color: rgba(59, 130, 246, 0.16);
-    background: rgba(59, 130, 246, 0.04);
+    border-color: var(--accent-border-faint);
+    background: var(--accent-wash);
 }
 
 .brief-date-row a.brief-date-step:focus-visible,
 .brief-dock-date:focus-visible {
-    outline: 2px solid var(--accent-color);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
@@ -129,10 +128,10 @@ a.brief-date-step:focus-visible {
     gap: 0.5rem;
     min-height: var(--nav-control-height);
     padding: 0 0.85rem;
-    border: 1px solid var(--pill-neutral-border);
+    border: 1px solid var(--border-pill);
     border-radius: 999px;
-    background: var(--pill-neutral-background);
-    color: var(--text-primary-color);
+    background: var(--surface-pill);
+    color: var(--text);
     font-size: 0.9rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -144,13 +143,13 @@ a.brief-date-step:focus-visible {
 
 .brief-dock-date:hover,
 .brief-dock-date:focus-visible {
-    color: var(--accent-color);
-    border-color: var(--pill-accent-border);
-    background: rgba(59, 130, 246, 0.06);
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-wash);
 }
 
 .brief-dock-date-arrow {
-    color: var(--text-secondary-color);
+    color: var(--text-muted);
     font-weight: 400;
 }
 
@@ -207,15 +206,15 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-dock a.brief-date-step:focus-visible .brief-date-step-body {
-    outline: 2px solid var(--accent-color);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
 /* Preview the neighbor's date on keyboard focus, or on hover where hover exists. */
 .brief-dock a.brief-date-step:focus-visible .brief-date-step-body {
     gap: 0.4rem;
-    border-color: rgba(59, 130, 246, 0.16);
-    background: #1f2530;
+    border-color: var(--accent-border-faint);
+    background: var(--surface-accent);
 }
 
 .brief-dock a.brief-date-step:focus-visible .brief-date-step-label {
@@ -226,8 +225,8 @@ a.brief-date-step:focus-visible {
 @media (hover: hover) {
     .brief-dock a.brief-date-step:hover .brief-date-step-body {
         gap: 0.4rem;
-        border-color: rgba(59, 130, 246, 0.16);
-        background: #1f2530;
+        border-color: var(--accent-border-faint);
+        background: var(--surface-accent);
     }
 
     .brief-dock a.brief-date-step:hover .brief-date-step-label {
@@ -347,14 +346,14 @@ a.brief-date-step:focus-visible {
 .briefs-lead {
     max-width: 42rem;
     margin: 1.2rem 0 0;
-    color: rgba(219, 220, 226, 0.86);
+    color: var(--text-soft);
     font-size: 1rem;
     line-height: 1.75;
 }
 
 .briefs-language-note,
 .brief-section-note {
-    color: var(--text-secondary-color);
+    color: var(--text-muted);
     font-size: 0.88rem;
     line-height: 1.65;
 }
@@ -370,7 +369,7 @@ a.brief-date-step:focus-visible {
 
 .brief-section + .brief-section {
     margin-top: 2.75rem;
-    border-top: 1px solid var(--brief-border);
+    border-top: 1px solid var(--border);
 }
 
 .briefs-section-heading {
@@ -390,7 +389,7 @@ a.brief-date-step:focus-visible {
 .brief-count,
 .brief-item-meta,
 .brief-archive-meta {
-    color: var(--text-secondary-color);
+    color: var(--text-muted);
     font-size: 0.82rem;
 }
 
@@ -400,12 +399,12 @@ a.brief-date-step:focus-visible {
 
 .brief-item-list {
     margin-top: 1.15rem;
-    border-top: 1px solid var(--brief-border);
+    border-top: 1px solid var(--border);
 }
 
 .brief-item-card {
     padding: 1.55rem 0 1.65rem;
-    border-bottom: 1px solid var(--brief-border);
+    border-bottom: 1px solid var(--border);
 }
 
 .brief-story-heading {
@@ -413,7 +412,7 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-story-title {
-    color: var(--text-primary-color);
+    color: var(--text);
     font-size: clamp(1.08rem, 2.2vw, 1.3rem);
     font-weight: 700;
     line-height: 1.46;
@@ -425,7 +424,7 @@ a.brief-date-step:focus-visible {
 .brief-story-title:focus-visible,
 .brief-item-meta a:hover,
 .brief-item-meta a:focus-visible {
-    color: #a6d1ff;
+    color: var(--accent-text-hover);
     text-decoration: underline;
     text-decoration-thickness: 1px;
 }
@@ -433,7 +432,7 @@ a.brief-date-step:focus-visible {
 .brief-story-title:focus-visible,
 .brief-item-meta a:focus-visible,
 .brief-archive-row:focus-visible {
-    outline: 2px solid var(--accent-color);
+    outline: 2px solid var(--accent);
     outline-offset: 4px;
 }
 
@@ -444,7 +443,7 @@ a.brief-date-step:focus-visible {
 
 .brief-summary {
     margin: 0.9rem 0 0;
-    color: rgba(219, 220, 226, 0.94);
+    color: var(--text-prose);
     font-size: 0.98rem;
 }
 
@@ -477,7 +476,7 @@ a.brief-date-step:focus-visible {
 
 .brief-details {
     margin: 0;
-    color: var(--text-secondary-color);
+    color: var(--text-muted);
     font-size: 0.84rem;
     line-height: 1.65;
 }
@@ -494,7 +493,7 @@ a.brief-date-step:focus-visible {
     padding: 0.25rem 0.5rem;
     margin: 0;
     border-radius: 5px;
-    color: #aeb4c2;
+    color: var(--text-soft);
     cursor: pointer;
     list-style: none;
     white-space: nowrap;
@@ -507,12 +506,12 @@ a.brief-date-step:focus-visible {
 
 .brief-details summary:hover,
 .brief-details summary:focus-visible {
-    color: #a6d1ff;
-    background: rgba(121, 184, 255, 0.07);
+    color: var(--accent-text-hover);
+    background: var(--accent-wash);
 }
 
 .brief-details summary:focus-visible {
-    outline: 2px solid var(--accent-color);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
@@ -539,7 +538,7 @@ a.brief-date-step:focus-visible {
     max-width: 46rem;
     margin: 0.65rem 0 0;
     padding-left: 0.9rem;
-    border-left: 1px solid rgba(174, 180, 194, 0.25);
+    border-left: 1px solid var(--border-rail);
 }
 
 .brief-details dl div {
@@ -553,7 +552,7 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-details dt {
-    color: rgba(219, 220, 226, 0.86);
+    color: var(--text-soft);
     font-weight: 700;
 }
 
@@ -574,7 +573,7 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-generation-note {
-    color: var(--text-secondary-color);
+    color: var(--text-muted);
 }
 
 .brief-item-meta {
@@ -592,7 +591,7 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-item-meta a {
-    color: #79b8ff;
+    color: var(--accent-text);
     text-decoration: none;
 }
 
@@ -608,13 +607,13 @@ a.brief-date-step:focus-visible {
     align-items: center;
     gap: 1rem;
     min-height: 72px;
-    border-bottom: 1px solid var(--brief-border);
-    color: var(--text-primary-color);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
     text-decoration: none;
 }
 
 .brief-archive-row:hover {
-    color: #a6d1ff;
+    color: var(--accent-text-hover);
 }
 
 .brief-archive-row .brief-date {
@@ -625,7 +624,7 @@ a.brief-date-step:focus-visible {
 
 .briefs-empty-state,
 .brief-section-empty {
-    color: var(--text-secondary-color);
+    color: var(--text-muted);
 }
 
 .briefs-empty-state {

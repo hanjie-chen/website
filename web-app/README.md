@@ -251,9 +251,12 @@ immutable. Use the date and `hn_item_id` together to identify an item.
 
 - [base.html](templates/base.html) and [_site_topbar.html](templates/_site_topbar.html)
   own the shared shell. The site uses no CSS or JavaScript framework:
-  [base.css](static/css/base.css) is the browser reset and page shell,
-  [style.css](static/css/style.css) provides global theme, navigation and
-  homepage styles, and page-specific styles extend them. Lay out pages with
+  [theme.css](static/css/theme.css) defines every site color as a role-named
+  token, [base.css](static/css/base.css) is the browser reset and page shell,
+  [style.css](static/css/style.css) provides navigation and homepage styles,
+  and page-specific styles extend them. Use tokens from `theme.css` instead of
+  color literals in component styles; Pygments syntax colors stay in
+  [pygment-style.css](static/css/md-css/pygment-style.css). Lay out pages with
   CSS grid or flexbox in the component's stylesheet rather than utility classes.
   [site-nav.js](static/site-nav.js) drives the mobile navigation menu.
 - UI translations live in `i18n.py`. Article translations use the sidecars above;
