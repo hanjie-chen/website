@@ -35,8 +35,11 @@
     --surface-subtle: light-dark(rgba(60, 50, 30, 0.03), rgba(255, 248, 235, 0.03));
     --surface-sunken: light-dark(rgba(60, 50, 30, 0.05), rgba(12, 11, 9, 0.35));
     --surface-pill: light-dark(rgba(60, 50, 30, 0.06), rgba(255, 248, 235, 0.08));
-    /* Opaque because it covers the text beneath a dock step. */
-    --surface-current: light-dark(#e3e7e1, #252b27);
+    /*
+     * Hover fill for quiet top-bar controls: --surface-pill over the bar,
+     * made opaque because a dock step's label slides over the date beneath.
+     */
+    --surface-hover: light-dark(#f1f0ec, #36342f);
     /* Used under color-scheme: dark, so only one value. */
     --surface-lightbox: rgba(14, 13, 11, 0.94);
     --backdrop: rgba(0, 0, 0, 0.5);
@@ -74,7 +77,6 @@
     --current-tint: light-dark(rgba(46, 107, 94, 0.1), rgba(114, 184, 166, 0.1));
     --current-tint-strong: light-dark(rgba(46, 107, 94, 0.14), rgba(114, 184, 166, 0.15));
     --current-border-faint: light-dark(rgba(46, 107, 94, 0.2), rgba(114, 184, 166, 0.2));
-    --current-border: light-dark(rgba(46, 107, 94, 0.45), rgba(114, 184, 166, 0.42));
 
     /*
      * Brand mark: the full moon of the 6.1 event art. At night it glows; on

@@ -332,8 +332,11 @@ on both backgrounds.
 - **Amber** (`--accent-*`, `#9a5f0e` / `#e3a548`) marks content worth noticing:
   the brand mark, links and their underlines, quote rails and highlighted labels.
 - **Pine** (`--current-*`, `#2e6b5e` / `#72b8a6`) marks where you are and what
-  responds to you: the current page, selected navigation items, hover feedback
-  and focus rings.
+  responds to you within a page: selected table-of-contents and sidebar items,
+  hover feedback on cards and buttons, and focus rings.
+
+The top bar keeps a single color, the moon. Its current page shows in bold with
+a neutral rule, and its controls hover with a neutral fill.
 
 Choose by role rather than looks: text that leads somewhere or deserves
 attention takes amber, and state takes pine. Admonition and success colors

@@ -89,13 +89,12 @@
 
 a.brief-date-step:hover,
 a.brief-date-step:focus-visible {
-    color: var(--current);
+    color: var(--text-strong);
 }
 
 .brief-date-row a.brief-date-step:hover,
 .brief-date-row a.brief-date-step:focus-visible {
-    border-color: var(--current-border-faint);
-    background: var(--current-wash);
+    background: var(--surface-pill);
 }
 
 .brief-date-row a.brief-date-step:focus-visible,
@@ -144,9 +143,8 @@ a.brief-date-step:focus-visible {
 /* Same hover as the dock steps beside it. */
 .brief-dock-date:hover,
 .brief-dock-date:focus-visible {
-    color: var(--current);
-    border-color: var(--current-border-faint);
-    background: var(--surface-current);
+    color: var(--text-strong);
+    background: var(--surface-hover);
 }
 
 .brief-dock-date-arrow {
@@ -214,8 +212,7 @@ a.brief-date-step:focus-visible {
 /* Preview the neighbor's date on keyboard focus, or on hover where hover exists. */
 .brief-dock a.brief-date-step:focus-visible .brief-date-step-body {
     gap: 0.4rem;
-    border-color: var(--current-border-faint);
-    background: var(--surface-current);
+    background: var(--surface-hover);
 }
 
 .brief-dock a.brief-date-step:focus-visible .brief-date-step-label {
@@ -226,8 +223,7 @@ a.brief-date-step:focus-visible {
 @media (hover: hover) {
     .brief-dock a.brief-date-step:hover .brief-date-step-body {
         gap: 0.4rem;
-        border-color: var(--current-border-faint);
-        background: var(--surface-current);
+        background: var(--surface-hover);
     }
 
     .brief-dock a.brief-date-step:hover .brief-date-step-label {

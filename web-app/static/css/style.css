@@ -164,15 +164,15 @@ body {
     outline-offset: 2px;
 }
 
+/* The top bar keeps one color, the moon; the current page shows in weight and a neutral rule. */
 .site-nav-link:hover {
-    color: var(--current);
-    border-color: var(--current-border-faint);
-    background: var(--current-wash);
+    color: var(--text-strong);
+    background: var(--surface-pill);
 }
 
 .site-nav-link.is-active {
-    color: var(--current);
-    border-color: var(--current-border);
+    color: var(--text-strong);
+    border-color: var(--border-strong);
     font-weight: 700;
 }
 
@@ -442,10 +442,10 @@ body {
     position: relative;
     min-height: var(--nav-control-height);
     padding: 0 0.75rem;
-    border: 1px solid var(--current-border);
+    border: 1px solid var(--border-strong);
     border-radius: 999px;
     background: transparent;
-    color: var(--current);
+    color: var(--text-strong);
     font: inherit;
     font-size: 0.9rem;
     font-weight: 700;
