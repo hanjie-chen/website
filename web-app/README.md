@@ -347,10 +347,10 @@ Each token holds `light-dark(light, dark)` values. Pages follow the system
 theme; `data-theme="light"` or `"dark"` on `<html>` overrides it. Language and
 appearance are rarely changed, so they sit behind one quiet settings button at
 the end of the top bar (a native `details` panel; the mobile menu shows the
-same rows). Each row lists both options and marks the current one in bold. The
-theme row ([theme-switcher.js](static/theme-switcher.js)) marks the theme in
-effect, saves a choice in `localStorage["theme"]`, and choosing the system's
-own theme clears it. An
+same rows). Each row lists its options and marks the current one in bold. In
+the theme row ([theme-switcher.js](static/theme-switcher.js)), Light and Dark
+pin a theme in `localStorage["theme"]` and Auto clears it to follow the system,
+so a pinned theme survives the system's own day and night switch. An
 inline script in `base.html` applies the saved choice before first paint.
 Browsers without `light-dark()` support (released before mid-2024) show the
 browser's default black on white; the site accepts this rather than keeping a

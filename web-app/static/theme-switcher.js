@@ -1,10 +1,7 @@
-// Theme switcher: the page follows the system theme until the visitor picks one.
+// Theme switcher: Light and Dark pin a theme; Auto follows the system.
 // The <head> script in base.html applies a saved choice before the first paint.
 (() => {
   const root = document.documentElement;
-  const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
-  const systemTheme = () => (systemDark.matches ? "dark" : "light");
-  const currentTheme = () => root.dataset.theme || systemTheme();
 
   const saved = () => {
     try {
@@ -35,11 +32,11 @@
     }
   };
 
-  // Mark the theme in effect, whether picked or inherited from the system.
+  // Mark the visitor's choice; without a pinned theme that is Auto.
   const render = () => {
-    const theme = currentTheme();
+    const choice = root.dataset.theme || "system";
     document.querySelectorAll("[data-theme-option]").forEach((option) => {
-      option.setAttribute("aria-pressed", String(option.dataset.themeOption === theme));
+      option.setAttribute("aria-pressed", String(option.dataset.themeOption === choice));
     });
   };
 
@@ -55,15 +52,12 @@
     if (!option) {
       return;
     }
-    const theme = option.dataset.themeOption;
-    // Picking the system's own theme goes back to following the system.
-    const choice = theme === systemTheme() ? null : theme;
-    apply(choice);
-    save(choice);
+    const theme = option.dataset.themeOption === "system" ? null : option.dataset.themeOption;
+    apply(theme);
+    save(theme);
     render();
   });
 
-  systemDark.addEventListener("change", render);
   window.addEventListener("storage", (event) => {
     if (event.key === "theme" || event.key === null) {
       sync();

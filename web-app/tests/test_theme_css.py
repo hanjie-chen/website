@@ -30,7 +30,8 @@ def test_pages_load_theme_tokens_first_and_render_theme_switchers(client):
     # One theme row in the settings panel, one in the mobile menu, both revealed by script.
     assert html.count("data-theme-switcher hidden") == 2
     assert html.count('data-theme-option="light"') == 2
-    assert 'aria-label="浅色模式"' in html
+    assert ">浅色</button>" in html
+    assert ">自动</button>" in html
     assert "/static/theme-switcher.js?v=" in html
 
 
@@ -39,5 +40,6 @@ def test_theme_switcher_labels_follow_page_language(client):
 
     assert 'aria-label="Settings"' in html
     assert 'aria-label="Appearance"' in html
-    assert 'aria-label="Light mode"' in html
-    assert 'aria-label="Dark mode"' in html
+    assert ">Light</button>" in html
+    assert ">Dark</button>" in html
+    assert ">Auto</button>" in html
