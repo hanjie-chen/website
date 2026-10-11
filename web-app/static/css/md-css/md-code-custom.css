@@ -126,7 +126,9 @@
 /* for inline code */
 p code,
 li code,
-blockquote code {
+blockquote code,
+table:not(.codehilitetable) td code,
+table:not(.codehilitetable) th code {
   background-color: var(--code-inline-bg);
   color: var(--code-inline-text);
   padding: 0.12rem 0.34rem 0.16rem;

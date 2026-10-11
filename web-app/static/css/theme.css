@@ -3,40 +3,46 @@
  * stylesheets refer to these names instead of literal values. Theme switching
  * redefines these tokens only. Pygments syntax colors stay in
  * md-css/pygment-style.css.
+ *
+ * Base palette: warm paper by day, warm charcoal by night. The neutrals carry
+ * no hue of their own so that any accent fits; the accent is still the
+ * previous blue until it is chosen.
  */
 :root {
+    color-scheme: dark;
+
     /* Page and surfaces */
-    --bg: #1a1c1f;
-    --surface-nav: rgba(28, 30, 34, 0.95);
-    --surface-popover: #1c1e22;
-    --surface-panel: linear-gradient(180deg, rgba(28, 30, 34, 0.82) 0%, rgba(22, 24, 28, 0.72) 100%);
-    --surface-glass: rgba(18, 20, 24, 0.7);
-    --surface-card: rgba(24, 26, 31, 0.7);
-    --surface-subtle: rgba(255, 255, 255, 0.03);
-    --surface-sunken: rgba(15, 23, 42, 0.44);
-    --surface-pill: rgba(255, 255, 255, 0.08);
+    --bg: #1c1b19;
+    --surface-nav: rgba(37, 35, 32, 0.95);
+    --surface-popover: #252320;
+    --surface-panel: linear-gradient(180deg, rgba(37, 35, 32, 0.82) 0%, rgba(32, 30, 27, 0.72) 100%);
+    --surface-glass: rgba(20, 19, 17, 0.7);
+    --surface-card: rgba(28, 26, 24, 0.7);
+    --surface-subtle: rgba(255, 248, 235, 0.03);
+    --surface-sunken: rgba(12, 11, 9, 0.35);
+    --surface-pill: rgba(255, 248, 235, 0.08);
     /* Opaque because it covers the text beneath a dock step. */
-    --surface-accent: #1f2530;
-    --surface-lightbox: rgba(8, 11, 18, 0.94);
+    --surface-accent: #1f252f;
+    --surface-lightbox: rgba(14, 13, 11, 0.94);
     --backdrop: rgba(0, 0, 0, 0.5);
 
     /* Borders and rules */
-    --border-subtle: rgba(255, 255, 255, 0.06);
-    --border: rgba(255, 255, 255, 0.09);
-    --border-strong: rgba(255, 255, 255, 0.15);
-    --border-pill: rgba(255, 255, 255, 0.24);
-    --border-rail: rgba(148, 163, 184, 0.28);
+    --border-subtle: rgba(255, 245, 230, 0.06);
+    --border: rgba(255, 245, 230, 0.1);
+    --border-strong: rgba(255, 245, 230, 0.16);
+    --border-pill: rgba(255, 245, 230, 0.22);
+    --border-rail: rgba(162, 157, 146, 0.3);
 
     /* Text, from most to least prominent */
-    --text-strong: #f8fbff;
-    --text-heading: #edf2f7;
-    --text-emphasis: rgba(226, 232, 240, 0.94);
-    --text: #dbdce2;
-    --text-prose: rgba(203, 213, 225, 0.95);
-    --text-soft: rgba(219, 220, 226, 0.84);
-    --text-muted: #9ca3af;
-    --text-subtle: rgba(156, 163, 175, 0.92);
-    --text-faint: rgba(156, 163, 175, 0.55);
+    --text-strong: #f6f3ec;
+    --text-heading: #f0ece4;
+    --text-emphasis: #e9e5dc;
+    --text: #e3dfd6;
+    --text-prose: #d9d4ca;
+    --text-soft: #c3beb4;
+    --text-muted: #a29d92;
+    --text-subtle: #99948a;
+    --text-faint: #6b675f;
 
     /* Accent: marks where you are, links and interactive states */
     --accent: #3b82f6;
@@ -52,11 +58,11 @@
     --accent-line-strong: rgba(121, 184, 255, 0.42);
 
     /* Code */
-    --code-bg: #1f2430;
-    --code-inline-bg: rgba(148, 163, 184, 0.12);
-    --code-inline-text: #dbeafe;
-    --code-lineno: rgba(140, 152, 170, 0.88);
-    --code-button-bg: rgba(13, 17, 23, 0.72);
+    --code-bg: #2a2824;
+    --code-inline-bg: rgba(255, 245, 230, 0.07);
+    --code-inline-text: #ece7dd;
+    --code-lineno: #8a857b;
+    --code-button-bg: rgba(20, 19, 17, 0.72);
 
     /* Status */
     --success-bg: rgba(34, 197, 94, 0.18);
