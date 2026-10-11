@@ -257,7 +257,8 @@ immutable. Use the date and `hn_item_id` together to identify an item.
 - [base.html](templates/base.html) and [_site_topbar.html](templates/_site_topbar.html)
   own the shared shell. The site uses no CSS or JavaScript framework:
   [theme.css](static/css/theme.css) defines every site color as a role-named
-  token, [base.css](static/css/base.css) is the browser reset and page shell,
+  token (see [Color and Themes](#color-and-themes)),
+  [base.css](static/css/base.css) is the browser reset and page shell,
   [style.css](static/css/style.css) provides navigation and homepage styles,
   and page-specific styles extend them. Use tokens from `theme.css` instead of
   color literals in component styles, including Pygments syntax colors in
@@ -265,11 +266,6 @@ immutable. Use the date and `hn_item_id` together to identify an item.
   this. Lay out pages with CSS grid or flexbox in the component's stylesheet
   rather than utility classes. [site-nav.js](static/site-nav.js) drives the
   mobile navigation menu.
-- Each token holds `light-dark(light, dark)` values. Pages follow the system
-  theme; `data-theme="light"` or `"dark"` on `<html>` overrides it. The top-bar
-  toggle ([theme-toggle.js](static/theme-toggle.js)) saves a choice in
-  `localStorage["theme"]`, and choosing the system's own theme clears it. An
-  inline script in `base.html` applies the saved choice before first paint.
 - UI translations live in `i18n.py`. Article translations use the sidecars above;
   switching the page language does not translate Daily Brief summaries.
 - Use `asset_url(...)` for direct template references to site assets. It appends
@@ -301,6 +297,59 @@ immutable. Use the date and `hn_item_id` together to identify an item.
   direct visits from the homepage. This is not reading progress: it uses local
   storage shared across languages, keeps at most 14 date keys, and does not sync
   across devices. Navigation remains usable with JavaScript or storage disabled.
+
+## Color and Themes
+
+Pages should stay calm to read for long stretches, so most of each page uses
+quiet neutrals and personality lives in a small accent.
+[theme.css](static/css/theme.css) is the only place colors are defined.
+
+### Base Palette
+
+Backgrounds, surfaces, text and borders use warm neutrals with no hue of their
+own: warm paper in light mode, warm charcoal in dark mode. They favor long
+reading, and because they lean toward no hue, an accent can change without
+retuning them.
+
+| Role | Light | Dark |
+| --- | --- | --- |
+| Background (`--bg`) | `#f7f5f0` | `#1c1b19` |
+| Body text (`--text`) | `#2a2925` | `#e3dfd6` |
+| Secondary text (`--text-muted`) | `#6a665e` | `#a29d92` |
+| Code background (`--code-bg`) | `#f0ece3` | `#2a2824` |
+
+Body and secondary text meet WCAG AA (4.5:1) on every surface in both themes.
+Code line numbers, syntax comments and `--text-faint` separators are the
+deliberate exceptions.
+
+### Accents
+
+The two accents come from the Genshin Impact 6.1 event screens: the amber
+challenge-record bar and the pine-green night scenes, adjusted to stay legible
+on both backgrounds.
+
+- **Amber** (`--accent-*`, `#9a5f0e` / `#e3a548`) marks content worth noticing:
+  the brand mark, links and their underlines, quote rails and highlighted labels.
+- **Pine** (`--current-*`, `#2e6b5e` / `#72b8a6`) marks where you are and what
+  responds to you: the current page, selected navigation items, hover feedback
+  and focus rings.
+
+Choose by role rather than looks: text that leads somewhere or deserves
+attention takes amber, and state takes pine. Admonition and success colors
+carry fixed meanings and stay independent of both accents. Code uses One Light
+and One Dark syntax colors. To try another accent, change only the two accent
+token groups in `theme.css`.
+
+### Theme Switching
+
+Each token holds `light-dark(light, dark)` values. Pages follow the system
+theme; `data-theme="light"` or `"dark"` on `<html>` overrides it. The top-bar
+toggle ([theme-toggle.js](static/theme-toggle.js)) saves a choice in
+`localStorage["theme"]`, and choosing the system's own theme clears it. An
+inline script in `base.html` applies the saved choice before first paint.
+Browsers without `light-dark()` support (released before mid-2024) show the
+browser's default black on white; the site accepts this rather than keeping a
+second copy of the dark values.
 
 ## Running and Testing
 
