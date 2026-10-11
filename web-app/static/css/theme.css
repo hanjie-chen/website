@@ -77,6 +77,14 @@
     --current-border-faint: light-dark(rgba(46, 107, 94, 0.2), rgba(114, 184, 166, 0.2));
     --current-border: light-dark(rgba(46, 107, 94, 0.45), rgba(114, 184, 166, 0.42));
 
+    /*
+     * Brand mark: the full moon of the 6.1 event art. At night it glows; on
+     * paper it is gilded, with a thin halo ring in place of the glow.
+     */
+    --moon: light-dark(#b8781c, #e3a548);
+    --moon-ring: light-dark(rgba(184, 120, 28, 0.55), transparent);
+    --moon-glow: light-dark(transparent, rgba(227, 165, 72, 0.4));
+
     /* Code */
     --code-bg: light-dark(#f0ece3, #2a2824);
     --code-inline-bg: light-dark(rgba(60, 50, 30, 0.06), rgba(255, 245, 230, 0.07));

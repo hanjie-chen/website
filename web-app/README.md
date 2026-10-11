@@ -341,6 +341,13 @@ carry fixed meanings and stay independent of both accents. Code uses One Light
 and One Dark syntax colors. To try another accent, change only the two accent
 token groups in `theme.css`.
 
+The brand mark is the full moon from the same event art. In dark mode it glows;
+on light paper it is gilded (`#b8781c`) with a thin halo ring instead, the way
+the event screens use glows at night and gold outlines on paper (`--moon-*`
+tokens). The browser icon [moon.svg](static/icon/moon.svg) follows the
+browser's own light or dark mode, with [moon.ico](static/icon/moon.ico) as the
+fallback for browsers without SVG icons.
+
 ### Theme Switching
 
 Each token holds `light-dark(light, dark)` values. Pages follow the system

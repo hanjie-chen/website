@@ -72,12 +72,16 @@ body {
     color: var(--text);
 }
 
+/* The moon: a glow in dark mode, a gilded halo ring in light mode. */
 .site-nav-brand-mark {
     flex-shrink: 0;
     width: 0.62rem;
     height: 0.62rem;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--moon);
+    outline: 1px solid var(--moon-ring);
+    outline-offset: 2px;
+    box-shadow: 0 0 6px 2px var(--moon-glow);
 }
 
 /*
