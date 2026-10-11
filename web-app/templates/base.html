@@ -4,6 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <script>
+        // Apply a saved theme before the first paint; theme-toggle.js handles changes.
+        try {
+            const theme = localStorage.getItem("theme");
+            if (theme === "light" || theme === "dark") {
+                document.documentElement.dataset.theme = theme;
+            }
+        } catch {
+            // Without storage the page follows the system theme.
+        }
+    </script>
 
     {% block title %}
 
@@ -59,6 +71,7 @@
 
     </main>
     <script src="{{ asset_url('site-nav.js') }}"></script>
+    <script src="{{ asset_url('theme-toggle.js') }}"></script>
     <script src="{{ asset_url('code-copy.js') }}"></script>
     <script src="{{ asset_url('article-toc.js') }}"></script>
     {% block script %}

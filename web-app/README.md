@@ -260,10 +260,16 @@ immutable. Use the date and `hn_item_id` together to identify an item.
   token, [base.css](static/css/base.css) is the browser reset and page shell,
   [style.css](static/css/style.css) provides navigation and homepage styles,
   and page-specific styles extend them. Use tokens from `theme.css` instead of
-  color literals in component styles; Pygments syntax colors stay in
-  [pygment-style.css](static/css/md-css/pygment-style.css). Lay out pages with
-  CSS grid or flexbox in the component's stylesheet rather than utility classes.
-  [site-nav.js](static/site-nav.js) drives the mobile navigation menu.
+  color literals in component styles, including Pygments syntax colors in
+  [pygment-style.css](static/css/md-css/pygment-style.css); a test enforces
+  this. Lay out pages with CSS grid or flexbox in the component's stylesheet
+  rather than utility classes. [site-nav.js](static/site-nav.js) drives the
+  mobile navigation menu.
+- Each token holds `light-dark(light, dark)` values. Pages follow the system
+  theme; `data-theme="light"` or `"dark"` on `<html>` overrides it. The top-bar
+  toggle ([theme-toggle.js](static/theme-toggle.js)) saves a choice in
+  `localStorage["theme"]`, and choosing the system's own theme clears it. An
+  inline script in `base.html` applies the saved choice before first paint.
 - UI translations live in `i18n.py`. Article translations use the sidecars above;
   switching the page language does not translate Daily Brief summaries.
 - Use `asset_url(...)` for direct template references to site assets. It appends
@@ -279,7 +285,8 @@ immutable. Use the date and `hn_item_id` together to identify an item.
   retrieval notes align in an indented group; notes wrap below the status on
   narrow screens. It uses native `details` / `summary`.
   Keep page links and disclosures usable without JavaScript; the mobile
-  navigation menu is the exception and needs `site-nav.js` to open.
+  navigation menu needs `site-nav.js` to open, and the theme toggle stays
+  hidden without scripts while the page follows the system theme.
 - Font configuration lives in [font.css](static/font/font.css). The PingFang UI
   subset is preloaded; full fonts provide fallback coverage.
   [build_pingfang_ui_subset.py](scripts/build_pingfang_ui_subset.py) extracts

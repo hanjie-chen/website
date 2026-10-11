@@ -17,6 +17,7 @@
                 <span class="site-nav-brand-text"><span>hanjie site</span></span>
             </a>
             {% include "_language_switcher.html" %}
+            {% include "_theme_toggle.html" %}
         </div>
         {% if topbar_center is defined %}
         <div class="site-nav-center">{{ topbar_center }}</div>
@@ -35,6 +36,7 @@
                 </ul>
                 <div class="site-nav-languages">
                     {% include "_language_switcher.html" %}
+                    {% include "_theme_toggle.html" %}
                 </div>
             </div>
         </div>

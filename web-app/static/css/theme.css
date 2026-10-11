@@ -1,88 +1,116 @@
 /*
  * Color tokens: every site color is defined here by role, and component
- * stylesheets refer to these names instead of literal values. Theme switching
- * redefines these tokens only. Pygments syntax colors stay in
- * md-css/pygment-style.css.
+ * stylesheets refer to these names instead of literal values. Each token is
+ * light-dark(light value, dark value).
+ *
+ * The page follows the system theme; data-theme on <html> overrides it.
  *
  * Base palette: warm paper by day, warm charcoal by night. The neutrals carry
  * no hue of their own so that any accent fits; the accent is still the
  * previous blue until it is chosen.
  */
 :root {
-    color-scheme: dark;
+    color-scheme: light dark;
+}
 
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+:root {
     /* Page and surfaces */
-    --bg: #1c1b19;
-    --surface-nav: rgba(37, 35, 32, 0.95);
-    --surface-popover: #252320;
-    --surface-panel: linear-gradient(180deg, rgba(37, 35, 32, 0.82) 0%, rgba(32, 30, 27, 0.72) 100%);
-    --surface-glass: rgba(20, 19, 17, 0.7);
-    --surface-card: rgba(28, 26, 24, 0.7);
-    --surface-subtle: rgba(255, 248, 235, 0.03);
-    --surface-sunken: rgba(12, 11, 9, 0.35);
-    --surface-pill: rgba(255, 248, 235, 0.08);
+    --bg: light-dark(#f7f5f0, #1c1b19);
+    --surface-nav: light-dark(rgba(253, 252, 249, 0.92), rgba(37, 35, 32, 0.95));
+    --surface-popover: light-dark(#fdfcf9, #252320);
+    --surface-panel: linear-gradient(
+        180deg,
+        light-dark(#fdfcf9, rgba(37, 35, 32, 0.82)) 0%,
+        light-dark(#fbf9f5, rgba(32, 30, 27, 0.72)) 100%
+    );
+    --surface-glass: light-dark(rgba(253, 252, 249, 0.75), rgba(20, 19, 17, 0.7));
+    --surface-card: light-dark(rgba(242, 239, 232, 0.6), rgba(28, 26, 24, 0.7));
+    --surface-subtle: light-dark(rgba(60, 50, 30, 0.03), rgba(255, 248, 235, 0.03));
+    --surface-sunken: light-dark(rgba(60, 50, 30, 0.05), rgba(12, 11, 9, 0.35));
+    --surface-pill: light-dark(rgba(60, 50, 30, 0.06), rgba(255, 248, 235, 0.08));
     /* Opaque because it covers the text beneath a dock step. */
-    --surface-accent: #1f252f;
+    --surface-accent: light-dark(#e4eaf1, #1f252f);
+    /* The image preview stays dark in both themes. */
     --surface-lightbox: rgba(14, 13, 11, 0.94);
+    --lightbox-text: #e9e5dc;
     --backdrop: rgba(0, 0, 0, 0.5);
 
     /* Borders and rules */
-    --border-subtle: rgba(255, 245, 230, 0.06);
-    --border: rgba(255, 245, 230, 0.1);
-    --border-strong: rgba(255, 245, 230, 0.16);
-    --border-pill: rgba(255, 245, 230, 0.22);
-    --border-rail: rgba(162, 157, 146, 0.3);
+    --border-subtle: light-dark(rgba(60, 50, 30, 0.08), rgba(255, 245, 230, 0.06));
+    --border: light-dark(rgba(60, 50, 30, 0.12), rgba(255, 245, 230, 0.1));
+    --border-strong: light-dark(rgba(60, 50, 30, 0.2), rgba(255, 245, 230, 0.16));
+    --border-pill: light-dark(rgba(60, 50, 30, 0.18), rgba(255, 245, 230, 0.22));
+    --border-rail: light-dark(rgba(106, 102, 94, 0.3), rgba(162, 157, 146, 0.3));
 
     /* Text, from most to least prominent */
-    --text-strong: #f6f3ec;
-    --text-heading: #f0ece4;
-    --text-emphasis: #e9e5dc;
-    --text: #e3dfd6;
-    --text-prose: #d9d4ca;
-    --text-soft: #c3beb4;
-    --text-muted: #a29d92;
-    --text-subtle: #99948a;
-    --text-faint: #6b675f;
+    --text-strong: light-dark(#16150f, #f6f3ec);
+    --text-heading: light-dark(#1d1c18, #f0ece4);
+    --text-emphasis: light-dark(#24231f, #e9e5dc);
+    --text: light-dark(#2a2925, #e3dfd6);
+    --text-prose: light-dark(#34322d, #d9d4ca);
+    --text-soft: light-dark(#4f4c45, #c3beb4);
+    --text-muted: light-dark(#6a665e, #a29d92);
+    --text-subtle: light-dark(#6f6b63, #99948a);
+    --text-faint: light-dark(#a8a398, #6b675f);
 
     /* Accent: marks where you are, links and interactive states */
-    --accent: #3b82f6;
-    --accent-text: #79b8ff;
-    --accent-text-hover: #a6d1ff;
-    --accent-text-soft: rgba(121, 184, 255, 0.9);
-    --accent-wash: rgba(59, 130, 246, 0.05);
-    --accent-tint: rgba(59, 130, 246, 0.1);
-    --accent-tint-strong: rgba(59, 130, 246, 0.14);
-    --accent-border-faint: rgba(59, 130, 246, 0.16);
-    --accent-border: rgba(59, 130, 246, 0.4);
-    --accent-line: rgba(121, 184, 255, 0.26);
-    --accent-line-strong: rgba(121, 184, 255, 0.42);
+    --accent: light-dark(#2563eb, #3b82f6);
+    --accent-text: light-dark(#2563eb, #79b8ff);
+    --accent-text-hover: light-dark(#1d4ed8, #a6d1ff);
+    --accent-text-soft: light-dark(rgba(37, 99, 235, 0.9), rgba(121, 184, 255, 0.9));
+    --accent-wash: light-dark(rgba(37, 99, 235, 0.06), rgba(59, 130, 246, 0.05));
+    --accent-tint: light-dark(rgba(37, 99, 235, 0.09), rgba(59, 130, 246, 0.1));
+    --accent-tint-strong: light-dark(rgba(37, 99, 235, 0.13), rgba(59, 130, 246, 0.14));
+    --accent-border-faint: light-dark(rgba(37, 99, 235, 0.18), rgba(59, 130, 246, 0.16));
+    --accent-border: light-dark(rgba(37, 99, 235, 0.4), rgba(59, 130, 246, 0.4));
+    --accent-line: light-dark(rgba(37, 99, 235, 0.3), rgba(121, 184, 255, 0.26));
+    --accent-line-strong: light-dark(rgba(37, 99, 235, 0.5), rgba(121, 184, 255, 0.42));
 
     /* Code */
-    --code-bg: #2a2824;
-    --code-inline-bg: rgba(255, 245, 230, 0.07);
-    --code-inline-text: #ece7dd;
-    --code-lineno: #8a857b;
-    --code-button-bg: rgba(20, 19, 17, 0.72);
+    --code-bg: light-dark(#f0ece3, #2a2824);
+    --code-inline-bg: light-dark(rgba(60, 50, 30, 0.06), rgba(255, 245, 230, 0.07));
+    --code-inline-text: light-dark(#2f2c26, #ece7dd);
+    --code-lineno: light-dark(#7f7a70, #8a857b);
+    --code-button-bg: light-dark(rgba(253, 252, 249, 0.85), rgba(20, 19, 17, 0.72));
+
+    /* Syntax highlighting: One Light by day, One Dark by night */
+    --syntax-text: light-dark(#383a42, #abb2bf);
+    --syntax-comment: light-dark(#7c7a73, #7f848e);
+    --syntax-keyword: light-dark(#a626a4, #c678dd);
+    --syntax-name: light-dark(#c8453a, #e06c75);
+    --syntax-string: light-dark(#3e7f3d, #98c379);
+    --syntax-number: light-dark(#8f5e00, #d19a66);
+    --syntax-type: light-dark(#8a6100, #e5c07b);
+    --syntax-function: light-dark(#2f63d6, #61afef);
+    --syntax-operator: light-dark(#00769e, #56b6c2);
 
     /* Status */
-    --success-bg: rgba(34, 197, 94, 0.18);
-    --success-border: rgba(34, 197, 94, 0.45);
-    --success-text: #dcfce7;
+    --success-bg: light-dark(rgba(34, 197, 94, 0.14), rgba(34, 197, 94, 0.18));
+    --success-border: light-dark(rgba(22, 163, 74, 0.45), rgba(34, 197, 94, 0.45));
+    --success-text: light-dark(#166534, #dcfce7);
 
     /* Admonitions */
-    --admonition-note-title: rgba(191, 219, 254, 0.94);
-    --admonition-note-rail: rgba(96, 165, 250, 0.46);
-    --admonition-tip-title: rgba(167, 243, 208, 0.94);
-    --admonition-tip-rail: rgba(52, 211, 153, 0.44);
-    --admonition-important-title: rgba(186, 230, 253, 0.94);
-    --admonition-important-rail: rgba(56, 189, 248, 0.46);
-    --admonition-warning-title: rgba(253, 224, 71, 0.94);
-    --admonition-warning-rail: rgba(245, 158, 11, 0.46);
-    --admonition-caution-title: rgba(254, 202, 202, 0.94);
-    --admonition-caution-rail: rgba(248, 113, 113, 0.46);
+    --admonition-note-title: light-dark(#1d4ed8, rgba(191, 219, 254, 0.94));
+    --admonition-note-rail: light-dark(rgba(59, 130, 246, 0.5), rgba(96, 165, 250, 0.46));
+    --admonition-tip-title: light-dark(#047857, rgba(167, 243, 208, 0.94));
+    --admonition-tip-rail: light-dark(rgba(16, 185, 129, 0.5), rgba(52, 211, 153, 0.44));
+    --admonition-important-title: light-dark(#0369a1, rgba(186, 230, 253, 0.94));
+    --admonition-important-rail: light-dark(rgba(14, 165, 233, 0.5), rgba(56, 189, 248, 0.46));
+    --admonition-warning-title: light-dark(#a16207, rgba(253, 224, 71, 0.94));
+    --admonition-warning-rail: light-dark(rgba(217, 119, 6, 0.5), rgba(245, 158, 11, 0.46));
+    --admonition-caution-title: light-dark(#b91c1c, rgba(254, 202, 202, 0.94));
+    --admonition-caution-rail: light-dark(rgba(220, 38, 38, 0.5), rgba(248, 113, 113, 0.46));
 
     /* Shadows */
-    --shadow-color-faint: rgba(0, 0, 0, 0.08);
-    --shadow-color: rgba(0, 0, 0, 0.18);
-    --shadow-color-strong: rgba(0, 0, 0, 0.3);
+    --shadow-color-faint: light-dark(rgba(60, 50, 30, 0.05), rgba(0, 0, 0, 0.08));
+    --shadow-color: light-dark(rgba(60, 50, 30, 0.08), rgba(0, 0, 0, 0.18));
+    --shadow-color-strong: light-dark(rgba(60, 50, 30, 0.14), rgba(0, 0, 0, 0.3));
 }

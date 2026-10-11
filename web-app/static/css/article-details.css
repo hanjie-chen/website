@@ -320,7 +320,7 @@ html:has(.image-preview[open]) {
 .image-preview-caption {
   margin: 0.9rem 0 0;
   text-align: center;
-  color: var(--text-emphasis);
+  color: var(--lightbox-text);
 }
 
 @media (min-width: 1200px) {

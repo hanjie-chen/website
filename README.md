@@ -66,6 +66,6 @@ Workflow 职责、触发条件与维护说明见 [.github/workflows/README.md](.
 
 1. website ui refactor
     - daily brief page ui improve
-    - dark/light mode switch
+    - 选定强调色（light/dark 切换已完成，强调色暂沿用蓝色）
 
 2. 盘点 Cloudflare 配置并集中记录，评估将适合的配置纳入 Terraform 管理。
