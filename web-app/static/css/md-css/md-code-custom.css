@@ -107,13 +107,13 @@
 }
 
 .code-copy-btn:hover {
-  background: var(--accent-tint-strong);
-  border-color: var(--accent-line);
+  background: var(--current-tint-strong);
+  border-color: var(--current-border-faint);
   color: var(--text-strong);
 }
 
 .code-copy-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--current);
   outline-offset: 2px;
 }
 

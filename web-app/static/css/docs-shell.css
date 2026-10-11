@@ -72,14 +72,14 @@
 
 .docs-tree-link:hover,
 .docs-tree-article-link:hover {
-  background: var(--accent-tint);
+  background: var(--current-tint);
   color: var(--text-strong);
   transform: translateX(2px);
 }
 
 .docs-tree-link.is-active,
 .docs-tree-article-link.is-active {
-  background: var(--accent-tint-strong);
+  background: var(--current-tint-strong);
   color: var(--text-strong);
 }
 
@@ -117,11 +117,11 @@
 }
 
 .docs-breadcrumb-link {
-  color: var(--accent-text);
+  color: var(--accent);
 }
 
 .docs-breadcrumb-link:hover {
-  color: var(--accent-text-hover);
+  color: var(--accent-hover);
 }
 
 .docs-breadcrumb-separator {
@@ -134,7 +134,7 @@
 
 .docs-overline {
   margin: 0 0 0.5rem;
-  color: var(--accent-text-soft);
+  color: var(--accent-soft);
   letter-spacing: 0.14em;
   font-size: 0.76rem;
   text-transform: uppercase;
@@ -191,7 +191,7 @@
 }
 
 .docs-section-caption {
-  color: var(--accent-text-soft);
+  color: var(--accent-soft);
   font-size: 0.88rem;
 }
 
@@ -231,7 +231,7 @@
 
 .docs-category-card:hover {
   transform: translateY(-2px);
-  border-color: var(--accent-line);
+  border-color: var(--current-border-faint);
   box-shadow: 0 12px 24px var(--shadow-color);
 }
 
@@ -256,7 +256,7 @@
 .docs-category-path {
   display: block;
   margin-top: 0.8rem;
-  color: var(--accent-text-soft);
+  color: var(--accent-soft);
   font-size: 0.86rem;
 }
 
@@ -278,7 +278,7 @@
 
 .docs-article-row:hover {
   transform: translateY(-1px);
-  border-color: var(--accent-line);
+  border-color: var(--current-border-faint);
   box-shadow: 0 12px 24px var(--shadow-color);
 }
 

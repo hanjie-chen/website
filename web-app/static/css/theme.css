@@ -6,8 +6,7 @@
  * The page follows the system theme; data-theme on <html> overrides it.
  *
  * Base palette: warm paper by day, warm charcoal by night. The neutrals carry
- * no hue of their own so that any accent fits; the accent is still the
- * previous blue until it is chosen.
+ * no hue of their own so that any accent fits.
  */
 :root {
     color-scheme: light dark;
@@ -37,7 +36,7 @@
     --surface-sunken: light-dark(rgba(60, 50, 30, 0.05), rgba(12, 11, 9, 0.35));
     --surface-pill: light-dark(rgba(60, 50, 30, 0.06), rgba(255, 248, 235, 0.08));
     /* Opaque because it covers the text beneath a dock step. */
-    --surface-accent: light-dark(#e4eaf1, #1f252f);
+    --surface-current: light-dark(#e3e7e1, #252b27);
     /* The image preview stays dark in both themes. */
     --surface-lightbox: rgba(14, 13, 11, 0.94);
     --lightbox-text: #e9e5dc;
@@ -61,18 +60,23 @@
     --text-subtle: light-dark(#6f6b63, #99948a);
     --text-faint: light-dark(#a8a398, #6b675f);
 
-    /* Accent: marks where you are, links and interactive states */
-    --accent: light-dark(#2563eb, #3b82f6);
-    --accent-text: light-dark(#2563eb, #79b8ff);
-    --accent-text-hover: light-dark(#1d4ed8, #a6d1ff);
-    --accent-text-soft: light-dark(rgba(37, 99, 235, 0.9), rgba(121, 184, 255, 0.9));
-    --accent-wash: light-dark(rgba(37, 99, 235, 0.06), rgba(59, 130, 246, 0.05));
-    --accent-tint: light-dark(rgba(37, 99, 235, 0.09), rgba(59, 130, 246, 0.1));
-    --accent-tint-strong: light-dark(rgba(37, 99, 235, 0.13), rgba(59, 130, 246, 0.14));
-    --accent-border-faint: light-dark(rgba(37, 99, 235, 0.18), rgba(59, 130, 246, 0.16));
-    --accent-border: light-dark(rgba(37, 99, 235, 0.4), rgba(59, 130, 246, 0.4));
-    --accent-line: light-dark(rgba(37, 99, 235, 0.3), rgba(121, 184, 255, 0.26));
-    --accent-line-strong: light-dark(rgba(37, 99, 235, 0.5), rgba(121, 184, 255, 0.42));
+    /*
+     * Two accents, after the Genshin 6.1 event screens: amber marks content
+     * worth noticing (brand mark, links, highlights); pine marks where you
+     * are and what responds to you (current page, selection, hover, focus).
+     */
+    --accent: light-dark(#9a5f0e, #e3a548);
+    --accent-hover: light-dark(#7e4c08, #f0c27a);
+    --accent-soft: light-dark(rgba(154, 95, 14, 0.9), rgba(227, 165, 72, 0.9));
+    --accent-line: light-dark(rgba(154, 95, 14, 0.35), rgba(227, 165, 72, 0.3));
+    --accent-line-strong: light-dark(rgba(154, 95, 14, 0.55), rgba(227, 165, 72, 0.5));
+
+    --current: light-dark(#2e6b5e, #72b8a6);
+    --current-wash: light-dark(rgba(46, 107, 94, 0.06), rgba(114, 184, 166, 0.06));
+    --current-tint: light-dark(rgba(46, 107, 94, 0.1), rgba(114, 184, 166, 0.1));
+    --current-tint-strong: light-dark(rgba(46, 107, 94, 0.14), rgba(114, 184, 166, 0.15));
+    --current-border-faint: light-dark(rgba(46, 107, 94, 0.2), rgba(114, 184, 166, 0.2));
+    --current-border: light-dark(rgba(46, 107, 94, 0.45), rgba(114, 184, 166, 0.42));
 
     /* Code */
     --code-bg: light-dark(#f0ece3, #2a2824);

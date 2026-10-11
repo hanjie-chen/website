@@ -34,7 +34,7 @@
 
 .about-overline {
   margin: 0 0 0.45rem;
-  color: var(--accent-text-soft);
+  color: var(--accent-soft);
   letter-spacing: 0.14em;
   font-size: 0.76rem;
   text-transform: uppercase;
@@ -82,7 +82,7 @@
 
 .about-hero-subtitle {
   margin: 0.7rem 0 0;
-  color: var(--accent-text-hover);
+  color: var(--accent-hover);
   font-size: 1rem;
 }
 
@@ -120,19 +120,19 @@
 }
 
 .about-btn-secondary:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--current);
   outline-offset: 2px;
 }
 
 .about-btn-primary {
-  background: var(--accent-tint-strong);
+  background: var(--current-tint-strong);
   color: var(--text-strong);
   cursor: not-allowed;
   opacity: 0.82;
 }
 
 .about-btn-primary:disabled {
-  background: var(--accent-tint-strong);
+  background: var(--current-tint-strong);
   color: var(--text-strong);
 }
 
@@ -143,8 +143,8 @@
 
 .about-btn-secondary:hover {
   color: var(--text-strong);
-  border-color: var(--accent-line);
-  background: var(--accent-tint);
+  border-color: var(--current-border-faint);
+  background: var(--current-tint);
 }
 
 .about-btn-note {
@@ -263,7 +263,7 @@
 
 .about-project-meta {
   margin-bottom: 0.55rem;
-  color: var(--accent-text-soft);
+  color: var(--accent-soft);
   font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -301,8 +301,8 @@
 
 .about-contact-card:hover {
   color: var(--text-strong);
-  border-color: var(--accent-line);
-  background: var(--accent-wash);
+  border-color: var(--current-border-faint);
+  background: var(--current-wash);
 }
 
 .about-contact-label {

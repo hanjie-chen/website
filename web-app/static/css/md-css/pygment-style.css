@@ -2,9 +2,9 @@
 pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
 span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
-td.linenos .special { color: var(--text-strong); background-color: var(--accent-tint); padding-left: 5px; padding-right: 5px; }
-span.linenos.special { color: var(--text-strong); background-color: var(--accent-tint); padding-left: 5px; padding-right: 5px; }
-.codehilite .hll { background-color: var(--accent-tint) }
+td.linenos .special { color: var(--text-strong); background-color: var(--current-tint); padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: var(--text-strong); background-color: var(--current-tint); padding-left: 5px; padding-right: 5px; }
+.codehilite .hll { background-color: var(--current-tint) }
 .codehilite { background: var(--code-bg); color: var(--syntax-text) }
 .codehilite .c { color: var(--syntax-comment) } /* Comment */
 .codehilite .err { color: var(--syntax-text) } /* Error */

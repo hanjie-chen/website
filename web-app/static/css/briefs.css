@@ -89,18 +89,18 @@
 
 a.brief-date-step:hover,
 a.brief-date-step:focus-visible {
-    color: var(--accent);
+    color: var(--current);
 }
 
 .brief-date-row a.brief-date-step:hover,
 .brief-date-row a.brief-date-step:focus-visible {
-    border-color: var(--accent-border-faint);
-    background: var(--accent-wash);
+    border-color: var(--current-border-faint);
+    background: var(--current-wash);
 }
 
 .brief-date-row a.brief-date-step:focus-visible,
 .brief-dock-date:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--current);
     outline-offset: 2px;
 }
 
@@ -143,9 +143,9 @@ a.brief-date-step:focus-visible {
 
 .brief-dock-date:hover,
 .brief-dock-date:focus-visible {
-    color: var(--accent);
-    border-color: var(--accent-border);
-    background: var(--accent-wash);
+    color: var(--current);
+    border-color: var(--current-border);
+    background: var(--current-wash);
 }
 
 .brief-dock-date-arrow {
@@ -206,15 +206,15 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-dock a.brief-date-step:focus-visible .brief-date-step-body {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--current);
     outline-offset: 2px;
 }
 
 /* Preview the neighbor's date on keyboard focus, or on hover where hover exists. */
 .brief-dock a.brief-date-step:focus-visible .brief-date-step-body {
     gap: 0.4rem;
-    border-color: var(--accent-border-faint);
-    background: var(--surface-accent);
+    border-color: var(--current-border-faint);
+    background: var(--surface-current);
 }
 
 .brief-dock a.brief-date-step:focus-visible .brief-date-step-label {
@@ -225,8 +225,8 @@ a.brief-date-step:focus-visible {
 @media (hover: hover) {
     .brief-dock a.brief-date-step:hover .brief-date-step-body {
         gap: 0.4rem;
-        border-color: var(--accent-border-faint);
-        background: var(--surface-accent);
+        border-color: var(--current-border-faint);
+        background: var(--surface-current);
     }
 
     .brief-dock a.brief-date-step:hover .brief-date-step-label {
@@ -423,7 +423,7 @@ a.brief-date-step:focus-visible {
 .brief-story-title:focus-visible,
 .brief-item-meta a:hover,
 .brief-item-meta a:focus-visible {
-    color: var(--accent-text-hover);
+    color: var(--accent-hover);
     text-decoration: underline;
     text-decoration-thickness: 1px;
 }
@@ -431,7 +431,7 @@ a.brief-date-step:focus-visible {
 .brief-story-title:focus-visible,
 .brief-item-meta a:focus-visible,
 .brief-archive-row:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--current);
     outline-offset: 4px;
 }
 
@@ -505,12 +505,12 @@ a.brief-date-step:focus-visible {
 
 .brief-details summary:hover,
 .brief-details summary:focus-visible {
-    color: var(--accent-text-hover);
-    background: var(--accent-wash);
+    color: var(--current);
+    background: var(--current-wash);
 }
 
 .brief-details summary:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--current);
     outline-offset: 2px;
 }
 
@@ -610,7 +610,7 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-item-meta a {
-    color: var(--accent-text);
+    color: var(--accent);
     text-decoration: none;
 }
 
@@ -658,7 +658,7 @@ a.brief-date-step:focus-visible {
 }
 
 .brief-archive-row:hover .brief-date {
-    color: var(--accent-text-hover);
+    color: var(--accent-hover);
 }
 
 .brief-archive-row .brief-date {
