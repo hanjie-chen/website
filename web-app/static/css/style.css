@@ -164,15 +164,15 @@ body {
     outline-offset: 2px;
 }
 
+/* The top bar keeps one color, the moon; the current page shows in weight and a neutral rule. */
 .site-nav-link:hover {
-    color: var(--current);
-    border-color: var(--current-border-faint);
-    background: var(--current-wash);
+    color: var(--text-strong);
+    background: var(--surface-pill);
 }
 
 .site-nav-link.is-active {
-    color: var(--current);
-    border-color: var(--current-border);
+    color: var(--text-strong);
+    border-color: var(--border-strong);
     font-weight: 700;
 }
 
@@ -313,51 +313,42 @@ body {
     /* 让内容区域自动占据剩余空间 */
 }
 
-/* Homepage: one centered column of modules, each a glimpse of what changed. */
+/*
+ * Homepage: the system speaking to its owner. A greeting opens, then the
+ * brief: one sentence, its first items and a link to the full brief.
+ */
 .home-page-shell {
     width: 100%;
     max-width: 680px;
     display: grid;
-    /* Modules keep their own height instead of stretching to fill the page. */
+    /* Reports keep their own height instead of stretching to fill the page. */
     align-content: start;
-    gap: 1.35rem;
-    padding-top: 1.15rem;
+    gap: 2.5rem;
+    padding-top: 1.5rem;
 }
 
 .home-greeting {
+    display: grid;
+    gap: 0.4rem;
     margin: 0;
-    font-size: 1.6rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
-.home-greeting time {
+.home-greeting-date {
     color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 400;
+    letter-spacing: 0;
 }
 
-.home-section {
-    padding: 1.65rem 1.8rem;
-    background: var(--surface-panel);
-    border: 1px solid var(--border-subtle);
-    border-radius: 22px;
-    box-shadow: 0 22px 48px var(--shadow-color);
-}
-
-.home-section-heading {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1.2rem;
-}
-
-.home-section-heading h2 {
-    margin: 0;
-    font-size: 1.4rem;
-}
-
-.home-section-meta {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    font-variant-numeric: tabular-nums;
+.home-report-line {
+    margin: 0 0 1.25rem;
+    color: var(--text);
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.6;
 }
 
 .home-brief-list {
@@ -373,7 +364,7 @@ body {
 }
 
 .home-brief-title {
-    color: var(--text);
+    color: var(--text-strong);
     font-weight: 600;
     line-height: 1.5;
     text-decoration: none;
@@ -392,24 +383,19 @@ body {
     white-space: nowrap;
 }
 
-.home-brief-empty {
-    margin: 0;
-    color: var(--text-muted);
-}
-
-.home-section-link {
+.home-report-link {
     display: inline-flex;
-    margin-top: 1.2rem;
+    margin-top: 1.35rem;
     color: var(--accent);
     text-decoration: none;
 }
 
-.home-section-link:hover {
+.home-report-link:hover {
     color: var(--accent-hover);
 }
 
 .home-brief-title:focus-visible,
-.home-section-link:focus-visible {
+.home-report-link:focus-visible {
     outline: 2px solid var(--current);
     outline-offset: 2px;
 }
@@ -442,10 +428,10 @@ body {
     position: relative;
     min-height: var(--nav-control-height);
     padding: 0 0.75rem;
-    border: 1px solid var(--current-border);
+    border: 1px solid var(--border-strong);
     border-radius: 999px;
     background: transparent;
-    color: var(--current);
+    color: var(--text-strong);
     font: inherit;
     font-size: 0.9rem;
     font-weight: 700;
@@ -547,12 +533,12 @@ body {
     }
 
     .home-page-shell {
-        gap: 1rem;
+        gap: 2rem;
+        padding-top: 0.75rem;
     }
 
-    .home-section {
-        padding: 1.35rem 1.2rem;
-        border-radius: 18px;
+    .home-greeting {
+        font-size: 1.5rem;
     }
 }
 

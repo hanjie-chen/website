@@ -14,19 +14,26 @@
 <!-- Main Content -->
 {% block main_content%}
 <div class="main-content">
+    {# The homepage is the system speaking to its owner; see "Homepage" in README.md. #}
     <div class="content-wrapper home-page-shell">
         <h1 class="home-greeting">
-            {{ greeting.text }} · <time datetime="{{ greeting.date }}">{{ greeting.date_label }}</time>
+            <span class="home-greeting-text">{{ greeting.text }}</span>
+            <time class="home-greeting-date" datetime="{{ greeting.date }}">{{ greeting.date_label }}</time>
         </h1>
 
-        <section class="home-section" aria-labelledby="home-brief-heading">
-            <header class="home-section-heading">
-                <h2 id="home-brief-heading">{{ t("briefs.page.heading") }}</h2>
-                {% if brief_preview and brief_preview.date_label %}
-                <time class="home-section-meta" datetime="{{ brief_preview.date }}">{{ brief_preview.date_label }}</time>
-                {% endif %}
-            </header>
+        {# The brief, in the system's voice: one sentence, the first items, and a link to the full brief. #}
+        <section class="home-report" aria-labelledby="home-brief-heading">
             {% if brief_preview %}
+            <h2 class="home-report-line" id="home-brief-heading">
+                {%- if brief_preview.date_label -%}
+                {%- set parts = t("home.brief.older").split("{date}") -%}
+                {{ parts[0] }}<time datetime="{{ brief_preview.date }}">{{ brief_preview.date_label }}</time>{{ parts[1] }}
+                {%- elif brief_preview.total == 1 -%}
+                {{ t("home.brief.today.one") }}
+                {%- else -%}
+                {{ t("home.brief.today").format(count=brief_preview.total) }}
+                {%- endif -%}
+            </h2>
             <ul class="home-brief-list">
                 {% for item in brief_preview["items"] %}
                 <li class="home-brief-item">
@@ -35,12 +42,12 @@
                 </li>
                 {% endfor %}
             </ul>
-            <a class="home-section-link" href="{{ url_for('brief_detail', lang=current_lang, brief_date=brief_preview.date) }}">
-                {{ t("home.brief.all").format(count=brief_preview.total) }}
+            <a class="home-report-link" href="{{ url_for('brief_detail', lang=current_lang, brief_date=brief_preview.date) }}">
+                {{ t("home.brief.read") if brief_preview.date_label else t("home.brief.read_today") }}
             </a>
             {% else %}
-            <p class="home-brief-empty">{{ t("briefs.empty.title") }}</p>
-            <a class="home-section-link" href="{{ url_for('brief_index', lang=current_lang) }}">
+            <h2 class="home-report-line" id="home-brief-heading">{{ t("briefs.empty.title") }}</h2>
+            <a class="home-report-link" href="{{ url_for('brief_index', lang=current_lang) }}">
                 {{ t("home.brief.archive") }}
             </a>
             {% endif %}

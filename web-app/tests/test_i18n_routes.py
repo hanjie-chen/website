@@ -71,9 +71,8 @@ def test_homepage_is_a_console_without_landing_page_sections(client, path):
 
     assert response.status_code == 200
     assert soup.select_one("h1.home-greeting") is not None
-    assert [heading.get_text(strip=True) for heading in soup.select("h2")] == [
-        "每日简报" if path == "/zh/" else "Daily Brief"
-    ]
+    # One report, headed by the system's own sentence rather than a section label.
+    assert [heading["id"] for heading in soup.select("h2")] == ["home-brief-heading"]
     for removed in (
         "Build, Learn, Document.",
         "PERSONAL SITE / KNOWLEDGE BASE",
@@ -319,8 +318,8 @@ def test_console_greeting_follows_time_of_day(hour, minute, zh_greeting, en_gree
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
-        ("/zh/", "下午好，hanjie · 10月5日 星期一"),
-        ("/en/", "Good afternoon, hanjie · Mon, Oct 5"),
+        ("/zh/", "下午好，hanjie 10月5日 星期一"),
+        ("/en/", "Good afternoon, hanjie Mon, Oct 5"),
     ],
 )
 def test_homepage_opens_with_greeting_and_date(client, monkeypatch, path, expected):

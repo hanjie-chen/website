@@ -678,8 +678,8 @@ def test_homepage_shows_latest_brief_and_language_scoped_links(client, app):
 
     assert 'href="/zh/briefs/2026-07-25"' in chinese
     assert 'href="/en/briefs/2026-07-25"' in english
-    assert "查看全部 1 条 →" in chinese
-    assert "See all 1 →" in english
+    assert "阅读这份简报 →" in chinese
+    assert "Read this brief →" in english
 
 
 @pytest.mark.parametrize(
@@ -708,7 +708,7 @@ def test_homepage_labels_brief_date_only_when_it_is_not_today(
         store_brief(app_module.Daily_Briefs_Directory, brief_payload())
 
     soup = BeautifulSoup(client.get(path).get_data(as_text=True), "html.parser")
-    label = soup.select_one(".home-section-heading time")
+    label = soup.select_one(".home-report-line time")
 
     if expected_label is None:
         assert label is None
@@ -752,9 +752,7 @@ def test_homepage_previews_first_two_items_in_display_order(client, app):
         items[1].select_one(".home-brief-summary").get_text().startswith("第二条摘要")
     )
     assert "Third" not in soup.get_text()
-    assert (
-        soup.select_one(".home-section-link").get_text(strip=True) == "查看全部 3 条 →"
-    )
+    assert soup.select_one(".home-report-link").get_text(strip=True) == "阅读这份简报 →"
 
 
 def test_empty_archive_still_returns_200(client):
@@ -769,9 +767,33 @@ def test_homepage_without_brief_points_to_archive(client):
     english = BeautifulSoup(client.get("/en/").get_data(as_text=True), "html.parser")
 
     assert chinese.select(".home-brief-item") == []
-    assert chinese.select_one(".home-brief-empty").get_text() == "最近 14 天暂无简报"
-    assert chinese.select_one(".home-section-link")["href"] == "/zh/briefs"
-    assert english.select_one(".home-section-link")["href"] == "/en/briefs"
+    assert chinese.select_one(".home-report-line").get_text() == "最近 14 天暂无简报"
+    assert chinese.select_one(".home-report-link")["href"] == "/zh/briefs"
+    assert english.select_one(".home-report-link")["href"] == "/en/briefs"
+
+
+@pytest.mark.parametrize(
+    ("path", "line", "link"),
+    [
+        ("/zh/", "今天的简报已送达，共 1 条。", "阅读今天的简报 →"),
+        ("/en/", "Today's brief is in, with 1 item.", "Read today's brief →"),
+    ],
+)
+def test_homepage_reports_todays_brief_in_one_sentence(
+    client, app, monkeypatch, path, line, link
+):
+    monkeypatch.setattr(
+        app_module,
+        "_console_now",
+        lambda: datetime(2026, 7, 25, 9, tzinfo=daily_briefs.BRIEF_TIMEZONE),
+    )
+    with app.app_context():
+        store_brief(app_module.Daily_Briefs_Directory, brief_payload())
+
+    soup = BeautifulSoup(client.get(path).get_data(as_text=True), "html.parser")
+
+    assert soup.select_one(".home-report-line").get_text() == line
+    assert soup.select_one(".home-report-link").get_text(strip=True) == link
 
 
 @pytest.mark.parametrize(

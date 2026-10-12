@@ -10,14 +10,15 @@ def test_root_redirects_to_canonical_language_homepage(client):
 
 
 @pytest.mark.parametrize(
-    ("path", "heading"), [("/zh/", "每日简报"), ("/en/", "Daily Brief")]
+    ("path", "line"),
+    [("/zh/", "最近 14 天暂无简报"), ("/en/", "No briefs in the last 14 days")],
 )
-def test_homepage_renders_daily_brief_module(client, path, heading):
+def test_homepage_renders_daily_brief_report(client, path, line):
     response = client.get(path)
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert f'<h2 id="home-brief-heading">{heading}</h2>' in html
+    assert f'<h2 class="home-report-line" id="home-brief-heading">{line}</h2>' in html
 
 
 def test_homepage_static_assets_are_versioned(client):

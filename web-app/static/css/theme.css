@@ -35,8 +35,11 @@
     --surface-subtle: light-dark(rgba(60, 50, 30, 0.03), rgba(255, 248, 235, 0.03));
     --surface-sunken: light-dark(rgba(60, 50, 30, 0.05), rgba(12, 11, 9, 0.35));
     --surface-pill: light-dark(rgba(60, 50, 30, 0.06), rgba(255, 248, 235, 0.08));
-    /* Opaque because it covers the text beneath a dock step. */
-    --surface-current: light-dark(#e3e7e1, #252b27);
+    /*
+     * Hover fill for quiet top-bar controls: --surface-pill over the bar,
+     * made opaque because a dock step's label slides over the date beneath.
+     */
+    --surface-hover: light-dark(#f1f0ec, #36342f);
     /* Used under color-scheme: dark, so only one value. */
     --surface-lightbox: rgba(14, 13, 11, 0.94);
     --backdrop: rgba(0, 0, 0, 0.5);
@@ -45,7 +48,6 @@
     --border-subtle: light-dark(rgba(60, 50, 30, 0.08), rgba(255, 245, 230, 0.06));
     --border: light-dark(rgba(60, 50, 30, 0.12), rgba(255, 245, 230, 0.1));
     --border-strong: light-dark(rgba(60, 50, 30, 0.2), rgba(255, 245, 230, 0.16));
-    --border-pill: light-dark(rgba(60, 50, 30, 0.18), rgba(255, 245, 230, 0.22));
     --border-rail: light-dark(rgba(106, 102, 94, 0.3), rgba(162, 157, 146, 0.3));
 
     /* Text, from most to least prominent */
@@ -75,7 +77,6 @@
     --current-tint: light-dark(rgba(46, 107, 94, 0.1), rgba(114, 184, 166, 0.1));
     --current-tint-strong: light-dark(rgba(46, 107, 94, 0.14), rgba(114, 184, 166, 0.15));
     --current-border-faint: light-dark(rgba(46, 107, 94, 0.2), rgba(114, 184, 166, 0.2));
-    --current-border: light-dark(rgba(46, 107, 94, 0.45), rgba(114, 184, 166, 0.42));
 
     /*
      * Brand mark: the full moon of the 6.1 event art. At night it glows; on
