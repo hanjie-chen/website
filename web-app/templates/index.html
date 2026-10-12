@@ -21,7 +21,7 @@
             <time class="home-greeting-date" datetime="{{ greeting.date }}">{{ greeting.date_label }}</time>
         </h1>
 
-        {# Each report is one sentence from the system, what it hands over, and where to go next. #}
+        {# The brief, in the system's voice: one sentence, the first items, and a link to the full brief. #}
         <section class="home-report" aria-labelledby="home-brief-heading">
             {% if brief_preview %}
             <h2 class="home-report-line" id="home-brief-heading">

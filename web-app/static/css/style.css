@@ -314,8 +314,8 @@ body {
 }
 
 /*
- * Homepage: the system speaking to its owner. A greeting opens; each report
- * below it is a sentence, what the system hands over and a link onward.
+ * Homepage: the system speaking to its owner. A greeting opens, then the
+ * brief: one sentence, its first items and a link to the full brief.
  */
 .home-page-shell {
     width: 100%;
