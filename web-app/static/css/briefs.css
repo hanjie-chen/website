@@ -127,10 +127,10 @@ a.brief-date-step:focus-visible {
     gap: 0.5rem;
     min-height: var(--nav-control-height);
     padding: 0 0.85rem;
-    /* Plain text at rest, so the current page stays the bar's only pill. */
-    border: 1px solid transparent;
+    /* The day being read, marked like the current page beside it. */
+    border: 1px solid var(--border-strong);
     border-radius: 999px;
-    color: var(--text);
+    color: var(--text-strong);
     font-size: 0.9rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -140,7 +140,7 @@ a.brief-date-step:focus-visible {
     transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Same hover as the dock steps beside it. */
+/* Same hover fill as the dock steps beside it. */
 .brief-dock-date:hover,
 .brief-dock-date:focus-visible {
     color: var(--text-strong);
