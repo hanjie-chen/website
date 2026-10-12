@@ -387,7 +387,7 @@ jobs:
 
       - name: Upload full container vulnerability reports
         if: always() && steps.findings.outcome == 'success'
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: container-vulnerability-reports
           path: trivy-reports/
