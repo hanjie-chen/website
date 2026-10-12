@@ -265,6 +265,12 @@ or something the owner needs to know or act on; for now that is the Daily
 Brief alone. Navigation covers everything else. Add modules as the system
 grows, one at a time, never to fill the page.
 
+Each module is a report in the system's voice, with no card around it: one
+sentence that states the situation, what the system hands over, and a link
+onward. The brief report says whether today's brief has arrived and how many
+items it has, or which day's brief it shows instead, then lists the first two
+items and links to the full brief.
+
 For direction only, not as planned work: the owner might later leave ideas
 here, let agents claim the ones they can do, and be reminded of the ones only
 the owner can do, such as writing down their own experience.
