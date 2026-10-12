@@ -20,7 +20,7 @@ flask-sqlalchemy==3.1.1
     # via -r requirements.in
 gunicorn==26.2.0
     # via -r requirements.in
-iniconfig==2.3.0
+iniconfig==2.3.1
     # via pytest
 itsdangerous==2.2.0
     # via flask
@@ -32,7 +32,7 @@ markdown==3.11
     # via
     #   -r requirements.in
     #   pymdown-extensions
-markupsafe==3.0.3
+markupsafe==3.0.4
     # via
     #   flask
     #   jinja2
@@ -65,7 +65,7 @@ ruff==0.16.10
     # via -r requirements.in
 soupsieve==2.10
     # via beautifulsoup4
-sqlalchemy==2.1.1
+sqlalchemy==2.1.4
     # via
     #   -r requirements.in
     #   flask-sqlalchemy
