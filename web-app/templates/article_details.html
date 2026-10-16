@@ -43,20 +43,19 @@
                     <nav class="docs-breadcrumb" aria-label="Breadcrumb">
                         {% for crumb in breadcrumbs %}
                         {% if not loop.first %}
-                        <span class="docs-breadcrumb-separator">/</span>
+                        <span class="docs-breadcrumb-separator" aria-hidden="true">/</span>
                         {% endif %}
-
-                        {% if crumb.url and not loop.last %}
                         <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
-                        {% else %}
-                        <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
-                        {% endif %}
                         {% endfor %}
                     </nav>
                     <h1 class="article-page-title">{{ article.title }}</h1>
-                    <div class="article-meta">
-                        {{ t("article.meta.author") }}: {{ article.author }} | {{ t("article.meta.published") }}: {{ article.rollout_date }} | {{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}
-                    </div>
+                    <p class="article-meta">
+                        {{ t("article.meta.published") }} <time datetime="{{ article.rollout_date }}">{{ article.rollout_date }}</time>
+                        {%- if article.ultimate_modified_date != article.rollout_date %}
+                        <span class="article-meta-separator" aria-hidden="true">·</span>
+                        {{ t("article.meta.updated") }} <time datetime="{{ article.ultimate_modified_date }}">{{ article.ultimate_modified_date }}</time>
+                        {%- endif %}
+                    </p>
                 </header>
                 {{ article_content|safe }}
             </article>

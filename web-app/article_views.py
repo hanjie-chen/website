@@ -109,7 +109,7 @@ def article_view_model(rendered_articles_dir: str, article, lang: str):
     return SimpleNamespace(
         id=article.id,
         title=translation.get("title") or article.title,
-        author=translation.get("author") or article.author,
+        author=article.author,
         instructor=article.instructor,
         cover_image_url=article.cover_image_url,
         rollout_date=article.rollout_date,

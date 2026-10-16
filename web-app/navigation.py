@@ -84,18 +84,15 @@ def _require_canonical_language(lang: str) -> str:
     return lang
 
 
-def build_breadcrumbs(category_path: str, article=None, lang: str | None = None):
+def build_breadcrumbs(category_path: str, lang: str | None = None):
+    """Link the knowledge base root and each level of category_path.
+
+    Callers pass the path above the current page: its own title follows the trail.
+    """
     lang = _require_canonical_language(lang)
     breadcrumbs = [{"label": "Articles", "url": public_path(lang, "articles")}]
-    parts = split_category_path(category_path)
-
-    if not parts:
-        if article:
-            breadcrumbs.append({"label": article.title, "url": None})
-        return breadcrumbs
-
     walked_parts = []
-    for part in parts:
+    for part in split_category_path(category_path):
         walked_parts.append(part)
         breadcrumbs.append(
             {
@@ -103,9 +100,6 @@ def build_breadcrumbs(category_path: str, article=None, lang: str | None = None)
                 "url": public_path(lang, f"articles/category/{'/'.join(walked_parts)}"),
             }
         )
-
-    if article:
-        breadcrumbs.append({"label": article.title, "url": None})
 
     return breadcrumbs
 
@@ -194,7 +188,9 @@ def build_docs_context(
         "current_node": current_node,
         "current_category": current_category,
         "current_category_label": current_node.label,
-        "breadcrumbs": build_breadcrumbs(current_category, lang=lang),
+        "breadcrumbs": build_breadcrumbs(
+            "/".join(split_category_path(current_category)[:-1]), lang=lang
+        ),
         "category_children": current_node.children,
         "category_articles": current_node.articles,
         "recent_articles": sorted(articles, key=_article_sort_key)[:12],

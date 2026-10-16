@@ -578,9 +578,7 @@ def view_article(lang, article_id):
         article=article,
         article_content=article_content,
         toc_items=toc_items,
-        breadcrumbs=build_breadcrumbs(
-            article.category, article=article, lang=current_lang
-        ),
+        breadcrumbs=build_breadcrumbs(article.category, lang=current_lang),
     )
 
 

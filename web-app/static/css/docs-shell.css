@@ -85,35 +85,31 @@
   color: var(--text-subtle);
 }
 
+/* The trail is navigation, so it stays neutral like the top bar; long trails wrap. */
 .docs-breadcrumb {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.45rem;
-  margin-bottom: 1rem;
+  gap: 0.2rem 0.45rem;
+  margin-bottom: 0.9rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Scoped to the trail so prose link styles inside .article-body do not apply. */
+.docs-breadcrumb .docs-breadcrumb-link {
+  border: 0;
   color: var(--text-subtle);
-  font-size: 0.94rem;
-}
-
-.docs-breadcrumb-link,
-.docs-breadcrumb-current {
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
-.docs-breadcrumb-link {
-  color: var(--accent);
-}
-
-.docs-breadcrumb-link:hover {
-  color: var(--accent-hover);
+.docs-breadcrumb .docs-breadcrumb-link:hover {
+  color: var(--text-strong);
 }
 
 .docs-breadcrumb-separator {
   color: var(--text-faint);
-}
-
-.docs-breadcrumb-current {
-  color: var(--text-soft);
 }
 
 .docs-overline {

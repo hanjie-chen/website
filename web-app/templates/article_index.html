@@ -28,14 +28,9 @@
                 <nav class="docs-breadcrumb" aria-label="Breadcrumb">
                     {% for crumb in breadcrumbs %}
                     {% if not loop.first %}
-                    <span class="docs-breadcrumb-separator">/</span>
+                    <span class="docs-breadcrumb-separator" aria-hidden="true">/</span>
                     {% endif %}
-
-                    {% if crumb.url and not loop.last %}
                     <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
-                    {% else %}
-                    <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
-                    {% endif %}
                     {% endfor %}
                 </nav>
                 {% endif %}
@@ -76,7 +71,6 @@
                         <h3 class="docs-article-title">{{ article.title }}</h3>
                         <p class="docs-article-summary">{{ article.brief_introduction }}</p>
                         <div class="docs-article-meta">
-                            <span>{{ t("article.meta.author") }}: {{ article.author }}</span>
                             <span>{{ t("article.meta.published") }}: {{ article.rollout_date }}</span>
                             <span>{{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}</span>
                         </div>

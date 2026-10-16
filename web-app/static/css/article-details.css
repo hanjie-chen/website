@@ -2,9 +2,11 @@
   margin-bottom: 1.5rem;
 }
 
-.article-meta {
-  margin-bottom: 0.5rem;
-  font-style: italic;
+.article-header .article-meta {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Prose keeps a readable measure. */
