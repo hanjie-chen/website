@@ -343,8 +343,7 @@ retuning them.
 | Code background (`--code-bg`) | `#f0ece3` | `#2a2824` |
 
 Body and secondary text meet WCAG AA (4.5:1) on every surface in both themes.
-Code line numbers, syntax comments and `--text-faint` separators are the
-deliberate exceptions.
+Syntax comments and `--text-faint` separators are the deliberate exceptions.
 
 ### Accents
 
