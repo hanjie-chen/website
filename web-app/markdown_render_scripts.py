@@ -8,7 +8,7 @@ from custom_md_extensions import Gfm_Admonition_Extension, Image_Processor_Exten
 # Bump when rendered HTML changes for unchanged Markdown (extensions, post-processing).
 # Imports fold it into each article's content hash, so the next reindex re-renders
 # every article instead of keeping HTML produced by the previous renderer.
-RENDERER_VERSION = "2"
+RENDERER_VERSION = "3"
 
 
 def render_markdown_to_html(
@@ -36,7 +36,7 @@ def render_markdown_to_html(
     ]
 
     my_extension_configs = {
-        "codehilite": {"linenums": True},
+        "codehilite": {"linenums": False},
         "pymdownx.emoji": {
             "emoji_index": pymdownx.emoji.gemoji,
             "emoji_generator": pymdownx.emoji.to_alt,

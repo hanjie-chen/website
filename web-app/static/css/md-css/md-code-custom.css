@@ -1,114 +1,49 @@
-/* block code style */
+/* Code blocks are objects inside the prose: a quiet fill and a hairline set
+   them apart, without line numbers or a shadow. */
 .codehilite {
   margin: 1.5rem 0;
   position: relative;
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--code-bg);
-  box-shadow: 0 14px 28px var(--shadow-color);
-  overflow: hidden;
 }
 
 .codehilite pre {
   margin: 0;
-  padding: 0.95rem 0.5rem;
-  border-radius: inherit;
-  overflow: visible;
-  line-height: 1.55;
-}
-
-.codehilite table {
-  margin: 0;
-  width: 100%;
-  table-layout: fixed;
-}
-
-.codehilite td.linenos {
-  width: 3.5rem;
-  min-width: 3.5rem;
-  background-color: var(--surface-subtle);
-  color: var(--code-lineno);
-  border-right: 1px solid var(--border-subtle);
-  text-align: right;
-  user-select: none;
-  vertical-align: top;
-  font-variant-numeric: tabular-nums;
-}
-
-.codehilite td.linenos pre {
-  padding-left: 0.35rem;
-  padding-right: 0.55rem;
-  overflow: visible;
-}
-
-.codehilite td.linenos .normal,
-.codehilite td.linenos .special,
-.codehilite span.linenos {
-  display: inline-block;
-  min-width: 3ch;
-  padding-left: 0;
-  padding-right: 0;
-  text-align: right;
-}
-
-.codehilite td.code {
-  width: auto;
-}
-
-.codehilite td.code > div {
+  padding: 0.9rem 1rem;
   overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.codehilite td.code > div::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-.codehilite td.code pre {
-  padding-left: 0.85rem;
-  padding-right: 0.85rem;
-  overflow: visible;
-}
-  
-/* 鼠标选中行号的时候无背景显示 */
-.codehilite td.linenos::selection {
-  background: none; 
+  scrollbar-width: thin;
+  line-height: 1.55;
 }
 
 .code-copy-btn {
   position: absolute;
-  top: 0.55rem;
-  right: 0.55rem;
+  top: 0.5rem;
+  right: 0.5rem;
   z-index: 2;
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
   padding: 0.24rem 0.62rem;
   background: var(--code-button-bg);
-  color: var(--text-emphasis);
+  color: var(--text-muted);
   font-size: 0.72rem;
-  font-weight: 550;
+  font-weight: 500;
   line-height: 1.2;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   opacity: 0;
-  transform: translateY(-2px);
   transition: background-color 0.2s ease, border-color 0.2s ease,
-    transform 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+    color 0.2s ease, opacity 0.2s ease;
 }
 
 .codehilite:hover .code-copy-btn,
 .code-copy-btn:focus-visible,
 .code-copy-btn.is-copied {
   opacity: 1;
-  transform: translateY(0);
 }
 
+/* Neutral hover, like the top bar. */
 .code-copy-btn:hover {
-  background: var(--current-tint-strong);
-  border-color: var(--current-border-faint);
+  background: var(--surface-hover);
+  border-color: var(--border);
   color: var(--text-strong);
 }
 
@@ -127,8 +62,8 @@
 p code,
 li code,
 blockquote code,
-table:not(.codehilitetable) td code,
-table:not(.codehilitetable) th code {
+td code,
+th code {
   background-color: var(--code-inline-bg);
   color: var(--code-inline-text);
   padding: 0.12rem 0.34rem 0.16rem;
