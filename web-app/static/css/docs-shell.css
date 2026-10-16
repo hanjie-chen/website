@@ -288,18 +288,21 @@
   color: var(--text-subtle);
 }
 
-@media (min-width: 1200px) {
-  .docs-layout {
-    grid-template-columns: var(--docs-side) minmax(0, 1fr);
-  }
-
-  /* Articles center on the page; the table of contents sits in the margin to the right. */
+/* Articles center on the page; the table of contents sits in the margin to the
+   right, keeping enough width to read on smaller laptops. */
+@media (min-width: 1100px) {
   .article-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 46rem) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 46rem) minmax(12rem, 1fr);
   }
 
   .article-layout > .article-body {
     grid-column: 2;
+  }
+}
+
+@media (min-width: 1200px) {
+  .docs-layout:not(.article-layout) {
+    grid-template-columns: var(--docs-side) minmax(0, 1fr);
   }
 
   .docs-sidebar-column {

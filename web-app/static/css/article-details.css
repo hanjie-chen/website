@@ -155,47 +155,53 @@
 
 .article-toc-title {
   margin: 0 0 0.6rem;
-  padding-inline: 0.56rem;
+  padding-left: 0.75rem;
   font-size: 0.8rem;
   color: var(--text-subtle);
 }
 
-.article-toc-list {
+/* The contents ride a faint track; the section being read lights its stretch.
+   Selectors carry two classes so prose list and link styles never reach them. */
+.article-toc > .article-toc-list,
+.article-toc-disclosure nav > .article-toc-list {
+  border-left: 1px solid var(--border-subtle);
+}
+
+.article-toc .article-toc-list,
+.article-toc-disclosure .article-toc-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.article-toc-item + .article-toc-item {
-  margin-top: 0.2rem;
+.article-toc-disclosure .article-toc-item {
+  margin: 0;
 }
 
 .article-toc-subtree {
   display: none;
 }
 
-.article-toc-item.is-expanded > .article-toc-subtree {
+.article-toc-item.is-expanded > .article-toc-subtree,
+.article-toc-disclosure .article-toc-subtree {
   display: block;
 }
 
-.article-toc-link {
+.article-toc-list .article-toc-link {
   display: block;
-  border-radius: 10px;
-  padding: 0.38rem 0.56rem;
-  color: var(--text-soft);
+  margin-left: -1px;
+  padding: 0.3rem 0.5rem 0.3rem 0.75rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  color: var(--text-subtle);
+  font-size: 0.86rem;
+  line-height: 1.4;
   text-decoration: none;
-  line-height: 1.35;
   overflow-wrap: anywhere;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
-.article-toc-link:hover {
-  background: var(--current-tint);
-  color: var(--text-strong);
-}
-
-.article-toc-link.is-active {
-  background: var(--current-tint-strong);
+.article-toc-list .article-toc-link:hover {
   color: var(--text-strong);
 }
 
@@ -203,22 +209,59 @@
   color: var(--text-emphasis);
 }
 
-.article-toc-link.level-1 {
-  font-size: 0.92rem;
-  font-weight: 500;
+.article-toc-list .article-toc-link.is-active {
+  border-left-color: var(--current);
+  color: var(--text-strong);
 }
 
-.article-toc-link.level-2 {
-  font-size: 0.88rem;
-  margin-left: 0.72rem;
-  padding-left: 0.88rem;
+.article-toc-list .article-toc-link.level-1 {
+  color: var(--text-soft);
+  font-size: 0.9rem;
 }
 
-.article-toc-link.level-3 {
-  font-size: 0.84rem;
-  margin-left: 1.45rem;
-  padding-left: 0.88rem;
+.article-toc-list .article-toc-link.level-2 {
+  padding-left: 1.5rem;
+}
+
+.article-toc-list .article-toc-link.level-3 {
+  padding-left: 2.25rem;
+  font-size: 0.82rem;
+}
+
+/* Narrow screens have no side column: the same contents fold under the meta line. */
+.article-toc-disclosure {
+  margin-top: 1.25rem;
+}
+
+.article-toc-disclosure summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--text-subtle);
+  font-size: 0.875rem;
+  list-style: none;
+  cursor: pointer;
+}
+
+.article-toc-disclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.article-toc-disclosure summary::after {
+  content: "▾";
+  transition: transform 0.2s ease;
+}
+
+.article-toc-disclosure[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.article-toc-disclosure summary:hover {
+  color: var(--text-strong);
+}
+
+.article-toc-disclosure nav {
+  margin-top: 0.75rem;
 }
 
 /* Full-viewport dialog so a click outside the content lands on the dialog itself. */
@@ -314,11 +357,15 @@ html:has(.image-preview[open]) {
   color: var(--text-emphasis);
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1100px) {
   .article-toc-column {
     display: block;
     align-self: stretch;
     max-width: 16rem;
+  }
+
+  .article-toc-disclosure {
+    display: none;
   }
 }
 

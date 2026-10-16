@@ -277,6 +277,12 @@ def test_view_article_renders_nested_toc_markup(client, app):
     assert 'data-toc-id="setup"' in body
     assert 'data-toc-id="git-add"' in body
     assert "article-toc-subtree" in body
+    # Narrow screens get a folded copy that the scroll tracking leaves alone.
+    soup = BeautifulSoup(body, "html.parser")
+    disclosure = soup.select_one("details.article-toc-disclosure")
+    assert disclosure.summary.get_text(strip=True) == "本页目录"
+    assert disclosure.select_one('a[href="#git-add"]') is not None
+    assert disclosure.select("[data-toc-node], [data-toc-link]") == []
 
 
 def test_view_article_includes_image_preview_modal_and_script(client, app):
