@@ -4,7 +4,6 @@ from types import SimpleNamespace
 import pytest
 
 from navigation import (
-    build_article_shell_context,
     build_breadcrumbs,
     build_docs_context,
     is_hidden_category_path,
@@ -63,12 +62,12 @@ def test_build_docs_context_prefixes_breadcrumb_urls_with_language():
     ]
 
 
-def test_build_article_shell_context_prefixes_breadcrumb_urls_with_language():
+def test_article_breadcrumbs_prefix_urls_with_language_and_end_at_the_article():
     article = _article("cloud-infra/terraform", "Terraform Intro")
 
-    shell_context = build_article_shell_context([article], article, lang="en")
+    breadcrumbs = build_breadcrumbs(article.category, article=article, lang="en")
 
-    assert shell_context["breadcrumbs"] == [
+    assert breadcrumbs == [
         {"label": "Articles", "url": "/en/articles"},
         {"label": "Cloud Infra", "url": "/en/articles/category/cloud-infra"},
         {
@@ -88,6 +87,3 @@ def test_navigation_helpers_reject_non_canonical_languages(lang):
 
     with pytest.raises(ValueError):
         build_docs_context([article], current_category="cloud-infra", lang=lang)
-
-    with pytest.raises(ValueError):
-        build_article_shell_context([article], article, lang=lang)

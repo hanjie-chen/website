@@ -16,8 +16,7 @@
   display: none;
 }
 
-/* Side columns sit on the page itself: the sidebar is set off by a hairline,
-   the table of contents by space alone. */
+/* The category sidebar sits on the page itself, set off by a hairline. */
 .docs-sidebar {
   position: sticky;
   top: 84px;
@@ -71,8 +70,7 @@
   color: var(--text-strong);
 }
 
-.docs-tree-link.is-active,
-.docs-tree-article-link.is-active {
+.docs-tree-link.is-active {
   background: var(--current-tint-strong);
   color: var(--text-strong);
 }
@@ -299,8 +297,13 @@
     grid-template-columns: var(--docs-side) minmax(0, 1fr);
   }
 
+  /* Articles center on the page; the table of contents sits in the margin to the right. */
   .article-layout {
-    grid-template-columns: var(--docs-side) minmax(0, 1fr) var(--docs-side);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 46rem) minmax(0, 1fr);
+  }
+
+  .article-layout > .article-body {
+    grid-column: 2;
   }
 
   .docs-sidebar-column {

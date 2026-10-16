@@ -1,5 +1,4 @@
 {% extends "base.html"%}
-{% import "_docs_tree.html" as docs_tree %}
 
 {% macro render_toc_items(items) %}
 <ol class="article-toc-list">
@@ -39,13 +38,6 @@
 <div class="main-content">
     <div class="content-wrapper docs-shell">
         <div class="docs-layout article-layout">
-            <aside class="docs-sidebar-column">
-                <nav class="docs-sidebar" aria-label="Section navigation">
-                    <p class="docs-sidebar-title">{{ t("article.sidebar.section_title") }}</p>
-                    {{ docs_tree.render_nodes(nav_root.children, current_lang=current_lang, current_article_id=current_article_id) }}
-                </nav>
-            </aside>
-
             <article class="article-body">
                 <header class="article-header">
                     <nav class="docs-breadcrumb" aria-label="Breadcrumb">

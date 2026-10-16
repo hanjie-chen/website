@@ -119,11 +119,7 @@ def _category_sort_key(node: CategoryNode):
     return (node.label.casefold(), node.path)
 
 
-def build_category_tree(
-    articles: Iterable,
-    current_category: str = "",
-    current_article_id: int | None = None,
-):
+def build_category_tree(articles: Iterable, current_category: str = ""):
     articles = [
         article for article in articles if not is_hidden_category_path(article.category)
     ]
@@ -181,21 +177,7 @@ def build_category_tree(
         lookup[node.path] = node
         return node
 
-    finalized_root = finalize(root)
-
-    if current_article_id is not None:
-        active_node = lookup.get(current_category)
-        if active_node:
-            active_node.expanded = True
-            active_node.articles = sorted(
-                active_node.articles,
-                key=lambda article: (
-                    article.id != current_article_id,
-                    _article_sort_key(article),
-                ),
-            )
-
-    return finalized_root, lookup
+    return finalize(root), lookup
 
 
 def build_docs_context(
@@ -216,22 +198,4 @@ def build_docs_context(
         "category_children": current_node.children,
         "category_articles": current_node.articles,
         "recent_articles": sorted(articles, key=_article_sort_key)[:12],
-    }
-
-
-def build_article_shell_context(articles: Iterable, article, lang: str | None = None):
-    lang = _require_canonical_language(lang)
-    articles = list(articles)
-    nav_root, lookup = build_category_tree(
-        articles,
-        current_category=article.category,
-        current_article_id=article.id,
-    )
-    current_node = lookup.get(article.category, nav_root)
-
-    return {
-        "current_lang": lang,
-        "nav_root": nav_root,
-        "current_node": current_node,
-        "breadcrumbs": build_breadcrumbs(article.category, article=article, lang=lang),
     }

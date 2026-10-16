@@ -247,7 +247,6 @@ def test_view_article_uses_chinese_shell_labels(client, app):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "本节内容" in body
     assert "作者:" in body
     assert "发布:" in body
     assert "更新:" in body
@@ -333,7 +332,7 @@ def test_view_article_includes_katex_assets(client, app):
     assert "/static/math-render.js?v=" in body
 
 
-def test_view_article_left_nav_lists_same_category_articles(client, app):
+def test_view_article_leaves_category_browsing_to_breadcrumbs(client, app):
     with app.app_context():
         article = _insert_article(
             title="Primary Article",
@@ -357,30 +356,9 @@ def test_view_article_left_nav_lists_same_category_articles(client, app):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "Sibling Article" in body
-
-
-def test_view_article_left_nav_highlights_only_current_article(client, app):
-    with app.app_context():
-        article = _insert_article(
-            title="Primary Article",
-            category="tests/shared",
-            file_path="tests/shared/primary.md",
-        )
-
-        category_path = article.category.replace("/", "-")
-        html_dir = Path(app_module.Rendered_Articles) / category_path
-        html_dir.mkdir(parents=True, exist_ok=True)
-        (html_dir / f"{article.id}.html").write_text(
-            "<h1>Primary Content</h1>", encoding="utf-8"
-        )
-
-    response = client.get(f"/zh/articles/{article.id}")
-    body = response.get_data(as_text=True)
-
-    assert response.status_code == 200
-    assert body.count("docs-tree-link is-active") == 0
-    assert body.count("docs-tree-article-link is-active") == 1
+    assert "docs-tree" not in body
+    assert "Sibling Article" not in body
+    assert 'href="/zh/articles/category/tests/shared"' in body
 
 
 def test_article_page_keeps_internal_links_in_same_language_namespace(client, app):

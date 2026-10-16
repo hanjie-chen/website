@@ -7,7 +7,7 @@
   font-style: italic;
 }
 
-/* Prose keeps a readable measure, centered in the space between the side columns. */
+/* Prose keeps a readable measure. */
 .article-body {
   justify-self: center;
   width: 100%;
@@ -316,6 +316,7 @@ html:has(.image-preview[open]) {
   .article-toc-column {
     display: block;
     align-self: stretch;
+    max-width: 16rem;
   }
 }
 
