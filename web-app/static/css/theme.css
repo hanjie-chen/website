@@ -30,7 +30,6 @@
         light-dark(#fdfcf9, rgba(37, 35, 32, 0.82)) 0%,
         light-dark(#fbf9f5, rgba(32, 30, 27, 0.72)) 100%
     );
-    --surface-glass: light-dark(rgba(253, 252, 249, 0.75), rgba(20, 19, 17, 0.7));
     --surface-card: light-dark(rgba(242, 239, 232, 0.6), rgba(28, 26, 24, 0.7));
     --surface-subtle: light-dark(rgba(60, 50, 30, 0.03), rgba(255, 248, 235, 0.03));
     --surface-sunken: light-dark(rgba(60, 50, 30, 0.05), rgba(12, 11, 9, 0.35));

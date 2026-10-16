@@ -46,30 +46,28 @@
                 </nav>
             </aside>
 
-            <div class="article-content-card">
-                <article class="article-body">
-                    <header class="article-header">
-                        <nav class="docs-breadcrumb" aria-label="Breadcrumb">
-                            {% for crumb in breadcrumbs %}
-                            {% if not loop.first %}
-                            <span class="docs-breadcrumb-separator">/</span>
-                            {% endif %}
+            <article class="article-body">
+                <header class="article-header">
+                    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+                        {% for crumb in breadcrumbs %}
+                        {% if not loop.first %}
+                        <span class="docs-breadcrumb-separator">/</span>
+                        {% endif %}
 
-                            {% if crumb.url and not loop.last %}
-                            <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
-                            {% else %}
-                            <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
-                            {% endif %}
-                            {% endfor %}
-                        </nav>
-                        <h1 class="article-page-title">{{ article.title }}</h1>
-                        <div class="article-meta">
-                            {{ t("article.meta.author") }}: {{ article.author }} | {{ t("article.meta.published") }}: {{ article.rollout_date }} | {{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}
-                        </div>
-                    </header>
-                    {{ article_content|safe }}
-                </article>
-            </div>
+                        {% if crumb.url and not loop.last %}
+                        <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
+                        {% else %}
+                        <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
+                        {% endif %}
+                        {% endfor %}
+                    </nav>
+                    <h1 class="article-page-title">{{ article.title }}</h1>
+                    <div class="article-meta">
+                        {{ t("article.meta.author") }}: {{ article.author }} | {{ t("article.meta.published") }}: {{ article.rollout_date }} | {{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}
+                    </div>
+                </header>
+                {{ article_content|safe }}
+            </article>
             {% if toc_items %}
             <aside class="article-toc-column">
                 <nav class="article-toc" aria-label="On this page" data-article-toc>
