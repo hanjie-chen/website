@@ -24,7 +24,7 @@
             </aside>
 
             <section class="docs-content">
-                {% if current_category %}
+                {% if breadcrumbs %}
                 <nav class="docs-breadcrumb" aria-label="Breadcrumb">
                     {% for crumb in breadcrumbs %}
                     {% if not loop.first %}

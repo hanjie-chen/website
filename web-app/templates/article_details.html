@@ -40,6 +40,7 @@
         <div class="docs-layout article-layout">
             <article class="article-body">
                 <header class="article-header">
+                    {% if breadcrumbs %}
                     <nav class="docs-breadcrumb" aria-label="Breadcrumb">
                         {% for crumb in breadcrumbs %}
                         {% if not loop.first %}
@@ -48,6 +49,7 @@
                         <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
                         {% endfor %}
                     </nav>
+                    {% endif %}
                     <h1 class="article-page-title">{{ article.title }}</h1>
                     <p class="article-meta">
                         {{ t("article.meta.published") }} <time datetime="{{ article.rollout_date }}">{{ article.rollout_date }}</time>

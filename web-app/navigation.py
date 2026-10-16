@@ -85,12 +85,13 @@ def _require_canonical_language(lang: str) -> str:
 
 
 def build_breadcrumbs(category_path: str, lang: str | None = None):
-    """Link the knowledge base root and each level of category_path.
+    """Link each level of category_path.
 
     Callers pass the path above the current page: its own title follows the trail.
+    The knowledge base root is left to the top bar's Articles link.
     """
     lang = _require_canonical_language(lang)
-    breadcrumbs = [{"label": "Articles", "url": public_path(lang, "articles")}]
+    breadcrumbs = []
     walked_parts = []
     for part in split_category_path(category_path):
         walked_parts.append(part)

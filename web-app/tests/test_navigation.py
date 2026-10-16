@@ -54,9 +54,18 @@ def test_category_breadcrumbs_link_the_ancestors_with_language_prefixes():
 
     # The page title names the current category, so the trail stops above it.
     assert docs_context["breadcrumbs"] == [
-        {"label": "Articles", "url": "/en/articles"},
         {"label": "Cloud Infra", "url": "/en/articles/category/cloud-infra"},
     ]
+
+
+def test_top_level_category_has_no_breadcrumbs():
+    docs_context = build_docs_context(
+        [_article("cloud-infra/terraform", "Terraform Intro")],
+        current_category="cloud-infra",
+        lang="en",
+    )
+
+    assert docs_context["breadcrumbs"] == []
 
 
 def test_article_breadcrumbs_link_every_category_above_the_article():
@@ -65,7 +74,6 @@ def test_article_breadcrumbs_link_every_category_above_the_article():
     breadcrumbs = build_breadcrumbs(article.category, lang="en")
 
     assert breadcrumbs == [
-        {"label": "Articles", "url": "/en/articles"},
         {"label": "Cloud Infra", "url": "/en/articles/category/cloud-infra"},
         {
             "label": "Terraform",
