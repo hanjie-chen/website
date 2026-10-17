@@ -67,5 +67,6 @@ Workflow 职责、触发条件与维护说明见 [.github/workflows/README.md](.
 
 1. website ui refactor
     - daily brief page ui improve
+    - 用代码为文章绘制封面（统一风格与比例，跟随深浅色），替换网上找的封面图
 
 2. 盘点 Cloudflare 配置并集中记录，评估将适合的配置纳入 Terraform 管理。
