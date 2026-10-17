@@ -108,16 +108,10 @@
     --success-text: light-dark(#166534, #dcfce7);
 
     /* Admonitions */
-    --admonition-note-title: light-dark(#1d4ed8, rgba(191, 219, 254, 0.94));
-    --admonition-note-rail: light-dark(rgba(59, 130, 246, 0.5), rgba(96, 165, 250, 0.46));
-    --admonition-tip-title: light-dark(#047857, rgba(167, 243, 208, 0.94));
-    --admonition-tip-rail: light-dark(rgba(16, 185, 129, 0.5), rgba(52, 211, 153, 0.44));
-    --admonition-important-title: light-dark(#0369a1, rgba(186, 230, 253, 0.94));
-    --admonition-important-rail: light-dark(rgba(14, 165, 233, 0.5), rgba(56, 189, 248, 0.46));
-    --admonition-warning-title: light-dark(#a16207, rgba(253, 224, 71, 0.94));
-    --admonition-warning-rail: light-dark(rgba(217, 119, 6, 0.5), rgba(245, 158, 11, 0.46));
-    --admonition-caution-title: light-dark(#b91c1c, rgba(254, 202, 202, 0.94));
-    --admonition-caution-rail: light-dark(rgba(220, 38, 38, 0.5), rgba(248, 113, 113, 0.46));
+    --admonition-warning-title: light-dark(#c2410c, #fb923c);
+    --admonition-warning-rail: light-dark(rgba(234, 88, 12, 0.6), rgba(251, 146, 60, 0.75));
+    --admonition-caution-title: light-dark(#b91c1c, #f87171);
+    --admonition-caution-rail: light-dark(rgba(220, 38, 38, 0.55), rgba(248, 113, 113, 0.7));
 
     /* Shadows */
     --shadow-color-faint: light-dark(rgba(60, 50, 30, 0.05), rgba(0, 0, 0, 0.08));

@@ -1,112 +1,38 @@
-:root {
-    --ad-rail-color: var(--border-rail);
-    --ad-margin: 1.2rem 0 1.35rem;
-    --ad-padding-left: 1rem;
-    --ad-rail-width: 2.5px;
-    --title-font-size: 0.82em;
-    --ad-title-color: var(--text-emphasis);
-    --ad-body-color: var(--text-prose);
+/* Admonitions are asides, shaped like a plain quote: a rail plus a small label.
+   Notes, tips and important points are supplementary, so they share the quote's
+   amber; warnings and cautions keep their own colors because they signal risk. */
+.article-body .admonition {
+    --ad-rail: var(--accent-line-strong);
+    --ad-label: var(--accent);
+    margin: 1.6rem 0;
+    padding: 0.2rem 0 0.2rem 1rem;
+    border-left: 2px solid var(--ad-rail);
 }
 
-/* 基础 admonition 样式 */
-.admonition {
-    position: relative;
-    border: 0;
-    padding: 0.05rem 0 0 var(--ad-padding-left);
-    margin: var(--ad-margin);
-    border-radius: 0;
-    box-shadow: none;
-    background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+.article-body .admonition .admonition-title {
+    margin: 0 0 0.35rem;
+    color: var(--ad-label);
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
-.admonition::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.16rem;
-    bottom: 0.16rem;
-    width: var(--ad-rail-width);
-    border-radius: 999px;
-    background: linear-gradient(
-        180deg,
-        var(--border-strong) 0%,
-        var(--ad-rail-color) 14%,
-        var(--ad-rail-color) 86%,
-        var(--border) 100%
-    );
-}
-
-/* admonition 标题样式 */
-.admonition .admonition-title {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-weight: 700;
-    margin: 0 0 0.72rem;
-    padding-bottom: 0.42rem;
-    color: var(--ad-title-color);
-    font-size: var(--title-font-size);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-}
-
-.admonition .admonition-title::before {
-    content: "";
-    width: 0.36rem;
-    height: 0.36rem;
-    flex: 0 0 auto;
-    border-radius: 999px;
-    background-color: currentColor;
-    opacity: 0.88;
-}
-
-.admonition p,
-.admonition li,
-.admonition ul,
-.admonition ol {
-    color: var(--ad-body-color);
-}
-
-.admonition p:not(.admonition-title) {
+.article-body .admonition p:not(.admonition-title),
+.article-body .admonition ul,
+.article-body .admonition ol {
     margin-top: 0;
-    margin-bottom: 0.9rem;
+    margin-bottom: 0.8rem;
 }
 
-.admonition ul,
-.admonition ol {
-    margin-top: 0;
-    margin-bottom: 0.9rem;
-}
-
-.admonition > :last-child {
+.article-body .admonition > :last-child {
     margin-bottom: 0;
 }
 
-/* 针对不同类型设置 rail 和标题颜色 */
-.admonition.note {
-    --ad-title-color: var(--admonition-note-title);
-    --ad-rail-color: var(--admonition-note-rail);
+.article-body .admonition.warning {
+    --ad-rail: var(--admonition-warning-rail);
+    --ad-label: var(--admonition-warning-title);
 }
 
-.admonition.tip {
-    --ad-title-color: var(--admonition-tip-title);
-    --ad-rail-color: var(--admonition-tip-rail);
-}
-
-.admonition.warning {
-    --ad-title-color: var(--admonition-warning-title);
-    --ad-rail-color: var(--admonition-warning-rail);
-}
-
-.admonition.important {
-    --ad-title-color: var(--admonition-important-title);
-    --ad-rail-color: var(--admonition-important-rail);
-}
-
-.admonition.caution {
-    --ad-title-color: var(--admonition-caution-title);
-    --ad-rail-color: var(--admonition-caution-rail);
+.article-body .admonition.caution {
+    --ad-rail: var(--admonition-caution-rail);
+    --ad-label: var(--admonition-caution-title);
 }
