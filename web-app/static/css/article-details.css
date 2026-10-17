@@ -80,22 +80,19 @@
   border-top: 1px solid var(--border);
 }
 
+/* A hairline keeps white screenshots from blending into light paper or
+   glaring on dark; the radius matches code blocks. */
 .article-body img {
   display: block;
   margin: 1.35rem auto;
   max-width: 100%;
   height: auto;
-  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
 }
 
 .article-body img.is-previewable {
   cursor: zoom-in;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.article-body img.is-previewable:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 36px var(--shadow-color-strong);
 }
 
 .article-body img.is-previewable:focus-visible {
@@ -103,29 +100,34 @@
   outline-offset: 4px;
 }
 
+/* Tables sit on the page like prose: a firmer rule under the header, hairlines
+   between rows, and edge cells aligned with the text column. */
 .article-body table {
   width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  background: var(--surface-sunken);
-}
-
-.article-body thead {
-  background: var(--surface-subtle);
 }
 
 .article-body th,
 .article-body td {
-  padding: 0.78rem 0.9rem;
+  padding: 0.6rem 0.75rem;
   border-bottom: 1px solid var(--border-subtle);
   text-align: left;
   vertical-align: top;
 }
 
+.article-body th:first-child,
+.article-body td:first-child {
+  padding-left: 0;
+}
+
+.article-body th:last-child,
+.article-body td:last-child {
+  padding-right: 0;
+}
+
 .article-body th {
+  border-bottom-color: var(--border-strong);
   color: var(--text-strong);
   font-weight: 650;
 }
