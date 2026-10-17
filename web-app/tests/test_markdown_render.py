@@ -36,6 +36,18 @@ def test_fenced_code_keeps_raw_emoji_shortcode_text(tmp_path):
     assert "❌" not in html
 
 
+def test_fenced_code_highlights_only_labeled_languages(tmp_path):
+    output = "Note: You didn't use the -out option, so Terraform can't guarantee"
+    unlabeled = _render(f"```\n{output}\n```", tmp_path)
+    labeled = _render("```python\ndef f():\n    return 'x'\n```", tmp_path)
+
+    # Without a label the block is plain text, with no guessed token spans.
+    assert f"<code>{output}\n</code>" in unlabeled
+    assert '<span class="k">def</span>' in labeled
+    # No line-number gutter in either case.
+    assert "linenos" not in unlabeled + labeled
+
+
 def test_latex_delimiters_render_as_math_placeholders(tmp_path):
     html = _render(
         r"Inline dollar math: $\times$"

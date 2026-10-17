@@ -36,7 +36,8 @@ def render_markdown_to_html(
     ]
 
     my_extension_configs = {
-        "codehilite": {"linenums": False},
+        # Unlabeled fences stay plain text: a guessed lexer miscolors prose-like output.
+        "codehilite": {"linenums": False, "guess_lang": False},
         "pymdownx.emoji": {
             "emoji_index": pymdownx.emoji.gemoji,
             "emoji_generator": pymdownx.emoji.to_alt,
