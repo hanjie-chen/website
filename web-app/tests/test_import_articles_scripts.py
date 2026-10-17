@@ -114,7 +114,6 @@ English body
         "lang": "en",
         "title": "Cloudflare Guide",
         "brief_introduction": "An English guide to enabling Cloudflare CDN.",
-        "author": "Hanjie Chen",
         "source_blob": "abc123",
         "content_hash": payload["content_hash"],
     }

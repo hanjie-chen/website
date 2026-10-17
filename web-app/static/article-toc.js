@@ -65,33 +65,44 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+  // The section being read is the last one whose heading has passed the
+  // reading line, so jumps, reloads and fast scrolls all land on the same
+  // answer. A short last section never reaches the line, so the end of the
+  // page selects it.
+  const atPageEnd = () =>
+    window.scrollY > 0 &&
+    window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
 
-      if (visible.length > 0) {
-        const nextActiveId = visible[0].target.id;
-        if (nextActiveId !== activeId) {
-          activeId = nextActiveId;
-          setActive(nextActiveId);
-        }
-      }
-    },
-    {
-      rootMargin: "-18% 0px -65% 0px",
-      threshold: [0, 1],
+  const sectionInView = () => {
+    if (atPageEnd()) {
+      return sections[sections.length - 1].id;
     }
-  );
 
-  const activeFromHash = window.location.hash
-    ? decodeURIComponent(window.location.hash.slice(1))
-    : null;
+    const readingLine = window.innerHeight * 0.25;
+    let currentId = sections[0].id;
+    for (const { id, section } of sections) {
+      if (section.getBoundingClientRect().top > readingLine) {
+        break;
+      }
+      currentId = id;
+    }
+    return currentId;
+  };
 
-  const initialActiveId = sections.some(({ id }) => id === activeFromHash)
-    ? activeFromHash
-    : sections[0].id;
+  let frame = 0;
+  const update = () => {
+    frame = 0;
+    const nextActiveId = sectionInView();
+    if (nextActiveId !== activeId) {
+      activeId = nextActiveId;
+      setActive(nextActiveId);
+    }
+  };
+  const scheduleUpdate = () => {
+    if (!frame) {
+      frame = window.requestAnimationFrame(update);
+    }
+  };
 
   toc.addEventListener("click", (event) => {
     const link = event.target.closest("[data-toc-link]");
@@ -108,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setActive(nextActiveId);
   });
 
-  sections.forEach(({ section }) => observer.observe(section));
-  activeId = initialActiveId;
-  setActive(initialActiveId);
+  window.addEventListener("scroll", scheduleUpdate, { passive: true });
+  window.addEventListener("resize", scheduleUpdate);
+  update();
 });

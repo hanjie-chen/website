@@ -84,18 +84,16 @@ def _require_canonical_language(lang: str) -> str:
     return lang
 
 
-def build_breadcrumbs(category_path: str, article=None, lang: str | None = None):
+def build_breadcrumbs(category_path: str, lang: str | None = None):
+    """Link each level of category_path.
+
+    Callers pass the path above the current page: its own title follows the trail.
+    The knowledge base root is left to the top bar's Articles link.
+    """
     lang = _require_canonical_language(lang)
-    breadcrumbs = [{"label": "Articles", "url": public_path(lang, "articles")}]
-    parts = split_category_path(category_path)
-
-    if not parts:
-        if article:
-            breadcrumbs.append({"label": article.title, "url": None})
-        return breadcrumbs
-
+    breadcrumbs = []
     walked_parts = []
-    for part in parts:
+    for part in split_category_path(category_path):
         walked_parts.append(part)
         breadcrumbs.append(
             {
@@ -103,9 +101,6 @@ def build_breadcrumbs(category_path: str, article=None, lang: str | None = None)
                 "url": public_path(lang, f"articles/category/{'/'.join(walked_parts)}"),
             }
         )
-
-    if article:
-        breadcrumbs.append({"label": article.title, "url": None})
 
     return breadcrumbs
 
@@ -119,11 +114,7 @@ def _category_sort_key(node: CategoryNode):
     return (node.label.casefold(), node.path)
 
 
-def build_category_tree(
-    articles: Iterable,
-    current_category: str = "",
-    current_article_id: int | None = None,
-):
+def build_category_tree(articles: Iterable, current_category: str = ""):
     articles = [
         article for article in articles if not is_hidden_category_path(article.category)
     ]
@@ -181,21 +172,7 @@ def build_category_tree(
         lookup[node.path] = node
         return node
 
-    finalized_root = finalize(root)
-
-    if current_article_id is not None:
-        active_node = lookup.get(current_category)
-        if active_node:
-            active_node.expanded = True
-            active_node.articles = sorted(
-                active_node.articles,
-                key=lambda article: (
-                    article.id != current_article_id,
-                    _article_sort_key(article),
-                ),
-            )
-
-    return finalized_root, lookup
+    return finalize(root), lookup
 
 
 def build_docs_context(
@@ -212,26 +189,10 @@ def build_docs_context(
         "current_node": current_node,
         "current_category": current_category,
         "current_category_label": current_node.label,
-        "breadcrumbs": build_breadcrumbs(current_category, lang=lang),
+        "breadcrumbs": build_breadcrumbs(
+            "/".join(split_category_path(current_category)[:-1]), lang=lang
+        ),
         "category_children": current_node.children,
         "category_articles": current_node.articles,
         "recent_articles": sorted(articles, key=_article_sort_key)[:12],
-    }
-
-
-def build_article_shell_context(articles: Iterable, article, lang: str | None = None):
-    lang = _require_canonical_language(lang)
-    articles = list(articles)
-    nav_root, lookup = build_category_tree(
-        articles,
-        current_category=article.category,
-        current_article_id=article.id,
-    )
-    current_node = lookup.get(article.category, nav_root)
-
-    return {
-        "current_lang": lang,
-        "nav_root": nav_root,
-        "current_node": current_node,
-        "breadcrumbs": build_breadcrumbs(article.category, article=article, lang=lang),
     }

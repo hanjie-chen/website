@@ -42,7 +42,6 @@ def test_article_view_model_uses_english_sidecar_fields_when_available(tmp_path)
             {
                 "title": "Cloudflare Guide EN",
                 "brief_introduction": "English intro",
-                "author": "Hanjie Chen",
             },
             ensure_ascii=False,
         ),
@@ -53,7 +52,6 @@ def test_article_view_model_uses_english_sidecar_fields_when_available(tmp_path)
 
     assert localized.title == "Cloudflare Guide EN"
     assert localized.brief_introduction == "English intro"
-    assert localized.author == "Hanjie Chen"
     assert localized.category == article.category
 
 

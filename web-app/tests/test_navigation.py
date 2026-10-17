@@ -4,7 +4,6 @@ from types import SimpleNamespace
 import pytest
 
 from navigation import (
-    build_article_shell_context,
     build_breadcrumbs,
     build_docs_context,
     is_hidden_category_path,
@@ -44,7 +43,7 @@ def test_build_docs_context_filters_hidden_categories():
     assert docs_context["category_children"][0].path == "cloud-infra"
 
 
-def test_build_docs_context_prefixes_breadcrumb_urls_with_language():
+def test_category_breadcrumbs_link_the_ancestors_with_language_prefixes():
     docs_context = build_docs_context(
         [
             _article("cloud-infra/terraform", "Terraform Intro"),
@@ -53,29 +52,33 @@ def test_build_docs_context_prefixes_breadcrumb_urls_with_language():
         lang="en",
     )
 
+    # The page title names the current category, so the trail stops above it.
     assert docs_context["breadcrumbs"] == [
-        {"label": "Articles", "url": "/en/articles"},
         {"label": "Cloud Infra", "url": "/en/articles/category/cloud-infra"},
-        {
-            "label": "Terraform",
-            "url": "/en/articles/category/cloud-infra/terraform",
-        },
     ]
 
 
-def test_build_article_shell_context_prefixes_breadcrumb_urls_with_language():
+def test_top_level_category_has_no_breadcrumbs():
+    docs_context = build_docs_context(
+        [_article("cloud-infra/terraform", "Terraform Intro")],
+        current_category="cloud-infra",
+        lang="en",
+    )
+
+    assert docs_context["breadcrumbs"] == []
+
+
+def test_article_breadcrumbs_link_every_category_above_the_article():
     article = _article("cloud-infra/terraform", "Terraform Intro")
 
-    shell_context = build_article_shell_context([article], article, lang="en")
+    breadcrumbs = build_breadcrumbs(article.category, lang="en")
 
-    assert shell_context["breadcrumbs"] == [
-        {"label": "Articles", "url": "/en/articles"},
+    assert breadcrumbs == [
         {"label": "Cloud Infra", "url": "/en/articles/category/cloud-infra"},
         {
             "label": "Terraform",
             "url": "/en/articles/category/cloud-infra/terraform",
         },
-        {"label": "Terraform Intro", "url": None},
     ]
 
 
@@ -88,6 +91,3 @@ def test_navigation_helpers_reject_non_canonical_languages(lang):
 
     with pytest.raises(ValueError):
         build_docs_context([article], current_category="cloud-infra", lang=lang)
-
-    with pytest.raises(ValueError):
-        build_article_shell_context([article], article, lang=lang)

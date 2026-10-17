@@ -1,21 +1,19 @@
-.article-content-card {
-  background: var(--surface-panel);
-  border: 1px solid var(--border-subtle);
-  border-radius: 18px;
-  box-shadow: 0 22px 48px var(--shadow-color);
-  padding: 1.65rem 1.9rem;
-}
-
 .article-header {
   margin-bottom: 1.5rem;
 }
 
-.article-meta {
-  margin-bottom: 0.5rem;
-  font-style: italic;
+.article-header .article-meta {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
 }
 
+/* Prose keeps a readable measure. */
 .article-body {
+  justify-self: center;
+  width: 100%;
+  max-width: 46rem;
   min-width: 0;
   color: var(--text-emphasis);
   font-size: 1.02rem;
@@ -82,22 +80,19 @@
   border-top: 1px solid var(--border);
 }
 
+/* A hairline keeps white screenshots from blending into light paper or
+   glaring on dark; the radius matches code blocks. */
 .article-body img {
   display: block;
   margin: 1.35rem auto;
   max-width: 100%;
   height: auto;
-  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
 }
 
 .article-body img.is-previewable {
   cursor: zoom-in;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.article-body img.is-previewable:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 36px var(--shadow-color-strong);
 }
 
 .article-body img.is-previewable:focus-visible {
@@ -105,29 +100,34 @@
   outline-offset: 4px;
 }
 
+/* Tables sit on the page like prose: a firmer rule under the header, hairlines
+   between rows, and edge cells aligned with the text column. */
 .article-body table {
   width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  background: var(--surface-sunken);
-}
-
-.article-body thead {
-  background: var(--surface-subtle);
 }
 
 .article-body th,
 .article-body td {
-  padding: 0.78rem 0.9rem;
+  padding: 0.6rem 0.75rem;
   border-bottom: 1px solid var(--border-subtle);
   text-align: left;
   vertical-align: top;
 }
 
+.article-body th:first-child,
+.article-body td:first-child {
+  padding-left: 0;
+}
+
+.article-body th:last-child,
+.article-body td:last-child {
+  padding-right: 0;
+}
+
 .article-body th {
+  border-bottom-color: var(--border-strong);
   color: var(--text-strong);
   font-weight: 650;
 }
@@ -143,13 +143,7 @@
 .article-toc {
   position: sticky;
   top: 84px;
-  border-radius: 18px;
-  padding: 0.9rem 0.85rem 1rem;
-  background: var(--surface-glass);
-  border: 1px solid var(--border-subtle);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 20px 40px var(--shadow-color);
+  padding-top: 0.25rem;
   max-height: calc(100vh - 108px);
   overflow-y: auto;
   overflow-x: hidden;
@@ -162,51 +156,54 @@
 }
 
 .article-toc-title {
-  margin: 0 0 0.85rem;
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  margin: 0 0 0.6rem;
+  padding-left: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-subtle);
 }
 
-.article-toc-list {
+/* The contents ride a faint track; the section being read lights its stretch.
+   Selectors carry two classes so prose list and link styles never reach them. */
+.article-toc > .article-toc-list,
+.article-toc-disclosure nav > .article-toc-list {
+  border-left: 1px solid var(--border-subtle);
+}
+
+.article-toc .article-toc-list,
+.article-toc-disclosure .article-toc-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.article-toc-item + .article-toc-item {
-  margin-top: 0.2rem;
+.article-toc-disclosure .article-toc-item {
+  margin: 0;
 }
 
 .article-toc-subtree {
   display: none;
 }
 
-.article-toc-item.is-expanded > .article-toc-subtree {
+.article-toc-item.is-expanded > .article-toc-subtree,
+.article-toc-disclosure .article-toc-subtree {
   display: block;
 }
 
-.article-toc-link {
+.article-toc-list .article-toc-link {
   display: block;
-  border-radius: 10px;
-  padding: 0.38rem 0.56rem;
-  color: var(--text-soft);
+  margin-left: -1px;
+  padding: 0.3rem 0.5rem 0.3rem 0.75rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  color: var(--text-subtle);
+  font-size: 0.86rem;
+  line-height: 1.4;
   text-decoration: none;
-  line-height: 1.35;
   overflow-wrap: anywhere;
-  transition: background-color 0.2s ease, color 0.2s ease,
-    transform 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
-.article-toc-link:hover {
-  background: var(--current-tint);
-  color: var(--text-strong);
-  transform: translateX(2px);
-}
-
-.article-toc-link.is-active {
-  background: var(--current-tint-strong);
+.article-toc-list .article-toc-link:hover {
   color: var(--text-strong);
 }
 
@@ -214,22 +211,59 @@
   color: var(--text-emphasis);
 }
 
-.article-toc-link.level-1 {
-  font-size: 0.94rem;
-  font-weight: 600;
+.article-toc-list .article-toc-link.is-active {
+  border-left-color: var(--current);
+  color: var(--text-strong);
 }
 
-.article-toc-link.level-2 {
-  font-size: 0.88rem;
-  margin-left: 0.72rem;
-  padding-left: 0.88rem;
+.article-toc-list .article-toc-link.level-1 {
+  color: var(--text-soft);
+  font-size: 0.9rem;
 }
 
-.article-toc-link.level-3 {
-  font-size: 0.84rem;
-  margin-left: 1.45rem;
-  padding-left: 0.88rem;
+.article-toc-list .article-toc-link.level-2 {
+  padding-left: 1.5rem;
+}
+
+.article-toc-list .article-toc-link.level-3 {
+  padding-left: 2.25rem;
+  font-size: 0.82rem;
+}
+
+/* Narrow screens have no side column: the same contents fold under the meta line. */
+.article-toc-disclosure {
+  margin-top: 1.25rem;
+}
+
+.article-toc-disclosure summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--text-subtle);
+  font-size: 0.875rem;
+  list-style: none;
+  cursor: pointer;
+}
+
+.article-toc-disclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.article-toc-disclosure summary::after {
+  content: "▾";
+  transition: transform 0.2s ease;
+}
+
+.article-toc-disclosure[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.article-toc-disclosure summary:hover {
+  color: var(--text-strong);
+}
+
+.article-toc-disclosure nav {
+  margin-top: 0.75rem;
 }
 
 /* Full-viewport dialog so a click outside the content lands on the dialog itself. */
@@ -325,19 +359,19 @@ html:has(.image-preview[open]) {
   color: var(--text-emphasis);
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1100px) {
   .article-toc-column {
     display: block;
     align-self: stretch;
+    max-width: 16rem;
+  }
+
+  .article-toc-disclosure {
+    display: none;
   }
 }
 
 @media (max-width: 991.98px) {
-  .article-content-card {
-    padding: 1.5rem 1.2rem;
-    border-radius: 14px;
-  }
-
   .image-preview-content {
     padding: 0.35rem;
   }

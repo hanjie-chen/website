@@ -50,7 +50,7 @@ from i18n import (
 )
 from import_articles_scripts import import_articles
 from models import Article_Meta_Data, db
-from navigation import build_article_shell_context, build_docs_context
+from navigation import build_breadcrumbs, build_docs_context
 
 # Flask route layer for the public site and the internal reindex endpoint.
 app = Flask(__name__)
@@ -572,20 +572,13 @@ def view_article(lang, article_id):
         abort(404)
 
     article_content, toc_items = build_article_toc(article_content)
-    shell_context = build_article_shell_context(
-        _localized_all_articles(current_lang),
-        article,
-        lang=current_lang,
-    )
-
     # 返回模板，使用相对路径
     return render_template(
         "article_details.html",
         article=article,
         article_content=article_content,
         toc_items=toc_items,
-        current_article_id=article.id,
-        **shell_context,
+        breadcrumbs=build_breadcrumbs(article.category, lang=current_lang),
     )
 
 

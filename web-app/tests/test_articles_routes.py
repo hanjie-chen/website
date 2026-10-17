@@ -44,7 +44,6 @@ def _write_english_sidecar(article, html_body="<h1>English Content</h1>"):
                 "lang": "en",
                 "title": f"{article.title} EN",
                 "brief_introduction": "English intro",
-                "author": "Hanjie Chen",
                 "source_blob": "abc123",
                 "content_hash": "b" * 64,
             },
@@ -204,7 +203,7 @@ def test_view_article_returns_200_for_existing_article(client, app):
     assert 'href="/en/articles/category/tests/category"' in body
 
 
-def test_english_view_article_uses_sidecar_title_author_and_body(client, app):
+def test_english_view_article_uses_sidecar_title_and_body(client, app):
     with app.app_context():
         article = _insert_article(
             title="中文标题",
@@ -224,7 +223,6 @@ def test_english_view_article_uses_sidecar_title_author_and_body(client, app):
 
     assert response.status_code == 200
     assert "<title>中文标题 EN</title>" in body
-    assert "Hanjie Chen" in body
     assert "English Sidecar Body" in body
     assert "中文内容" not in body
 
@@ -236,6 +234,8 @@ def test_view_article_uses_chinese_shell_labels(client, app):
             category="tests/chinese",
             file_path="tests/chinese/shell.md",
         )
+        article.ultimate_modified_date = date(2026, 2, 1)
+        db.session.commit()
         category_path = article.category.replace("/", "-")
         html_dir = Path(app_module.Rendered_Articles) / category_path
         html_dir.mkdir(parents=True, exist_ok=True)
@@ -247,10 +247,9 @@ def test_view_article_uses_chinese_shell_labels(client, app):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "本节内容" in body
-    assert "作者:" in body
-    assert "发布:" in body
-    assert "更新:" in body
+    assert "作者" not in body
+    assert '发布 <time datetime="2026-01-01">' in body
+    assert '更新 <time datetime="2026-02-01">' in body
     assert "本页目录" in body
 
 
@@ -278,6 +277,12 @@ def test_view_article_renders_nested_toc_markup(client, app):
     assert 'data-toc-id="setup"' in body
     assert 'data-toc-id="git-add"' in body
     assert "article-toc-subtree" in body
+    # Narrow screens get a folded copy that the scroll tracking leaves alone.
+    soup = BeautifulSoup(body, "html.parser")
+    disclosure = soup.select_one("details.article-toc-disclosure")
+    assert disclosure.summary.get_text(strip=True) == "本页目录"
+    assert disclosure.select_one('a[href="#git-add"]') is not None
+    assert disclosure.select("[data-toc-node], [data-toc-link]") == []
 
 
 def test_view_article_includes_image_preview_modal_and_script(client, app):
@@ -333,7 +338,7 @@ def test_view_article_includes_katex_assets(client, app):
     assert "/static/math-render.js?v=" in body
 
 
-def test_view_article_left_nav_lists_same_category_articles(client, app):
+def test_view_article_leaves_category_browsing_to_breadcrumbs(client, app):
     with app.app_context():
         article = _insert_article(
             title="Primary Article",
@@ -357,30 +362,16 @@ def test_view_article_left_nav_lists_same_category_articles(client, app):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "Sibling Article" in body
-
-
-def test_view_article_left_nav_highlights_only_current_article(client, app):
-    with app.app_context():
-        article = _insert_article(
-            title="Primary Article",
-            category="tests/shared",
-            file_path="tests/shared/primary.md",
-        )
-
-        category_path = article.category.replace("/", "-")
-        html_dir = Path(app_module.Rendered_Articles) / category_path
-        html_dir.mkdir(parents=True, exist_ok=True)
-        (html_dir / f"{article.id}.html").write_text(
-            "<h1>Primary Content</h1>", encoding="utf-8"
-        )
-
-    response = client.get(f"/zh/articles/{article.id}")
-    body = response.get_data(as_text=True)
-
-    assert response.status_code == 200
-    assert body.count("docs-tree-link is-active") == 0
-    assert body.count("docs-tree-article-link is-active") == 1
+    assert "docs-tree" not in body
+    assert "Sibling Article" not in body
+    trail = BeautifulSoup(body, "html.parser").select_one("nav.docs-breadcrumb")
+    assert [link["href"] for link in trail.select("a")][-1] == (
+        "/zh/articles/category/tests/shared"
+    )
+    assert "Primary Article" not in trail.get_text()
+    # Released and last updated on the same day: the date shows once.
+    assert body.count('<time datetime="2026-01-01">') == 1
+    assert "更新" not in body
 
 
 def test_article_page_keeps_internal_links_in_same_language_namespace(client, app):

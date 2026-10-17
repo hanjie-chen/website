@@ -1,8 +1,6 @@
 function getCodeText(codeBlock) {
   const codeElement =
-    codeBlock.querySelector("td.code code") ||
-    codeBlock.querySelector("pre code") ||
-    codeBlock.querySelector("pre");
+    codeBlock.querySelector("pre code") || codeBlock.querySelector("pre");
 
   if (!codeElement) {
     return "";

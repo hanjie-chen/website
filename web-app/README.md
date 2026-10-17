@@ -343,8 +343,7 @@ retuning them.
 | Code background (`--code-bg`) | `#f0ece3` | `#2a2824` |
 
 Body and secondary text meet WCAG AA (4.5:1) on every surface in both themes.
-Code line numbers, syntax comments and `--text-faint` separators are the
-deliberate exceptions.
+Syntax comments and `--text-faint` separators are the deliberate exceptions.
 
 ### Accents
 
@@ -353,17 +352,18 @@ challenge-record bar and the pine-green night scenes, adjusted to stay legible
 on both backgrounds.
 
 - **Amber** (`--accent-*`, `#9a5f0e` / `#e3a548`) marks content worth noticing:
-  the brand mark, links and their underlines, quote rails and highlighted labels.
+  the brand mark, links and their underlines, the rails and labels of quotes and
+  supplementary admonitions (note, tip, important), and highlighted labels.
 - **Pine** (`--current-*`, `#2e6b5e` / `#72b8a6`) marks where you are and what
-  responds to you within a page: selected table-of-contents and sidebar items,
-  hover feedback on cards and buttons, and focus rings.
+  responds to you within a page: the table-of-contents track, selected sidebar
+  items, hover feedback on cards, and focus rings.
 
 The top bar keeps a single color, the moon. Its current page shows in bold with
 a neutral rule, and its controls hover with a neutral fill.
 
 Choose by role rather than looks: text that leads somewhere or deserves
-attention takes amber, and state takes pine. Admonition and success colors
-carry fixed meanings and stay independent of both accents. Code uses One Light
+attention takes amber, and state takes pine. Warning, caution and success
+colors carry fixed meanings and stay independent of both accents. Code uses One Light
 and One Dark syntax colors. To try another accent, change only the two accent
 token groups in `theme.css`.
 

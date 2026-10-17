@@ -32,9 +32,6 @@ leading_image_block_pattern = re.compile(
     r"^\s*((?:(?:!\[[^\]]*\]\([^)]+\))|(?:<img\b[^>]*>))\s*(?:\n\s*)*)+",
     re.DOTALL | re.IGNORECASE,
 )
-ENGLISH_AUTHOR_MAP = {
-    "陈翰杰": "Hanjie Chen",
-}
 
 
 def _is_hidden_item(item_name: str):
@@ -161,12 +158,6 @@ def find_translation_sidecar(
     return None
 
 
-def _translation_author(source_author: str, translation_metadata: dict):
-    return translation_metadata.get("Author") or ENGLISH_AUTHOR_MAP.get(
-        source_author, source_author
-    )
-
-
 def _prepend_leading_source_images(
     translation_content: str, source_content: str
 ) -> str:
@@ -207,7 +198,6 @@ def _sync_translation_sidecar(
     output_path: str,
     url_base_path: str,
     article_id: int,
-    source_author: str,
     source_content_part: str,
 ):
     translation_path = find_translation_sidecar(current_dir, md_filename, lang="en")
@@ -233,7 +223,6 @@ def _sync_translation_sidecar(
         "lang": "en",
         "title": metadata.get("Title"),
         "brief_introduction": brief_intro_text,
-        "author": _translation_author(source_author, metadata),
         "source_blob": metadata.get("SourceBlob"),
         "content_hash": content_hash,
     }
@@ -292,7 +281,6 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
                     output_path,
                     url_base_path,
                     exist_check.id,
-                    exist_check.author,
                     content_part,
                 )
                 print(
@@ -311,7 +299,6 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
                     output_path,
                     url_base_path,
                     exist_check.id,
-                    exist_check.author,
                     content_part,
                 )
                 print(
@@ -346,7 +333,6 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
                     output_path,
                     url_base_path,
                     exist_check.id,
-                    exist_check.author,
                     content_part,
                 )
             print(f"Article {exist_check.category}/{exist_check.title} updated")
@@ -384,7 +370,6 @@ def process_article(md_filename: str, current_dir: str, root_dir: str, db: SQLAl
                 output_path,
                 url_base_path,
                 article_metadata.id,
-                article_metadata.author,
                 content_part,
             )
     except (OSError, UnicodeError, RuntimeError, SQLAlchemyError) as e:

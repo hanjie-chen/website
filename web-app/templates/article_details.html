@@ -1,17 +1,17 @@
 {% extends "base.html"%}
-{% import "_docs_tree.html" as docs_tree %}
 
-{% macro render_toc_items(items) %}
+{# tracked: the side contents follow scrolling; the narrow-screen copy is a plain list. #}
+{% macro render_toc_items(items, tracked=true) %}
 <ol class="article-toc-list">
     {% for item in items %}
-    <li class="article-toc-item{% if item.children %} has-children{% endif %}" data-toc-node data-toc-id="{{ item.id }}"
-        data-toc-level="{{ item.level }}">
-        <a href="#{{ item.id }}" class="article-toc-link level-{{ item.level }}" data-toc-link>
+    <li class="article-toc-item{% if item.children %} has-children{% endif %}"
+        {%- if tracked %} data-toc-node data-toc-id="{{ item.id }}" data-toc-level="{{ item.level }}"{% endif %}>
+        <a href="#{{ item.id }}" class="article-toc-link level-{{ item.level }}"{% if tracked %} data-toc-link{% endif %}>
             {{ item.text }}
         </a>
         {% if item.children %}
         <div class="article-toc-subtree">
-            {{ render_toc_items(item.children) }}
+            {{ render_toc_items(item.children, tracked) }}
         </div>
         {% endif %}
     </li>
@@ -39,40 +39,40 @@
 <div class="main-content">
     <div class="content-wrapper docs-shell">
         <div class="docs-layout article-layout">
-            <aside class="docs-sidebar-column">
-                <nav class="docs-sidebar" aria-label="Section navigation">
-                    <p class="docs-sidebar-title">{{ t("article.sidebar.section_title") }}</p>
-                    {{ docs_tree.render_nodes(nav_root.children, current_lang=current_lang, current_article_id=current_article_id) }}
-                </nav>
-            </aside>
-
-            <div class="article-content-card">
-                <article class="article-body">
-                    <header class="article-header">
-                        <nav class="docs-breadcrumb" aria-label="Breadcrumb">
-                            {% for crumb in breadcrumbs %}
-                            {% if not loop.first %}
-                            <span class="docs-breadcrumb-separator">/</span>
-                            {% endif %}
-
-                            {% if crumb.url and not loop.last %}
-                            <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
-                            {% else %}
-                            <span class="docs-breadcrumb-current">{{ crumb.label }}</span>
-                            {% endif %}
-                            {% endfor %}
+            <article class="article-body">
+                <header class="article-header">
+                    {% if breadcrumbs %}
+                    <nav class="docs-breadcrumb" aria-label="Breadcrumb">
+                        {% for crumb in breadcrumbs %}
+                        {% if not loop.first %}
+                        <span class="docs-breadcrumb-separator" aria-hidden="true">/</span>
+                        {% endif %}
+                        <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
+                        {% endfor %}
+                    </nav>
+                    {% endif %}
+                    <h1 class="article-page-title">{{ article.title }}</h1>
+                    <p class="article-meta">
+                        {{ t("article.meta.published") }} <time datetime="{{ article.rollout_date }}">{{ article.rollout_date }}</time>
+                        {%- if article.ultimate_modified_date != article.rollout_date %}
+                        <span class="article-meta-separator" aria-hidden="true">·</span>
+                        {{ t("article.meta.updated") }} <time datetime="{{ article.ultimate_modified_date }}">{{ article.ultimate_modified_date }}</time>
+                        {%- endif %}
+                    </p>
+                    {% if toc_items %}
+                    <details class="article-toc-disclosure">
+                        <summary>{{ t("article.toc.title") }}</summary>
+                        <nav aria-label="{{ t('article.toc.title') }}">
+                            {{ render_toc_items(toc_items, tracked=false) }}
                         </nav>
-                        <h1 class="article-page-title">{{ article.title }}</h1>
-                        <div class="article-meta">
-                            {{ t("article.meta.author") }}: {{ article.author }} | {{ t("article.meta.published") }}: {{ article.rollout_date }} | {{ t("article.meta.updated") }}: {{ article.ultimate_modified_date }}
-                        </div>
-                    </header>
-                    {{ article_content|safe }}
-                </article>
-            </div>
+                    </details>
+                    {% endif %}
+                </header>
+                {{ article_content|safe }}
+            </article>
             {% if toc_items %}
             <aside class="article-toc-column">
-                <nav class="article-toc" aria-label="On this page" data-article-toc>
+                <nav class="article-toc" aria-label="{{ t('article.toc.title') }}" data-article-toc>
                     <p class="article-toc-title">{{ t("article.toc.title") }}</p>
                     {{ render_toc_items(toc_items) }}
                 </nav>
