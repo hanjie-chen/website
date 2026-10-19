@@ -63,7 +63,7 @@ pyyaml==6.0.3
     #   python-frontmatter
 ruff==0.17.1
     # via -r requirements.in
-soupsieve==2.10
+soupsieve==3.0.3
     # via beautifulsoup4
 sqlalchemy==2.1.4
     # via
