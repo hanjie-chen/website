@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import json
 import os
 import re
-from types import SimpleNamespace
 from urllib.parse import unquote, urlsplit
 
 from bs4 import BeautifulSoup
@@ -92,52 +90,5 @@ def note_render_dir(rendered_dir: str, note) -> str:
     return os.path.join(rendered_dir, note.category.replace(os.sep, "-"))
 
 
-def note_html_path(rendered_dir: str, note, lang: str) -> str:
-    render_dir = note_render_dir(rendered_dir, note)
-    if lang == "en":
-        localized_path = os.path.join(render_dir, f"{note.id}.en.html")
-        if os.path.exists(localized_path):
-            return localized_path
-    return os.path.join(render_dir, f"{note.id}.html")
-
-
-def note_translation_meta_path(rendered_dir: str, note, lang: str):
-    if lang != "en":
-        return None
-    return os.path.join(note_render_dir(rendered_dir, note), f"{note.id}.en.json")
-
-
-def load_note_translation(rendered_dir: str, note, lang: str):
-    meta_path = note_translation_meta_path(rendered_dir, note, lang)
-    if not meta_path or not os.path.exists(meta_path):
-        return None
-
-    try:
-        with open(meta_path, "r", encoding="utf-8") as handle:
-            return json.load(handle)
-    except (OSError, json.JSONDecodeError):
-        return None
-
-
-def note_view_model(rendered_dir: str, note, lang: str):
-    """Overlay a translated title on top of the canonical note row."""
-    if lang != "en":
-        return note
-
-    translation = load_note_translation(rendered_dir, note, lang)
-    if not translation or not translation.get("title"):
-        return note
-
-    return SimpleNamespace(
-        id=note.id,
-        title=translation["title"],
-        category=note.category,
-        file_path=note.file_path,
-        rollout_date=note.rollout_date,
-        updated_date=note.updated_date,
-        content_hash=note.content_hash,
-    )
-
-
-def localized_notes(rendered_dir: str, notes, lang: str):
-    return [note_view_model(rendered_dir, note, lang) for note in notes]
+def note_html_path(rendered_dir: str, note) -> str:
+    return os.path.join(note_render_dir(rendered_dir, note), f"{note.id}.html")

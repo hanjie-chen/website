@@ -13,7 +13,7 @@ publishing endpoint.
 | [app.py](app.py) | Routes, authentication, page context and template helpers |
 | [config.py](config.py) | Environment configuration |
 | [models.py](models.py), [db_health.py](db_health.py) | Note metadata and deployment-time database assessment |
-| [import_notes.py](import_notes.py) | Note discovery, titles and dates, incremental import, translations and deletion cleanup |
+| [import_notes.py](import_notes.py) | Note discovery, titles and dates, incremental import and deletion cleanup |
 | [markdown_render_scripts.py](markdown_render_scripts.py), [custom_md_extensions/](custom_md_extensions/) | Markdown rendering, image paths, links between notes and admonitions |
 | [note_views.py](note_views.py), [navigation.py](navigation.py) | Localized note views, TOC, note links, category tree and breadcrumbs |
 | [daily_briefs.py](daily_briefs.py) | Brief validation, JSON storage, current pointer and archive index |
@@ -74,7 +74,7 @@ Every `.md` file is a note except:
 
 - `README.md`, `AGENTS.md` and `CLAUDE.md`, which guide people and agents;
 - files under hidden folders, `__template__`-style folders, and the `resources/`
-  and `images/` folders that hold a note's images and translations.
+  and `images/` folders that hold a note's images.
 
 A note's path is its classification: its folder is its category. Its title is
 its first `# heading` outside code blocks, which leaves the body and becomes the
@@ -100,10 +100,7 @@ Links to other notes (`../ssh/client-guide.md`, or `/tools/git/commands.md` from
 the root) render as `/notes/path/<path>` and the note page points them at the
 target's current id; links to notes that are gone keep that path and return 404.
 
-Optional English translations live at `resources/i18n/<basename>-en.md` and follow
-the same title rule. They provide a translated title and body without creating
-another note; missing English output falls back to the original. If the English
-body has no leading image block, it inherits the source's leading images.
+Notes have one language: `/en/` switches the interface, not the note.
 
 See [import tests](tests/test_import_notes.py) for accepted formats and edge
 cases. Markdown extension configuration lives in
@@ -125,9 +122,8 @@ This credential is separate from the Daily Brief publishing token. The
 ### Rebuild Behavior
 
 - Production imports skip existing canonical HTML when the source hash is
-  unchanged. Missing HTML is regenerated; English sidecars are refreshed during
-  import. The hash includes `RENDERER_VERSION` from
-  [markdown_render_scripts.py](markdown_render_scripts.py): bump it whenever a
+  unchanged. Missing HTML is regenerated. The hash includes `RENDERER_VERSION`
+  from [markdown_render_scripts.py](markdown_render_scripts.py): bump it whenever a
   renderer change alters HTML for unchanged Markdown, and the next reindex
   re-renders every note.
 - Development imports clear the rendered tree before rebuilding it.
@@ -306,8 +302,8 @@ the owner can do, such as writing down their own experience.
   rather than utility classes. [site-nav.js](static/site-nav.js) drives the
   mobile navigation menu and closes it and the settings panel on an outside
   click, Escape or tabbing away.
-- UI translations live in `i18n.py`. Note translations use the sidecars above;
-  switching the page language does not translate Daily Brief summaries.
+- UI translations live in `i18n.py`. Switching the page language translates the
+  interface only: notes and Daily Brief summaries keep their own language.
 - Use `asset_url(...)` for direct template references to site assets. It appends
   integer-second file mtime, not a content hash. CSS-relative font/image URLs
   are not automatically versioned. Load shared `style.css` through `base.html`;

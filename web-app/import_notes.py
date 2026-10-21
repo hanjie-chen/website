@@ -9,7 +9,6 @@ Notes import pipeline: every Markdown note in the knowledge base becomes a page.
 """
 
 import hashlib
-import json
 import os
 import re
 import shutil
@@ -25,8 +24,8 @@ from config import IS_DEV, Rendered_Articles
 from markdown_render_scripts import RENDERER_VERSION, render_markdown_to_html
 from models import Note
 
-# Folders that hold a note's images and translations rather than notes, as the
-# knowledge base README lays them out: `images/` for drafts, `resources/` otherwise.
+# Folders that hold a note's images rather than notes, as the knowledge base
+# README lays them out: `images/` for drafts, `resources/images/` otherwise.
 NON_NOTE_FOLDERS = {"resources", "images"}
 # Image folders copied next to the rendered HTML, relative to a note's folder.
 ASSET_FOLDERS = ("images", os.path.join("resources", "images"))
@@ -35,12 +34,8 @@ AUXILIARY_FILES = {"README.md", "AGENTS.md", "CLAUDE.md"}
 
 TITLE_MAX_LENGTH = 255
 
-fence_pattern = re.compile(r"^\s*(```|~~~)")
+fence_pattern = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
 title_pattern = re.compile(r"^#\s+(.+?)\s*#*\s*$")
-leading_image_block_pattern = re.compile(
-    r"^\s*((?:(?:!\[[^\]]*\]\([^)]+\))|(?:<img\b[^>]*>))\s*(?:\n\s*)*)+",
-    re.DOTALL | re.IGNORECASE,
-)
 
 
 def _is_hidden_item(item_name: str):
@@ -89,22 +84,27 @@ def _rendered_url_base(category: str) -> str:
 def split_title(body: str):
     """Return the first `# heading` outside code blocks and the body without it."""
     lines = body.splitlines(keepends=True)
-    open_fence = None
+    open_fence = None  # (character, length) of the code fence being read
     for index, line in enumerate(lines):
         fence = fence_pattern.match(line)
-        if fence:
-            marker = fence.group(1)
-            if open_fence is None:
-                open_fence = marker
-            elif marker == open_fence:
-                open_fence = None
+        if open_fence is None and fence:
+            open_fence = (fence.group(1)[0], len(fence.group(1)))
             continue
         if open_fence is not None:
+            # As in CommonMark, only a bare fence of the same character, at
+            # least as long, closes the block, so shorter fences inside stay code.
+            if (
+                fence
+                and fence.group(1)[0] == open_fence[0]
+                and len(fence.group(1)) >= open_fence[1]
+                and not fence.group(2).strip()
+            ):
+                open_fence = None
             continue
         match = title_pattern.match(line)
         if match:
             # Titles show as plain text, so inline code marks are dropped.
-            title = match.group(1).replace("`", "").strip()
+            title = " ".join(match.group(1).replace("`", "").split())
             return title, "".join(lines[:index] + lines[index + 1 :])
     return None, body
 
@@ -207,94 +207,14 @@ def git_updated_dates(root_dir: str) -> dict[str, date]:
     return dates
 
 
-def find_translation_sidecar(
-    current_dir: str, md_filename: str, lang: str = "en"
-) -> str | None:
-    basename, _ext = os.path.splitext(md_filename)
-    translation_path = os.path.join(
-        current_dir, "resources", "i18n", f"{basename}-{lang}.md"
-    )
-    if os.path.exists(translation_path):
-        return translation_path
-    return None
-
-
-def _prepend_leading_source_images(
-    translation_content: str, source_content: str
-) -> str:
-    """Keep the English sidecar lightweight by inheriting the source lead image.
-
-    Sidecars may omit repeated resource markdown. When the English body has no
-    leading images of its own, reuse the source note's leading image block so
-    both languages open with the same image.
-    """
-    if leading_image_block_pattern.match(translation_content):
-        return translation_content
-
-    match = leading_image_block_pattern.match(source_content)
-    if not match:
-        return translation_content
-
-    leading_images = match.group(1).strip()
-    if not leading_images:
-        return translation_content
-
-    return f"{leading_images}\n\n{translation_content.lstrip()}"
-
-
-def _remove_translation_artifacts(note_id: int, output_path: str, lang: str = "en"):
-    for artifact_path in (
-        os.path.join(output_path, f"{note_id}.{lang}.html"),
-        os.path.join(output_path, f"{note_id}.{lang}.json"),
-    ):
-        if os.path.exists(artifact_path):
-            os.remove(artifact_path)
-
-
-def _sync_translation_sidecar(
-    md_filename: str, current_dir: str, category: str, note_id: int, source_body: str
-):
-    output_path = get_dst_path(category)
-    translation_path = find_translation_sidecar(current_dir, md_filename, lang="en")
-    parsed = parse_note(translation_path) if translation_path else None
-    if not parsed:
-        _remove_translation_artifacts(note_id, output_path, lang="en")
-        return
-
-    title, _rollout_date, body, content_hash = parsed
-    body = _prepend_leading_source_images(body, source_body)
-    if not render_markdown_to_html(
-        body, f"{note_id}.en", output_path, _rendered_url_base(category), category
-    ):
-        print(f"English sidecar render failed for {translation_path}")
-        _remove_translation_artifacts(note_id, output_path, lang="en")
-        return
-
-    # A sidecar without its own heading falls back to its file name, which is
-    # no better than the source title, so leave the title to the source then.
-    sidecar_stem = os.path.splitext(os.path.basename(translation_path))[0]
-    payload = {
-        "lang": "en",
-        "title": title if title != sidecar_stem else None,
-        "content_hash": content_hash,
-    }
-    with open(
-        os.path.join(output_path, f"{note_id}.en.json"), "w", encoding="utf-8"
-    ) as f:
-        json.dump(payload, f, ensure_ascii=False)
-
-
-def _render_note(note: Note, body: str, md_filename: str, current_dir: str) -> bool:
-    if not render_markdown_to_html(
+def _render_note(note: Note, body: str) -> bool:
+    return render_markdown_to_html(
         body,
         note.id,
         get_dst_path(note.category),
         _rendered_url_base(note.category),
         note.category,
-    ):
-        return False
-    _sync_translation_sidecar(md_filename, current_dir, note.category, note.id, body)
-    return True
+    )
 
 
 def process_note(
@@ -324,10 +244,9 @@ def process_note(
         note.updated_date = updated_date
         html_path = os.path.join(get_dst_path(category), f"{note.id}.html")
         if os.path.exists(html_path):
-            _sync_translation_sidecar(md_filename, current_dir, category, note.id, body)
             return
         # Keep the rendered tree self-healing when HTML went missing.
-        if not _render_note(note, body, md_filename, current_dir):
+        if not _render_note(note, body):
             print(f"Note {rel_path} unchanged but html missing, render failed")
         return
 
@@ -342,7 +261,7 @@ def process_note(
             note.updated_date = updated_date
             note.content_hash = content_hash
             db.session.flush()
-            if not _render_note(note, body, md_filename, current_dir):
+            if not _render_note(note, body):
                 raise RuntimeError("render failed")
         print(f"Note {rel_path} imported")
     except (OSError, UnicodeError, RuntimeError, SQLAlchemyError) as e:
@@ -378,7 +297,6 @@ def _sync_deleted_notes(db: SQLAlchemy, seen_file_paths: set):
         html_path = os.path.join(output_path, f"{note.id}.html")
         if os.path.exists(html_path):
             os.remove(html_path)
-        _remove_translation_artifacts(note.id, output_path, lang="en")
         db.session.delete(note)
         db.session.flush()
 

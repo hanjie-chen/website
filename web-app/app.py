@@ -45,13 +45,7 @@ from i18n import (
 from import_notes import import_notes
 from models import Note, db
 from navigation import build_breadcrumbs, build_docs_context
-from note_views import (
-    build_note_toc,
-    localized_notes,
-    note_html_path,
-    note_view_model,
-    resolve_note_links,
-)
+from note_views import build_note_toc, note_html_path, resolve_note_links
 
 # Flask route layer for the public site and the internal reindex endpoint.
 app = Flask(__name__)
@@ -76,9 +70,8 @@ app.add_url_rule(
 db.init_app(app)
 
 
-def _localized_all_notes(lang: str):
-    notes = db.session.execute(db.select(Note)).scalars().all()
-    return localized_notes(Rendered_Articles, notes, lang)
+def _all_notes():
+    return db.session.execute(db.select(Note)).scalars().all()
 
 
 def _asset_url(filename: str) -> str:
@@ -434,7 +427,7 @@ def set_language(lang):
 @app.route("/<lang>/notes")
 def note_index(lang):
     current_lang = _require_supported_language(lang)
-    notes = _localized_all_notes(current_lang)
+    notes = _all_notes()
     docs_context = build_docs_context(notes, current_category="", lang=current_lang)
     return render_template("note_index.html", **docs_context)
 
@@ -442,7 +435,7 @@ def note_index(lang):
 @app.route("/<lang>/notes/category/<path:category_path>")
 def note_category(lang, category_path):
     current_lang = _require_supported_language(lang)
-    notes = _localized_all_notes(current_lang)
+    notes = _all_notes()
     docs_context = build_docs_context(
         notes, current_category=category_path, lang=current_lang
     )
@@ -553,12 +546,11 @@ def page_not_found(error_info):  # 接受异常对象作为参数
 @app.route("/<lang>/notes/<int:note_id>")
 def view_note(lang, note_id):
     current_lang = _require_supported_language(lang)
-    canonical_note = db.session.get(Note, note_id)
-    if not canonical_note:
+    note = db.session.get(Note, note_id)
+    if not note:
         abort(404)
 
-    note = note_view_model(Rendered_Articles, canonical_note, current_lang)
-    html_path = note_html_path(Rendered_Articles, canonical_note, current_lang)
+    html_path = note_html_path(Rendered_Articles, note)
 
     try:
         with open(html_path, "r", encoding="utf-8") as f:

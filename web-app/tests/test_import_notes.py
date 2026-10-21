@@ -1,4 +1,3 @@
-import json
 import os
 import subprocess
 from datetime import date
@@ -73,6 +72,18 @@ def test_split_title_takes_the_first_heading_outside_code_blocks():
     assert "# A later heading" in rest
 
 
+def test_split_title_keeps_shorter_fences_inside_a_longer_code_block():
+    body = (
+        "````markdown\n```shell\n# not a title\n```\n# still code\n````\n\n"
+        "# `python -m ` 命令\n"
+    )
+
+    title, rest = split_title(body)
+
+    assert title == "python -m 命令"
+    assert "# still code" in rest
+
+
 def test_parse_note_reads_rollout_date_and_falls_back_to_the_file_name(tmp_path):
     dated = tmp_path / "dated.md"
     _write(dated, "---\nRolloutDate: 2026-03-06\n---\n\n# Terraform 入门指南\n\n正文\n")
@@ -134,36 +145,6 @@ def test_import_notes_removes_notes_that_disappear(app, tmp_path, rendered_root)
 
         assert set(_notes()) == {"tools/git/commands.md"}
     assert not hooks_html.exists()
-
-
-def test_import_notes_writes_english_sidecar_with_its_own_title(
-    app, tmp_path, rendered_root
-):
-    root = tmp_path / "kb"
-    note_dir = root / "cloud-infra/platforms/cloudflare"
-    _write(
-        note_dir / "enable-cdn.md",
-        "![cf](./resources/images/cf.jpg)\n\n# cloudflare 使用指南\n\n中文正文\n",
-    )
-    _write(note_dir / "resources/images/cf.jpg", "fake image")
-    _write(
-        note_dir / "resources/i18n/enable-cdn-en.md",
-        "# Cloudflare Guide\n\nEnglish body\n",
-    )
-
-    with app.app_context():
-        import_notes(str(root), db)
-        note = _notes()["cloud-infra/platforms/cloudflare/enable-cdn.md"]
-
-    rendered_dir = rendered_root / "cloud-infra-platforms-cloudflare"
-    english_html = (rendered_dir / f"{note.id}.en.html").read_text("utf-8")
-    payload = json.loads((rendered_dir / f"{note.id}.en.json").read_text("utf-8"))
-
-    assert "English body" in english_html
-    assert "Cloudflare Guide" not in english_html
-    # The sidecar inherits the source note's leading image.
-    assert "resources/images/cf.jpg" in english_html
-    assert payload["title"] == "Cloudflare Guide"
 
 
 def test_import_notes_rerenders_unchanged_sources_after_renderer_version_bump(

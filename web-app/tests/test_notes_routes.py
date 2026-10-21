@@ -1,4 +1,3 @@
-import json
 from datetime import date
 from pathlib import Path
 
@@ -35,18 +34,6 @@ def _write_html(note, html_body):
     html_dir = Path(app_module.Rendered_Articles) / note.category.replace("/", "-")
     html_dir.mkdir(parents=True, exist_ok=True)
     (html_dir / f"{note.id}.html").write_text(html_body, encoding="utf-8")
-
-
-def _write_english_sidecar(note, html_body="<h2>English Content</h2>"):
-    html_dir = Path(app_module.Rendered_Articles) / note.category.replace("/", "-")
-    html_dir.mkdir(parents=True, exist_ok=True)
-    (html_dir / f"{note.id}.en.html").write_text(html_body, encoding="utf-8")
-    (html_dir / f"{note.id}.en.json").write_text(
-        json.dumps(
-            {"lang": "en", "title": f"{note.title} EN", "content_hash": "b" * 64},
-            ensure_ascii=False,
-        )
-    )
 
 
 def test_notes_index_returns_200(client):
@@ -87,23 +74,6 @@ def test_notes_index_uses_shared_english_topbar_and_marks_notes_active(client):
         assert active_links[0]["href"] == "/zh/notes"
         assert active_links[0]["aria-current"] == "page"
     assert soup.select_one("#site-nav-toggle").get_text(strip=True) == "Notes"
-
-
-def test_english_notes_index_uses_sidecar_title(client, app):
-    with app.app_context():
-        note = _insert_note(
-            title="Cloudflare 指南",
-            category="tests/cloudflare",
-            file_path="tests/cloudflare/guide.md",
-        )
-        _write_english_sidecar(note)
-
-    response = client.get("/en/notes")
-    body = response.get_data(as_text=True)
-
-    assert response.status_code == 200
-    assert "Cloudflare 指南 EN" in body
-    assert "Cloudflare 指南</h3>" not in body
 
 
 def test_unprefixed_notes_index_route_returns_404(client):
@@ -202,23 +172,17 @@ def test_view_note_returns_200_for_existing_note(client, app):
     assert 'href="/en/notes/category/tests/category"' in body
 
 
-def test_english_view_note_uses_sidecar_title_and_body(client, app):
+def test_english_view_note_shows_the_note_as_written(client, app):
+    # Notes have one language; /en/ only switches the interface.
     with app.app_context():
-        note = _insert_note(
-            title="中文标题",
-            category="tests/english",
-            file_path="tests/english/guide.md",
-        )
-        _write_html(note, "<h2>中文内容</h2>")
-        _write_english_sidecar(note, html_body="<h2>English Sidecar Body</h2>")
+        note = _insert_note(title="中文标题", file_path="tests/category/guide.md")
+        _write_html(note, "<p>中文内容</p>")
+        note_id = note.id
 
-    response = client.get(f"/en/notes/{note.id}")
-    body = response.get_data(as_text=True)
+    body = client.get(f"/en/notes/{note_id}").get_data(as_text=True)
 
-    assert response.status_code == 200
-    assert "<title>中文标题 EN</title>" in body
-    assert "English Sidecar Body" in body
-    assert "中文内容" not in body
+    assert "<title>中文标题</title>" in body
+    assert "中文内容" in body
 
 
 def test_view_note_uses_chinese_shell_labels(client, app):
