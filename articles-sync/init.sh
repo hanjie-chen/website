@@ -27,8 +27,8 @@ fi
 if [ -z "$(ls -A "$ARTICLES_DIR")" ]; then
     log_message "Initializing articles directory..."
     cd "$ARTICLES_DIR"
-    # Only the latest tree is needed for article rendering, so keep the clone shallow.
-    if ! "$SU_EXEC_BIN" appuser git clone --depth=1 -b "$REPO_BRANCH" "$GITHUB_REPO" .; then
+    # Keep full history: the web app reads each note's last commit date from it.
+    if ! "$SU_EXEC_BIN" appuser git clone -b "$REPO_BRANCH" "$GITHUB_REPO" .; then
         log_message "Git clone failed"
         exit 1
     fi

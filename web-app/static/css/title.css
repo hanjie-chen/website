@@ -1,7 +1,8 @@
-/* Content headings step down from the page title by size and weight alone. */
-.article-body h1,
+/* The page title is the note's single `#` heading, so the body's outline
+   starts at `##` and steps down by size and weight alone. */
 .article-body h2,
-.article-body h3 {
+.article-body h3,
+.article-body h4 {
   display: block;
   margin-bottom: 0.7rem;
   padding: 0;
@@ -11,28 +12,28 @@
   scroll-margin-top: 88px;
 }
 
-.article-body h1::before,
-.article-body h1::after,
 .article-body h2::before,
 .article-body h2::after,
 .article-body h3::before,
-.article-body h3::after {
+.article-body h3::after,
+.article-body h4::before,
+.article-body h4::after {
   content: none;
 }
 
-.article-body h1 {
+.article-body h2 {
   margin-top: 3rem;
   font-size: 1.6rem;
   font-weight: 650;
 }
 
-.article-body h2 {
+.article-body h3 {
   margin-top: 2.4rem;
   font-size: 1.3rem;
   font-weight: 650;
 }
 
-.article-body h3 {
+.article-body h4 {
   margin-top: 1.8rem;
   font-size: 1.1rem;
   font-weight: 600;
@@ -40,11 +41,11 @@
 }
 
 @media (max-width: 768px) {
-  .article-body h1 {
+  .article-body h2 {
     margin-top: 2.4rem;
   }
 
-  .article-body h2 {
+  .article-body h3 {
     margin-top: 2rem;
   }
 }

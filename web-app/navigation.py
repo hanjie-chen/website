@@ -36,13 +36,6 @@ SPECIAL_LABELS = {
 }
 
 
-def is_hidden_category_path(category_path: str) -> bool:
-    return any(
-        segment.startswith("__") and segment.endswith("__")
-        for segment in split_category_path(category_path)
-    )
-
-
 @dataclass
 class CategoryNode:
     path: str
@@ -50,10 +43,10 @@ class CategoryNode:
     label: str
     depth: int
     children: list[CategoryNode] = field(default_factory=list)
-    articles: list = field(default_factory=list)
+    notes: list = field(default_factory=list)
     active: bool = False
     expanded: bool = False
-    article_count: int = 0
+    note_count: int = 0
 
 
 def split_category_path(category_path: str) -> list[str]:
@@ -88,7 +81,7 @@ def build_breadcrumbs(category_path: str, lang: str | None = None):
     """Link each level of category_path.
 
     Callers pass the path above the current page: its own title follows the trail.
-    The knowledge base root is left to the top bar's Articles link.
+    The knowledge base root is left to the top bar's Notes link.
     """
     lang = _require_canonical_language(lang)
     breadcrumbs = []
@@ -98,38 +91,36 @@ def build_breadcrumbs(category_path: str, lang: str | None = None):
         breadcrumbs.append(
             {
                 "label": humanize_segment(part),
-                "url": public_path(lang, f"articles/category/{'/'.join(walked_parts)}"),
+                "url": public_path(lang, f"notes/category/{'/'.join(walked_parts)}"),
             }
         )
 
     return breadcrumbs
 
 
-def _article_sort_key(article):
-    rollout = article.rollout_date or date.min
-    return (-(rollout.toordinal()), article.title.casefold())
+def _note_sort_key(note):
+    # Most recently touched first; notes without history sink to the end.
+    touched = note.updated_date or note.rollout_date or date.min
+    return (-(touched.toordinal()), note.title.casefold())
 
 
 def _category_sort_key(node: CategoryNode):
     return (node.label.casefold(), node.path)
 
 
-def build_category_tree(articles: Iterable, current_category: str = ""):
-    articles = [
-        article for article in articles if not is_hidden_category_path(article.category)
-    ]
+def build_category_tree(notes: Iterable, current_category: str = ""):
     root = {
         "path": "",
         "segment": "",
-        "label": "Articles",
+        "label": "Notes",
         "depth": 0,
         "children": {},
-        "articles": [],
+        "notes": [],
     }
 
-    for article in articles:
+    for note in notes:
         current = root
-        parts = split_category_path(article.category)
+        parts = split_category_path(note.category)
         walked_parts = []
 
         for depth, part in enumerate(parts, start=1):
@@ -142,11 +133,11 @@ def build_category_tree(articles: Iterable, current_category: str = ""):
                     "label": humanize_segment(part),
                     "depth": depth,
                     "children": {},
-                    "articles": [],
+                    "notes": [],
                 },
             )
 
-        current["articles"].append(article)
+        current["notes"].append(note)
 
     lookup: dict[str, CategoryNode] = {}
 
@@ -156,7 +147,7 @@ def build_category_tree(articles: Iterable, current_category: str = ""):
             segment=raw_node["segment"],
             label=raw_node["label"],
             depth=raw_node["depth"],
-            articles=sorted(raw_node["articles"], key=_article_sort_key),
+            notes=sorted(raw_node["notes"], key=_note_sort_key),
         )
 
         is_current = node.path == current_category
@@ -166,8 +157,8 @@ def build_category_tree(articles: Iterable, current_category: str = ""):
 
         children = [finalize(child) for child in raw_node["children"].values()]
         node.children = sorted(children, key=_category_sort_key)
-        node.article_count = len(node.articles) + sum(
-            child.article_count for child in node.children
+        node.note_count = len(node.notes) + sum(
+            child.note_count for child in node.children
         )
         lookup[node.path] = node
         return node
@@ -176,11 +167,11 @@ def build_category_tree(articles: Iterable, current_category: str = ""):
 
 
 def build_docs_context(
-    articles: Iterable, current_category: str = "", lang: str | None = None
+    notes: Iterable, current_category: str = "", lang: str | None = None
 ):
     lang = _require_canonical_language(lang)
-    articles = list(articles)
-    nav_root, lookup = build_category_tree(articles, current_category=current_category)
+    notes = list(notes)
+    nav_root, lookup = build_category_tree(notes, current_category=current_category)
     current_node = lookup.get(current_category, nav_root)
 
     return {
@@ -193,6 +184,6 @@ def build_docs_context(
             "/".join(split_category_path(current_category)[:-1]), lang=lang
         ),
         "category_children": current_node.children,
-        "category_articles": current_node.articles,
-        "recent_articles": sorted(articles, key=_article_sort_key)[:12],
+        "category_notes": current_node.notes,
+        "recent_notes": sorted(notes, key=_note_sort_key)[:12],
     }

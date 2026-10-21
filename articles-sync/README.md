@@ -1,9 +1,10 @@
-# Article Sync Service
+# Knowledge Base Sync Service
 
-Maintains a shallow mirror of the knowledge-base repository in the shared source
-volume and notifies the web app when its checked-out commit changes. Article
-validation, database import and HTML rendering belong to
-[web-app](../web-app/README.md#article-pipeline).
+Maintains a mirror of the knowledge-base repository, with full history, in the
+shared source volume and notifies the web app when its checked-out commit changes.
+The web app reads each note's last commit date from that history; note discovery,
+database import and HTML rendering belong to
+[web-app](../web-app/README.md#note-pipeline).
 
 ## Files
 
@@ -21,7 +22,7 @@ writable by that user (image build defaults: UID/GID 1000).
 ## Startup and Updates
 
 - **Empty source directory:** initialization clones the configured branch with
-  depth 1, then starts cron. This initial clone does not request reindexing;
+  its full history, then starts cron. This initial clone does not request reindexing;
   [production initialization](../scripts/deploy/README.md#initial-setup) imports
   the source through the web app's database initializer.
 - **Existing source directory:** initialization runs the update script before
@@ -34,12 +35,13 @@ writable by that user (image build defaults: UID/GID 1000).
 - **Scheduled update:** Compose sets a daily fallback at 03:00 UTC. Cron and sync
   messages include the timezone and are written to container logs.
 
-An update sets the configured origin, fetches the branch at depth 1, then uses
+An update sets the configured origin, fetches the branch (once with
+`--unshallow` for a mirror cloned shallow by an earlier version), then uses
 `git reset --hard FETCH_HEAD` and `git clean -fd`. This is a disposable content
 mirror: tracked local changes and untracked files/directories can be discarded.
 Do not use the source volume as a developer working copy.
 
-The script attempts a replacement shallow clone when `.git` is missing, origin
+The script attempts a replacement clone when `.git` is missing, origin
 cannot be updated, or fetch fails. This requires access to the directory's parent
 and the ability to replace the source directory; a successful fallback is not
 guaranteed for every permissions or mount failure. Reset/clean failures return
@@ -58,7 +60,7 @@ omit the header, but the web app rejects anonymous reindexing; see
 Content Sync runs the script with `REQUIRE_REINDEX=1`: it reindexes even when HEAD
 is unchanged, and a failed POST or missing `WEB_APP_REINDEX_URL` fails the run.
 After fixing the endpoint or token, rerun Content Sync to recover; unchanged
-articles are skipped by the web app's incremental import.
+notes are skipped by the web app's incremental import.
 
 Startup and cron runs leave `REQUIRE_REINDEX` unset. They only log a failed POST,
 so a web app that is still starting cannot stop the container. There is no retry

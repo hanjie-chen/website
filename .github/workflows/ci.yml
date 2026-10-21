@@ -183,7 +183,7 @@ jobs:
           docker compose -f compose.yml -f compose.dev.yml run --rm --no-deps -T web-app
           pytest -q
           --cov=app
-          --cov=import_articles_scripts
+          --cov=import_notes
           --cov=markdown_render_scripts
           --cov=models
           --cov-report=term-missing

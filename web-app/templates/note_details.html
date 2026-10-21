@@ -21,7 +21,7 @@
 
 
 {% block title %}
-<title>{{ article.title }}</title>
+<title>{{ note.title }}</title>
 {% endblock %}
 
 {% block extra_styles %}
@@ -30,7 +30,7 @@
 
 
 {% block navbar%}
-{% set active_page = "articles" %}
+{% set active_page = "notes" %}
 {% include "_site_topbar.html" %}
 {% endblock %}
 
@@ -51,29 +51,37 @@
                         {% endfor %}
                     </nav>
                     {% endif %}
-                    <h1 class="article-page-title">{{ article.title }}</h1>
+                    <h1 class="article-page-title">{{ note.title }}</h1>
+                    {# Each date shows only when known; an update on the release day adds nothing. #}
+                    {% set show_updated = note.updated_date and note.updated_date != note.rollout_date %}
+                    {% if note.rollout_date or show_updated %}
                     <p class="article-meta">
-                        {{ t("article.meta.published") }} <time datetime="{{ article.rollout_date }}">{{ article.rollout_date }}</time>
-                        {%- if article.ultimate_modified_date != article.rollout_date %}
+                        {%- if note.rollout_date %}
+                        {{ t("note.meta.published") }} <time datetime="{{ note.rollout_date }}">{{ note.rollout_date }}</time>
+                        {%- endif %}
+                        {%- if note.rollout_date and show_updated %}
                         <span class="article-meta-separator" aria-hidden="true">·</span>
-                        {{ t("article.meta.updated") }} <time datetime="{{ article.ultimate_modified_date }}">{{ article.ultimate_modified_date }}</time>
+                        {%- endif %}
+                        {%- if show_updated %}
+                        {{ t("note.meta.updated") }} <time datetime="{{ note.updated_date }}">{{ note.updated_date }}</time>
                         {%- endif %}
                     </p>
+                    {% endif %}
                     {% if toc_items %}
                     <details class="article-toc-disclosure">
-                        <summary>{{ t("article.toc.title") }}</summary>
-                        <nav aria-label="{{ t('article.toc.title') }}">
+                        <summary>{{ t("note.toc.title") }}</summary>
+                        <nav aria-label="{{ t('note.toc.title') }}">
                             {{ render_toc_items(toc_items, tracked=false) }}
                         </nav>
                     </details>
                     {% endif %}
                 </header>
-                {{ article_content|safe }}
+                {{ note_content|safe }}
             </article>
             {% if toc_items %}
             <aside class="article-toc-column">
-                <nav class="article-toc" aria-label="{{ t('article.toc.title') }}" data-article-toc>
-                    <p class="article-toc-title">{{ t("article.toc.title") }}</p>
+                <nav class="article-toc" aria-label="{{ t('note.toc.title') }}" data-article-toc>
+                    <p class="article-toc-title">{{ t("note.toc.title") }}</p>
                     {{ render_toc_items(toc_items) }}
                 </nav>
             </aside>
@@ -82,9 +90,9 @@
     </div>
 </div>
 
-<dialog class="image-preview" aria-label="{{ t('article.image_preview.label') }}" data-image-preview-modal>
+<dialog class="image-preview" aria-label="{{ t('note.image_preview.label') }}" data-image-preview-modal>
     <div class="image-preview-content">
-        <button type="button" class="image-preview-close" aria-label="{{ t('article.image_preview.close') }}"
+        <button type="button" class="image-preview-close" aria-label="{{ t('note.image_preview.close') }}"
             data-image-preview-close></button>
         <img class="image-preview-full" src="" alt="" data-image-preview-target>
         <p class="image-preview-caption" data-image-preview-caption hidden></p>

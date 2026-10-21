@@ -106,7 +106,7 @@ def test_homepage_links_stay_in_current_language_namespace(client):
 
     assert response.status_code == 200
     assert 'href="/en/"' in body
-    assert 'href="/en/articles"' in body
+    assert 'href="/en/notes"' in body
     assert 'href="/en/briefs"' in body
     assert 'href="/en/about"' in body
 
@@ -118,7 +118,7 @@ def test_about_page_links_stay_in_current_language_namespace(client):
     assert response.status_code == 200
     assert 'href="/en/about"' in body
     assert 'href="/en/"' in body
-    assert 'href="/en/articles"' in body
+    assert 'href="/en/notes"' in body
     assert 'href="/en/briefs"' in body
 
 
@@ -132,7 +132,7 @@ def test_shared_topbar_uses_fixed_brand_and_english_nav_on_chinese_homepage(clie
     assert brand.select_one(".site-nav-brand-mark")["aria-hidden"] == "true"
     assert brand.get_text(strip=True) == "hanjie site"
     assert ">Home<" not in body
-    assert ">Articles<" in body
+    assert ">Notes<" in body
     assert ">Brief<" in body
     assert ">About<" in body
     assert "欢迎来到我的个人网站" not in body

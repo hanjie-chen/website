@@ -1,8 +1,9 @@
 # GitHub Actions Workflows
 
-Automation for application delivery, article synchronization, GCP infrastructure
-and container security. This guide covers triggers, operational boundaries and
-repository setup; exact commands and action versions live in the linked YAML.
+Automation for application delivery, knowledge base synchronization, GCP
+infrastructure and container security. This guide covers triggers, operational
+boundaries and repository setup; exact commands and action versions live in the
+linked YAML.
 
 ## Workflow Index
 
@@ -12,7 +13,7 @@ Scheduled times below use UTC. All scheduled workflows also accept manual dispat
 | --- | --- | --- |
 | [ci.yml](ci.yml) | Push to `main`, pull request targeting `main`, or manual dispatch | Validate code/configuration and candidate runtime; publish application images on successful `main` push checks |
 | [cd.yml](cd.yml) | Successful push-triggered `CI` completion on `main` | Deploy application images tagged with the CI commit SHA, validate production and clean up old images |
-| [content-sync.yml](content-sync.yml) | Manual or external `workflow_dispatch` | Sync article sources on production, then run health and smoke checks |
+| [content-sync.yml](content-sync.yml) | Manual or external `workflow_dispatch` | Sync the knowledge base on production, then run health and smoke checks |
 | [container-security.yml](container-security.yml) | Daily at 19:45 UTC (03:45 UTC+8 next day) | Scan pinned third-party images, propose security updates and check production image references |
 | [infra-sync.yml](infra-sync.yml) | Sundays at 03:00 UTC (11:00 UTC+8) | Validate and plan GCP Terraform; automatically apply a plan containing changes |
 

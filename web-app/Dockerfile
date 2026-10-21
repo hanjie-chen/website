@@ -4,6 +4,13 @@ FROM python:3.12-slim
 # set web app directory
 WORKDIR /app
 
+# git reads note dates from the knowledge base history. The mirror is owned by the
+# sync service's user, so git must trust it.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/* \
+    && git config --system --add safe.directory '*'
+
 # 复制requirements.txt
 COPY requirements.txt .
 

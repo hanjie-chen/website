@@ -2,25 +2,25 @@
 <ul class="docs-tree-list">
     {% for node in nodes recursive %}
     <li class="docs-tree-item">
-        <a href="{{ url_for('article_category', lang=current_lang, category_path=node.path) }}"
+        <a href="{{ url_for('note_category', lang=current_lang, category_path=node.path) }}"
             class="docs-tree-link{% if node.active %} is-active{% endif %}">
             {{ node.label }}
         </a>
 
-        {% if node.expanded and (node.children or node.active and node.articles) %}
+        {% if node.expanded and (node.children or node.active and node.notes) %}
         {% if node.children %}
         <ul class="docs-tree-list docs-tree-list-nested">
             {{ loop(node.children) }}
         </ul>
         {% endif %}
 
-        {% if node.active and node.articles %}
+        {% if node.active and node.notes %}
         <ul class="docs-tree-article-list">
-            {% for article in node.articles %}
+            {% for note in node.notes %}
             <li class="docs-tree-article-item">
-                <a href="{{ url_for('view_article', lang=current_lang, article_id=article.id) }}"
+                <a href="{{ url_for('view_note', lang=current_lang, note_id=note.id) }}"
                     class="docs-tree-article-link">
-                    {{ article.title }}
+                    {{ note.title }}
                 </a>
             </li>
             {% endfor %}

@@ -3,50 +3,46 @@ from types import SimpleNamespace
 
 import pytest
 
-from navigation import (
-    build_breadcrumbs,
-    build_docs_context,
-    is_hidden_category_path,
-)
+from navigation import build_breadcrumbs, build_docs_context
 
 TEST_DATE = date(2026, 1, 1)
 
 
-def _article(category, title):
+def _note(category, title, updated_date=TEST_DATE):
     return SimpleNamespace(
         id=1,
         title=title,
-        author="tester",
-        rollout_date=TEST_DATE,
-        ultimate_modified_date=TEST_DATE,
-        brief_introduction="intro",
+        rollout_date=None,
+        updated_date=updated_date,
         category=category,
     )
 
 
-def test_is_hidden_category_path_detects_internal_templates():
-    assert is_hidden_category_path("__template__") is True
-    assert is_hidden_category_path("tools/__template__/drafts") is True
-    assert is_hidden_category_path("cloud-infra/terraform") is False
-
-
-def test_build_docs_context_filters_hidden_categories():
+def test_recent_notes_put_the_latest_update_first_and_undated_notes_last():
     docs_context = build_docs_context(
         [
-            _article("__template__", "Template"),
-            _article("cloud-infra/terraform", "Terraform Intro"),
+            _note("tools/git", "Older", updated_date=date(2026, 1, 1)),
+            _note("tools/git", "Undated", updated_date=None),
+            _note("cloud-infra/terraform", "Newer", updated_date=date(2026, 2, 1)),
         ],
         lang="en",
     )
 
-    assert len(docs_context["category_children"]) == 1
-    assert docs_context["category_children"][0].path == "cloud-infra"
+    assert [note.title for note in docs_context["recent_notes"]] == [
+        "Newer",
+        "Older",
+        "Undated",
+    ]
+    assert [node.path for node in docs_context["category_children"]] == [
+        "cloud-infra",
+        "tools",
+    ]
 
 
 def test_category_breadcrumbs_link_the_ancestors_with_language_prefixes():
     docs_context = build_docs_context(
         [
-            _article("cloud-infra/terraform", "Terraform Intro"),
+            _note("cloud-infra/terraform", "Terraform Intro"),
         ],
         current_category="cloud-infra/terraform",
         lang="en",
@@ -54,13 +50,13 @@ def test_category_breadcrumbs_link_the_ancestors_with_language_prefixes():
 
     # The page title names the current category, so the trail stops above it.
     assert docs_context["breadcrumbs"] == [
-        {"label": "Cloud Infra", "url": "/en/articles/category/cloud-infra"},
+        {"label": "Cloud Infra", "url": "/en/notes/category/cloud-infra"},
     ]
 
 
 def test_top_level_category_has_no_breadcrumbs():
     docs_context = build_docs_context(
-        [_article("cloud-infra/terraform", "Terraform Intro")],
+        [_note("cloud-infra/terraform", "Terraform Intro")],
         current_category="cloud-infra",
         lang="en",
     )
@@ -68,26 +64,26 @@ def test_top_level_category_has_no_breadcrumbs():
     assert docs_context["breadcrumbs"] == []
 
 
-def test_article_breadcrumbs_link_every_category_above_the_article():
-    article = _article("cloud-infra/terraform", "Terraform Intro")
+def test_note_breadcrumbs_link_every_category_above_the_note():
+    note = _note("cloud-infra/terraform", "Terraform Intro")
 
-    breadcrumbs = build_breadcrumbs(article.category, lang="en")
+    breadcrumbs = build_breadcrumbs(note.category, lang="en")
 
     assert breadcrumbs == [
-        {"label": "Cloud Infra", "url": "/en/articles/category/cloud-infra"},
+        {"label": "Cloud Infra", "url": "/en/notes/category/cloud-infra"},
         {
             "label": "Terraform",
-            "url": "/en/articles/category/cloud-infra/terraform",
+            "url": "/en/notes/category/cloud-infra/terraform",
         },
     ]
 
 
 @pytest.mark.parametrize("lang", ["", "en-US", "fr", " zh "])
 def test_navigation_helpers_reject_non_canonical_languages(lang):
-    article = _article("cloud-infra/terraform", "Terraform Intro")
+    note = _note("cloud-infra/terraform", "Terraform Intro")
 
     with pytest.raises(ValueError):
         build_breadcrumbs("cloud-infra", lang=lang)
 
     with pytest.raises(ValueError):
-        build_docs_context([article], current_category="cloud-infra", lang=lang)
+        build_docs_context([note], current_category="cloud-infra", lang=lang)

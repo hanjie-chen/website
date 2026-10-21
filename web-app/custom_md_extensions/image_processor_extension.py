@@ -1,11 +1,21 @@
-# this extension used to change relative image path correct image path
-# further consider: for relative like ./ all use this extensino to deal with
+# Point relative image paths at the note's copied assets in the rendered tree.
 
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 from markdown.extensions import Extension
 from markdown.postprocessors import Postprocessor
+
+
+def is_relative_reference(url: str) -> bool:
+    """True for paths like "./a.png", "images/a.png" or "../b.md#x".
+
+    Absolute URLs, root paths, protocol-relative URLs, data URIs and bare
+    fragments are left alone.
+    """
+    if not url or url.startswith(("/", "#")):
+        return False
+    return not urlsplit(url).scheme
 
 
 class Image_Processor(Postprocessor):
@@ -14,21 +24,12 @@ class Image_Processor(Postprocessor):
         self.base_url = base_url
 
     def run(self, text):
-        """
-        use beautifulSoup to parse html
-        only change <img> tag src attribute which start with "./"
-        (sizing and centering come from the .article-body img styles)
-        """
+        # Sizing and centering come from the .article-body img styles.
         soup = BeautifulSoup(text, "html.parser")
         for img in soup.find_all("img"):
-            # process path
             src = img.get("src", "")
-            if src.startswith("./"):
-                img["src"] = urljoin(self.base_url, src[2:])
-                # debug the image url
-                # print("base_url = ", self.base_url)
-                # print("Update image src to ",img["src"])
-
+            if is_relative_reference(src):
+                img["src"] = urljoin(self.base_url, src)
         return str(soup)
 
 
@@ -39,9 +40,8 @@ class Image_Processor_Extension(Extension):
 
     def __init__(self, base_url: str, **kwargs):
         """
-        :param base_url: Base URL for images, e.g. 'rendered-articles/tools-guide-git-guide/'
+        :param base_url: Base URL for images, e.g. 'rendered-articles/tools-git/'
         """
-        # make sure the base url end with / and start with /
         base_url = Image_Processor_Extension.normalize_base_url(base_url)
         self.config = {"base_url": [base_url, "Base URL for images"]}
         super().__init__(**kwargs)

@@ -1,10 +1,11 @@
-import article_views as article_views_module
+import note_views
 
 
-def test_build_article_toc_assigns_ids_and_extracts_outline():
-    html = "<h1>Intro</h1><p>Text</p><h2>Setup</h2><h2>Setup</h2><h3>中文 标题</h3>"
+def test_build_note_toc_assigns_ids_and_extracts_outline():
+    # The title left the body, so its outline starts at h2 and shows as level 1.
+    html = "<h2>Intro</h2><p>Text</p><h3>Setup</h3><h3>Setup</h3><h4>中文 标题</h4>"
 
-    updated_html, toc_items = article_views_module.build_article_toc(html)
+    updated_html, toc_items = note_views.build_note_toc(html)
 
     assert 'id="intro"' in updated_html
     assert 'id="setup"' in updated_html
@@ -35,10 +36,10 @@ def test_build_article_toc_assigns_ids_and_extracts_outline():
     ]
 
 
-def test_build_article_toc_keeps_orphan_subheadings_visible():
-    html = "<h2>Setup</h2><h3>Commands</h3>"
+def test_build_note_toc_keeps_orphan_subheadings_visible():
+    html = "<h3>Setup</h3><h4>Commands</h4>"
 
-    _, toc_items = article_views_module.build_article_toc(html)
+    _, toc_items = note_views.build_note_toc(html)
 
     assert toc_items == [
         {

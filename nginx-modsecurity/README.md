@@ -1,6 +1,6 @@
 # Nginx + ModSecurity
 
-HTTPS termination, reverse proxy, rendered article assets and the Dozzle log
+HTTPS termination, reverse proxy, rendered note assets and the Dozzle log
 panel for the website. The OWASP CRS image and container settings are declared
 in [compose.yml](../compose.yml).
 

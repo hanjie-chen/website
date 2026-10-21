@@ -75,10 +75,9 @@ th code {
 
 /* for title code */
 /* need furhter optimized */
-h1 code,
 h2 code,
-h3 code 
-{
+h3 code,
+h4 code {
   background-color: var(--code-inline-bg);
   color: var(--code-inline-text);
   border-radius: 5px;

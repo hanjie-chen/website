@@ -1,9 +1,10 @@
 # Web App
 
-Flask application for the personal dashboard, article reader, Daily Brief pages
-and APIs. Article sources are maintained by [articles-sync](../articles-sync/README.md);
-this service imports and renders them. Daily Briefs are generated externally and
-submitted through an authenticated publishing endpoint.
+Flask application for the personal dashboard, the knowledge base's notes, Daily
+Brief pages and APIs. The knowledge base is mirrored by
+[articles-sync](../articles-sync/README.md); this service imports and renders it.
+Daily Briefs are generated externally and submitted through an authenticated
+publishing endpoint.
 
 ## Code Map
 
@@ -11,10 +12,10 @@ submitted through an authenticated publishing endpoint.
 | --- | --- |
 | [app.py](app.py) | Routes, authentication, page context and template helpers |
 | [config.py](config.py) | Environment configuration |
-| [models.py](models.py), [db_health.py](db_health.py) | Article metadata and deployment-time database assessment |
-| [import_articles_scripts.py](import_articles_scripts.py) | Source discovery, incremental import, translations and deletion cleanup |
-| [markdown_render_scripts.py](markdown_render_scripts.py), [custom_md_extensions/](custom_md_extensions/) | Markdown rendering, image processing and admonitions |
-| [article_views.py](article_views.py), [navigation.py](navigation.py) | Localized article views, TOC, category tree and breadcrumbs |
+| [models.py](models.py), [db_health.py](db_health.py) | Note metadata and deployment-time database assessment |
+| [import_notes.py](import_notes.py) | Note discovery, titles and dates, incremental import, translations and deletion cleanup |
+| [markdown_render_scripts.py](markdown_render_scripts.py), [custom_md_extensions/](custom_md_extensions/) | Markdown rendering, image paths, links between notes and admonitions |
+| [note_views.py](note_views.py), [navigation.py](navigation.py) | Localized note views, TOC, note links, category tree and breadcrumbs |
 | [daily_briefs.py](daily_briefs.py) | Brief validation, JSON storage, current pointer and archive index |
 | [daily_brief_cleanup.py](daily_brief_cleanup.py) | Optional one-off retention cleanup |
 | [i18n.py](i18n.py) | Supported languages, UI translations and language-aware URLs |
@@ -36,11 +37,11 @@ runtime mounts and overrides; see [compose.yml](../compose.yml) and
 | --- | --- |
 | `SOURCE_ARTICLES_DIRECTORY` | `/articles/src`: synchronized Markdown and assets |
 | `RENDERED_ARTICLES_DIRECTORY` | `/articles/rendered`: generated HTML and copied assets |
-| `SQLALCHEMY_DATABASE_URI` | `sqlite:///project.db`: article metadata in the Flask instance directory; development Compose uses `project_test.db` |
+| `SQLALCHEMY_DATABASE_URI` | `sqlite:///project.db`: note metadata in the Flask instance directory; development Compose uses `project_test.db` |
 | `DAILY_BRIEF_DATA_DIRECTORY` | `/daily-briefs/data`: published briefs and their index/pointer |
-| `REIMPORT_ARTICLES_TOKEN` | Unset by default; enables authenticated article reindexing |
+| `REIMPORT_ARTICLES_TOKEN` | Unset by default; enables authenticated note reindexing |
 | `DAILY_BRIEF_PUBLISH_TOKEN` | Unset by default; enables authenticated brief publishing |
-| `APP_ENV` | `production`; `development` or `dev` enables `/debug` and clears rendered output before each article import |
+| `APP_ENV` | `production`; `development` or `dev` enables `/debug` and clears rendered output before each note import |
 
 If `APP_ENV` is absent, `FLASK_ENV` is used before the production default.
 Production runs Gunicorn; development Compose mounts the source and runs Flask
@@ -48,52 +49,64 @@ with debug enabled. Keep development imports away from production data volumes.
 Host initialization, deployment and health checks are documented in
 [scripts/deploy/README.md](../scripts/deploy/README.md).
 
-## Article Pipeline
+## Note Pipeline
 
 `articles-sync → POST /internal/reindex → import/render → SQLite + HTML → pages`
 
-SQLite stores article metadata; generated HTML and copied assets live separately.
-Article pages require both. The website has no public article JSON API.
-Article Markdown is trusted repository content: rendered HTML is inserted into
-templates without HTML sanitization. This pipeline is not an upload interface
-for untrusted Markdown.
+The site is the owner's window onto the
+[knowledge base](https://github.com/hanjie-chen/knowledge-base): every note is
+published, drafts included, and the knowledge base's own README defines how notes
+are organized. This service alone decides what counts as a note. Notes live at
+`/<lang>/notes`, `/<lang>/notes/<id>` and `/<lang>/notes/category/<path>`; ids are
+assigned at import, so a moved note gets a new id. Infrastructure names that
+predate notes (the `articles-sync` service, its volumes and environment
+variables, and `/rendered-articles/`) are kept.
+
+SQLite stores note metadata; generated HTML and copied assets live separately.
+Note pages require both. The website has no public note JSON API. Note Markdown
+is trusted repository content: rendered HTML is inserted into templates without
+HTML sanitization. This pipeline is not an upload interface for untrusted
+Markdown.
 
 ### Source Format
 
-The importer discovers article directories containing `images/`, `assets/`, or
-`resources/images/`. It skips hidden and internal directories such as
-`__template__`. Once it finds an article directory, it processes its Markdown
-files rather than recursively treating its resource directories as articles.
+Every `.md` file is a note except:
 
-A canonical article needs YAML frontmatter with `Title`, `Author`, `CoverImage`
-and `RolloutDate`, a fenced `BriefIntroduction:` block, and `<!-- split -->`
-before the body. For example, with a sibling `images/cover.png`:
+- `README.md`, `AGENTS.md` and `CLAUDE.md`, which guide people and agents;
+- files under hidden folders, `__template__`-style folders, and the `resources/`
+  and `images/` folders that hold a note's images and translations.
+
+A note's path is its classification: its folder is its category. Its title is
+its first `# heading` outside code blocks, which leaves the body and becomes the
+page title; a note without one is titled by its file name. The body's outline
+therefore starts at `##`. Front matter is optional and only `RolloutDate` is read,
+as the date the owner wrote the note:
 
 ````markdown
 ---
-Title: Example article
-Author: Example author
-CoverImage: images/cover.png
 RolloutDate: 2026-01-01
 ---
 
-```text
-BriefIntroduction: A short introduction.
-```
+# Example note
 
-<!-- split -->
-# Article body
+## First section
 ````
 
-Categories and article identity derive from the source path. Optional English
-translations live at `resources/i18n/<basename>-en.md`, use the same introduction
-and body separators, and require `Title` in frontmatter. They provide translated
-body and display metadata without creating another database article. Missing
-English output falls back to the canonical Chinese content. If the English body
-has no leading image block, it inherits the source's leading images.
+The updated date is the date of the last commit that touched the file, read from
+the mirror's full git history; notes without history show no updated date.
+Relative image paths resolve against the note's folder, whose `images/` and
+`resources/images/` folders are copied next to the rendered HTML.
+Links to other notes (`../ssh/client-guide.md`, or `/tools/git/commands.md` from
+the root) render as `/notes/path/<path>` and the note page points them at the
+target's current id; links to notes that are gone keep that path and return 404.
 
-See [import tests](tests/test_import_articles_scripts.py) for accepted formats
-and edge cases. Markdown extension configuration lives in
+Optional English translations live at `resources/i18n/<basename>-en.md` and follow
+the same title rule. They provide a translated title and body without creating
+another note; missing English output falls back to the original. If the English
+body has no leading image block, it inherits the source's leading images.
+
+See [import tests](tests/test_import_notes.py) for accepted formats and edge
+cases. Markdown extension configuration lives in
 [markdown_render_scripts.py](markdown_render_scripts.py); math uses local KaTeX
 through [math-render.js](static/math-render.js).
 
@@ -116,20 +129,20 @@ This credential is separate from the Daily Brief publishing token. The
   import. The hash includes `RENDERER_VERSION` from
   [markdown_render_scripts.py](markdown_render_scripts.py): bump it whenever a
   renderer change alters HTML for unchanged Markdown, and the next reindex
-  re-renders every article.
+  re-renders every note.
 - Development imports clear the rendered tree before rebuilding it.
-- Source files no longer discovered are removed from the article database and
+- Source files no longer discovered are removed from the note database and
   their generated HTML is deleted. Verify the source tree before reindexing;
-  an empty scan can remove existing article records.
+  an empty scan can remove existing note records.
 - [scripts/init_db.py](scripts/init_db.py) **drops and recreates database tables**
-  before importing articles. It can change article IDs and is not a routine
+  before importing notes. It can change note IDs and is not a routine
   rerender command. Deployment safeguards are described in the deploy guide.
 
 ## Daily Briefs
 
 `external generator → POST /internal/briefs → JSON files → pages and public API`
 
-Briefs are stored separately from the rebuildable article database. Storage uses
+Briefs are stored separately from the rebuildable note database. Storage uses
 one `YYYY-MM-DD.json` payload per date, `current.json` for the latest date and
 `archive-index.json` for archive metadata. Writes are serialized with a file lock;
 each file is replaced atomically, but the files are not one database transaction.
@@ -293,15 +306,15 @@ the owner can do, such as writing down their own experience.
   rather than utility classes. [site-nav.js](static/site-nav.js) drives the
   mobile navigation menu and closes it and the settings panel on an outside
   click, Escape or tabbing away.
-- UI translations live in `i18n.py`. Article translations use the sidecars above;
+- UI translations live in `i18n.py`. Note translations use the sidecars above;
   switching the page language does not translate Daily Brief summaries.
 - Use `asset_url(...)` for direct template references to site assets. It appends
   integer-second file mtime, not a content hash. CSS-relative font/image URLs
   are not automatically versioned. Load shared `style.css` through `base.html`;
   do not re-import it with an unversioned CSS URL. Cloudflare cache policy is
   managed separately.
-- Article math, code-copy, TOC and image-preview behavior belongs to the scripts
-  loaded by [article_details.html](templates/article_details.html). Brief date
+- Note math, code-copy, TOC and image-preview behavior belongs to the scripts
+  loaded by [note_details.html](templates/note_details.html). Brief date
   navigation enhancement is loaded by [brief_detail.html](templates/brief_detail.html).
   Brief items place the "About this summary" disclosure beside source and discussion
   metadata, with its contents below that row. Material sources, statuses and
