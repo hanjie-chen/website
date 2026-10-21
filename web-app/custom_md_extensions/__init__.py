@@ -3,8 +3,10 @@
 
 from custom_md_extensions.gfm_admonition_extension import Gfm_Admonition_Extension
 from custom_md_extensions.image_processor_extension import Image_Processor_Extension
+from custom_md_extensions.note_link_extension import Note_Link_Extension
 
 __all__ = [
     "Gfm_Admonition_Extension",
     "Image_Processor_Extension",
+    "Note_Link_Extension",
 ]

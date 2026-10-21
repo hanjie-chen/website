@@ -13,12 +13,6 @@ from flask import (
     url_for,
 )
 
-from article_views import (
-    article_html_path,
-    article_view_model,
-    build_article_toc,
-    localized_articles,
-)
 from config import (
     DAILY_BRIEF_PUBLISH_TOKEN,
     IS_DEV,
@@ -48,9 +42,10 @@ from i18n import (
     switch_language_path,
     translate,
 )
-from import_articles_scripts import import_articles
-from models import Article_Meta_Data, db
+from import_notes import import_notes
+from models import Note, db
 from navigation import build_breadcrumbs, build_docs_context
+from note_views import build_note_toc, note_html_path, resolve_note_links
 
 # Flask route layer for the public site and the internal reindex endpoint.
 app = Flask(__name__)
@@ -75,12 +70,8 @@ app.add_url_rule(
 db.init_app(app)
 
 
-def _fetch_all_articles():
-    return db.session.execute(db.select(Article_Meta_Data)).scalars().all()
-
-
-def _localized_all_articles(lang: str):
-    return localized_articles(Rendered_Articles, _fetch_all_articles(), lang)
+def _all_notes():
+    return db.session.execute(db.select(Note)).scalars().all()
 
 
 def _asset_url(filename: str) -> str:
@@ -433,26 +424,26 @@ def set_language(lang):
     return response
 
 
-@app.route("/<lang>/articles")
-def article_index(lang):
+@app.route("/<lang>/notes")
+def note_index(lang):
     current_lang = _require_supported_language(lang)
-    articles = _localized_all_articles(current_lang)
-    docs_context = build_docs_context(articles, current_category="", lang=current_lang)
-    return render_template("article_index.html", **docs_context)
+    notes = _all_notes()
+    docs_context = build_docs_context(notes, current_category="", lang=current_lang)
+    return render_template("note_index.html", **docs_context)
 
 
-@app.route("/<lang>/articles/category/<path:category_path>")
-def article_category(lang, category_path):
+@app.route("/<lang>/notes/category/<path:category_path>")
+def note_category(lang, category_path):
     current_lang = _require_supported_language(lang)
-    articles = _localized_all_articles(current_lang)
+    notes = _all_notes()
     docs_context = build_docs_context(
-        articles, current_category=category_path, lang=current_lang
+        notes, current_category=category_path, lang=current_lang
     )
 
     if category_path and docs_context["current_node"].path != category_path:
         abort(404)
 
-    return render_template("article_index.html", **docs_context)
+    return render_template("note_index.html", **docs_context)
 
 
 @app.route("/<lang>/about")
@@ -552,33 +543,37 @@ def page_not_found(error_info):  # 接受异常对象作为参数
     ), 404  # 将错误信息传递给模板
 
 
-@app.route("/<lang>/articles/<int:article_id>")
-def view_article(lang, article_id):
+@app.route("/<lang>/notes/<int:note_id>")
+def view_note(lang, note_id):
     current_lang = _require_supported_language(lang)
-    canonical_article = db.session.execute(
-        db.select(Article_Meta_Data).where(Article_Meta_Data.id == article_id)
-    ).scalar()
-
-    if not canonical_article:
+    note = db.session.get(Note, note_id)
+    if not note:
         abort(404)
 
-    article = article_view_model(Rendered_Articles, canonical_article, current_lang)
-    html_path = article_html_path(Rendered_Articles, canonical_article, current_lang)
+    html_path = note_html_path(Rendered_Articles, note)
 
     try:
         with open(html_path, "r", encoding="utf-8") as f:
-            article_content = f.read()
+            note_content = f.read()
     except FileNotFoundError:
         abort(404)
 
-    article_content, toc_items = build_article_toc(article_content)
-    # 返回模板，使用相对路径
+    def note_url_for_path(file_path: str):
+        target = db.session.execute(
+            db.select(Note.id).where(Note.file_path == file_path)
+        ).scalar()
+        if target is None:
+            return None
+        return url_for("view_note", lang=current_lang, note_id=target)
+
+    note_content = resolve_note_links(note_content, note_url_for_path)
+    note_content, toc_items = build_note_toc(note_content)
     return render_template(
-        "article_details.html",
-        article=article,
-        article_content=article_content,
+        "note_details.html",
+        note=note,
+        note_content=note_content,
         toc_items=toc_items,
-        breadcrumbs=build_breadcrumbs(article.category, lang=current_lang),
+        breadcrumbs=build_breadcrumbs(note.category, lang=current_lang),
     )
 
 
@@ -586,11 +581,11 @@ if IS_DEV:
     # 在路由函数之前添加这些调试代码
     @app.route("/debug")
     def debug_info():
-        # 1. 检查数据库中的文章
-        articles = db.session.execute(db.select(Article_Meta_Data)).scalars().all()
-        db_info = "Database Articles:\n"
-        for article in articles:
-            db_info += f"ID: {article.id}, Title: {article.title}, Category: {article.category}, Cover_image_url: {article.cover_image_url}\n"
+        # 1. 检查数据库中的笔记
+        notes = db.session.execute(db.select(Note)).scalars().all()
+        db_info = "Database Notes:\n"
+        for note in notes:
+            db_info += f"ID: {note.id}, Title: {note.title}, Path: {note.file_path}\n"
 
         # 2. 检查rendered_articles目录
         rendered_path = app.config["RENDERED_ARTICLES_FOLDER"]
@@ -613,9 +608,9 @@ if IS_DEV:
 
 
 @app.route("/internal/reindex", methods=["POST"])
-def reindex_articles():
+def reindex_notes():
     # Only the sync pipeline should hit this endpoint; public callers should
-    # not be able to force a re-import of the article source tree.
+    # not be able to force a re-import of the knowledge base.
     if not REIMPORT_ARTICLES_TOKEN:
         abort(404)
 
@@ -624,7 +619,7 @@ def reindex_articles():
         abort(403)
 
     with app.app_context():
-        import_articles(Articles_Directory, db)
+        import_notes(Articles_Directory, db)
     return {"status": "ok"}
 
 

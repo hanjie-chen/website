@@ -8,7 +8,7 @@ if BASE_DIR not in sys.path:
 
 from app import app
 from config import Articles_Directory
-from import_articles_scripts import import_articles
+from import_notes import import_notes
 from models import db
 
 
@@ -16,8 +16,8 @@ def main():
     with app.app_context():
         db.drop_all()
         db.create_all()
-        import_articles(Articles_Directory, db)
-    print("Database initialized and articles imported.")
+        import_notes(Articles_Directory, db)
+    print("Database initialized and notes imported.")
 
 
 if __name__ == "__main__":

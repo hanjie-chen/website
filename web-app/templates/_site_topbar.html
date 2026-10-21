@@ -1,5 +1,5 @@
 {# The brand links home, so the menu lists only the other sections. #}
-{% set nav_items = [('articles', 'article_index'), ('briefs', 'brief_index'), ('about', 'about_me')] %}
+{% set nav_items = [('notes', 'note_index'), ('briefs', 'brief_index'), ('about', 'about_me')] %}
 {% set nav_pages = nav_items | map('first') | list %}
 {% macro nav_links() %}
     {% for page, endpoint in nav_items %}

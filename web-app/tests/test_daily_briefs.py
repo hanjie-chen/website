@@ -565,7 +565,7 @@ def test_topbar_date_dock_only_renders_on_brief_detail_pages(client, app):
     assert 'class="site-nav-center"' in detail
     assert "brief-date-dock.js" in detail
 
-    for path in ("/zh/", "/zh/briefs", "/zh/articles", "/zh/about"):
+    for path in ("/zh/", "/zh/briefs", "/zh/notes", "/zh/about"):
         html = client.get(path).get_data(as_text=True)
         assert 'class="site-nav-center"' not in html, path
         assert "brief-date-dock.js" not in html, path

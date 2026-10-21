@@ -31,7 +31,7 @@ reclone_repository() {
     rm -rf "$tmp_dir"
     mkdir -p "$parent_dir"
 
-    if /usr/bin/git clone --depth=1 -b "$REPO_BRANCH" "$GITHUB_REPO" "$tmp_dir"; then
+    if /usr/bin/git clone -b "$REPO_BRANCH" "$GITHUB_REPO" "$tmp_dir"; then
         rm -rf "$ARTICLES_DIR"
         mv "$tmp_dir" "$ARTICLES_DIR"
     else
@@ -46,7 +46,7 @@ log_message "Starting articles synchronization"
 log_message "Using GITHUB_REPO: $GITHUB_REPO"
 log_message "Using REPO_BRANCH: $REPO_BRANCH"
 
-# This service mirrors the latest branch state only. It does not preserve local history.
+# This service mirrors the branch, with full history so the web app can date notes.
 if [ ! -d "$ARTICLES_DIR/.git" ]; then
     log_message "$ARTICLES_DIR is not a git repository, rebuilding local mirror"
     reclone_repository
@@ -72,7 +72,14 @@ if ! /usr/bin/git remote set-url origin "$GITHUB_REPO"; then
     }
 fi
 
-if /usr/bin/git fetch --depth=1 origin "$REPO_BRANCH"; then
+# Mirrors cloned before notes were dated are shallow: fetch their history once.
+fetch_args=""
+if [ "$(/usr/bin/git rev-parse --is-shallow-repository 2>/dev/null)" = "true" ]; then
+    fetch_args="--unshallow"
+fi
+
+# shellcheck disable=SC2086 # fetch_args is empty or a single flag.
+if /usr/bin/git fetch $fetch_args origin "$REPO_BRANCH"; then
     log_message "Git fetch successful"
 else
     log_message "Git fetch failed, rebuilding local mirror"

@@ -39,8 +39,8 @@ wait_request_ok() {
 echo "[smoke] Checking /"
 wait_request_ok "/"
 
-echo "[smoke] Checking /zh/articles"
-wait_request_ok "/zh/articles"
+echo "[smoke] Checking /zh/notes"
+wait_request_ok "/zh/notes"
 
 echo "[smoke] Checking /zh/briefs"
 wait_request_ok "/zh/briefs"
@@ -82,7 +82,7 @@ if [[ -n "${BRIEF_INGEST_TEST_TOKEN:-}" ]]; then
 
   echo "[smoke] Confirming WAF protection remains active on public routes"
   public_waf_status="$(curl -ksS -o /dev/null -w '%{http_code}' \
-    "${BASE_URL}/zh/articles?probe=1%20OR%201%3D1%20UNION%20SELECT%20password%20FROM%20users" \
+    "${BASE_URL}/zh/notes?probe=1%20OR%201%3D1%20UNION%20SELECT%20password%20FROM%20users" \
     -H "Host: ${HOST_HEADER}" \
     2>/dev/null)"
   if [[ "${public_waf_status}" != "403" ]]; then

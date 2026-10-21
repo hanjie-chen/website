@@ -268,12 +268,6 @@
   font-weight: 600;
 }
 
-.docs-article-summary {
-  margin: 0.5rem 0 0;
-  color: var(--text-subtle);
-  line-height: 1.65;
-}
-
 .docs-article-meta {
   display: flex;
   flex-wrap: wrap;

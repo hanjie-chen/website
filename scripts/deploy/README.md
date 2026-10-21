@@ -34,8 +34,8 @@ web-app/Nginx health plus HTTP smoke paths. Images use the tags
 resolved from
 Compose and the environment, defaulting to `latest` for application images.
 
-**Initialization drops and recreates article database tables before importing
-sources.** It can change article IDs and URLs. Do not use this as a routine
+**Initialization drops and recreates note database tables before importing
+sources.** It can change note IDs and URLs. Do not use this as a routine
 restart or rerender command. Daily Brief data is stored separately.
 
 ### Release Deployment
@@ -78,7 +78,7 @@ as the image tag. Run cleanup only after deployment succeeds.
 [ensure_db_ready.sh](ensure_db_ready.sh) runs inside the deployment flow. It waits
 for `articles-sync` to be healthy and `web-app` to be running, then uses
 [db_health.py](../../web-app/db_health.py) to check the SQLite file/table and
-compare article row count with valid discoverable source articles.
+compare note row count with readable notes discovered in the source.
 
 - Missing database/table or a count mismatch can trigger a rebuild through
   [init_db.py](../../web-app/scripts/init_db.py), which drops and recreates tables.
@@ -106,9 +106,9 @@ from this limited image rollback.
 | Command | Scope |
 | --- | --- |
 | `./scripts/deploy/wait_services_healthy.sh [services...]` | Wait for Docker health; defaults to `web-app nginx-modsecurity` |
-| `./scripts/deploy/smoke_check.sh` | Request `/`, `/zh/articles` and `/zh/briefs` through local Nginx |
+| `./scripts/deploy/smoke_check.sh` | Request `/`, `/zh/notes` and `/zh/briefs` through local Nginx |
 | `./scripts/deploy/verify_image_refs.sh [services...]` | Compare running container image references with resolved Compose configuration; defaults to `nginx-modsecurity dozzle` |
-| `./scripts/deploy/ensure_db_ready.sh [deploy_sha]` | Check and potentially rebuild the article DB as described above |
+| `./scripts/deploy/ensure_db_ready.sh [deploy_sha]` | Check and potentially rebuild the note DB as described above |
 
 [service_wait.sh](service_wait.sh) is a sourced helper, not a standalone command.
 [verify_image_refs.sh](verify_image_refs.sh) checks the container's configured

@@ -1,65 +1,34 @@
 import sqlite3
 
-from db_health import assess_article_db
-
-VALID_ARTICLE = """---
-Title: Example Article
-Author: Tester
-CoverImage: ./resources/images/cover.png
-RolloutDate: 2026-04-18
----
-
-```
-BriefIntroduction:
-Example intro
-```
-
-<!-- split -->
-
-# Example
-
-Body
-"""
+from db_health import assess_note_db
 
 
-def _write_article(article_dir, filename):
-    (article_dir / "resources" / "images").mkdir(parents=True, exist_ok=True)
-    (article_dir / "resources" / "images" / "cover.png").write_text(
-        "fake", encoding="utf-8"
-    )
-    (article_dir / filename).write_text(VALID_ARTICLE, encoding="utf-8")
+def _write_note(root_dir, rel_path):
+    path = root_dir / rel_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("# Example\n\nBody\n", encoding="utf-8")
 
 
-def _init_article_table(db_path, rows):
+def _init_note_table(db_path, rows, table="notes"):
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE article_meta_data (
-            id INTEGER PRIMARY KEY,
-            file_path TEXT UNIQUE
-        )
-        """
-    )
+    cur.execute(f"CREATE TABLE {table} (id INTEGER PRIMARY KEY, file_path TEXT UNIQUE)")
     for file_path in rows:
-        cur.execute(
-            "INSERT INTO article_meta_data (file_path) VALUES (?)", (file_path,)
-        )
+        cur.execute(f"INSERT INTO {table} (file_path) VALUES (?)", (file_path,))
     conn.commit()
     conn.close()
 
 
-def test_assess_article_db_detects_count_mismatch_against_source_tree(tmp_path):
-    root_dir = tmp_path / "articles"
-    first_dir = root_dir / "cloud" / "terraform"
-    second_dir = root_dir / "cloud" / "network"
-    _write_article(first_dir, "first.md")
-    _write_article(second_dir, "second.md")
+def test_assess_note_db_detects_count_mismatch_against_source_tree(tmp_path):
+    root_dir = tmp_path / "kb"
+    _write_note(root_dir, "cloud/terraform/first.md")
+    _write_note(root_dir, "cloud/network/second.md")
+    _write_note(root_dir, "cloud/README.md")
 
     db_path = tmp_path / "project.db"
-    _init_article_table(db_path, ["cloud/terraform/first.md"])
+    _init_note_table(db_path, ["cloud/terraform/first.md"])
 
-    report = assess_article_db(str(root_dir), f"sqlite:///{db_path}")
+    report = assess_note_db(str(root_dir), f"sqlite:///{db_path}")
 
     assert report == {
         "db_exists": True,
@@ -69,15 +38,14 @@ def test_assess_article_db_detects_count_mismatch_against_source_tree(tmp_path):
     }
 
 
-def test_assess_article_db_reports_matching_counts(tmp_path):
-    root_dir = tmp_path / "articles"
-    article_dir = root_dir / "tools" / "shell"
-    _write_article(article_dir, "guide.md")
+def test_assess_note_db_reports_matching_counts(tmp_path):
+    root_dir = tmp_path / "kb"
+    _write_note(root_dir, "tools/shell/guide.md")
 
     db_path = tmp_path / "project.db"
-    _init_article_table(db_path, ["tools/shell/guide.md"])
+    _init_note_table(db_path, ["tools/shell/guide.md"])
 
-    report = assess_article_db(str(root_dir), f"sqlite:///{db_path}")
+    report = assess_note_db(str(root_dir), f"sqlite:///{db_path}")
 
     assert report == {
         "db_exists": True,
@@ -85,3 +53,16 @@ def test_assess_article_db_reports_matching_counts(tmp_path):
         "db_count": 1,
         "expected_count": 1,
     }
+
+
+def test_assess_note_db_treats_an_article_era_database_as_missing_its_table(tmp_path):
+    # A database from before notes has only the old table, so deploy rebuilds it.
+    root_dir = tmp_path / "kb"
+    _write_note(root_dir, "tools/shell/guide.md")
+
+    db_path = tmp_path / "project.db"
+    _init_note_table(db_path, ["tools/shell/guide.md"], table="article_meta_data")
+
+    report = assess_note_db(str(root_dir), f"sqlite:///{db_path}")
+
+    assert report["table_exists"] is False

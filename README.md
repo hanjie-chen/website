@@ -3,7 +3,7 @@
 [hanjie-chen.com](https://hanjie-chen.com) 是一个公开的个人网站和个人信息中枢，聚合技术知识库、Daily Brief、个人项目与介绍。
 首页是我与个人系统之间的界面：由系统向我交付需要我知道或处理的事情，而不是新闻页或网站介绍，详见 [web-app README](./web-app/README.md#homepage)。
 
-文章来自独立的 [knowledge-base](https://github.com/hanjie-chen/knowledge-base) 仓库，由本站提供中英文阅读页面。
+笔记来自独立的 [knowledge-base](https://github.com/hanjie-chen/knowledge-base) 仓库：知识库里的所有笔记（包括草稿）都在本站 Notes 中可读，网站是主人查看知识库的窗口。
 
 每日简报由 [Daily Brief](https://github.com/hanjie-chen/daily-brief) 项目生成，通过本站页面与公开只读 JSON API 提供。
 本站按 `Asia/Singapore` 日期滚动保留今天及此前 13 天的简报，过期内容停止提供，过期文件在下次成功发布简报时自动清理。
@@ -13,7 +13,7 @@
 ## Architecture
 
 - 站点访问：`Client → Cloudflare → GCP VM 上的 Nginx → Flask`；部分静态资源由 Nginx 直接提供。
-- 文章更新：`knowledge-base push → content-sync workflow → articles-sync → web-app 导入与渲染`；每日定时同步作为兜底。
+- 笔记更新：`knowledge-base push → content-sync workflow → articles-sync → web-app 导入与渲染`；每日定时同步作为兜底。
 - 简报发布：`独立 Daily Brief 生成器 → 认证发布接口 → JSON 存储 → 页面与公开 API`。
 
 ## Repository Layout
@@ -21,7 +21,7 @@
 | Path | Purpose | Documentation |
 | --- | --- | --- |
 | `web-app/` | Flask 应用、模板、静态资源与测试 | [README](./web-app/README.md) |
-| `articles-sync/` | 知识库同步与文章重建触发 | [README](./articles-sync/README.md) |
+| `articles-sync/` | 知识库同步与笔记重建触发 | [README](./articles-sync/README.md) |
 | `nginx-modsecurity/` | HTTPS、反向代理、WAF 与日志面板入口 | [README](./nginx-modsecurity/README.md) |
 | `scripts/deploy/` | 生产初始化、部署与健康检查 | [README](./scripts/deploy/README.md) |
 | `scripts/security/` | 容器安全扫描与自动修复工具 | [README](./scripts/security/README.md) |
@@ -57,7 +57,7 @@ Workflow 职责、触发条件与维护说明见 [.github/workflows/README.md](.
 
 ## Security
 
-公开 Daily Brief API 提供只读访问；内容发布与文章重建接口使用独立 token 鉴权，日志面板由 Cloudflare Access 保护。
+公开 Daily Brief API 提供只读访问；内容发布与笔记重建接口使用独立 token 鉴权，日志面板由 Cloudflare Access 保护。
 
 接口说明见 [web-app/README.md](./web-app/README.md)，TLS、WAF 与日志面板访问控制见 [nginx-modsecurity/README.md](./nginx-modsecurity/README.md)。
 

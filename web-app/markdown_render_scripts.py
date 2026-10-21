@@ -3,16 +3,24 @@ import os
 import markdown
 import pymdownx.emoji
 
-from custom_md_extensions import Gfm_Admonition_Extension, Image_Processor_Extension
+from custom_md_extensions import (
+    Gfm_Admonition_Extension,
+    Image_Processor_Extension,
+    Note_Link_Extension,
+)
 
 # Bump when rendered HTML changes for unchanged Markdown (extensions, post-processing).
-# Imports fold it into each article's content hash, so the next reindex re-renders
-# every article instead of keeping HTML produced by the previous renderer.
-RENDERER_VERSION = "3"
+# Imports fold it into each note's content hash, so the next reindex re-renders
+# every note instead of keeping HTML produced by the previous renderer.
+RENDERER_VERSION = "4"
 
 
 def render_markdown_to_html(
-    markdown_content: str, filename: str, destination_folder: str, url_base_path: str
+    markdown_content: str,
+    filename: str,
+    destination_folder: str,
+    url_base_path: str,
+    note_dir: str = "",
 ) -> bool:
     """generate html file to destination folder
 
@@ -20,9 +28,11 @@ def render_markdown_to_html(
         markdown_content: The markdown string need to convert
         filename: The name for the output html file
         destination_folder: The folder path to save the rendered HTML
+        url_base_path: URL of the note's rendered folder, for relative images
+        note_dir: The note's folder from the knowledge base root, for note links
     """
     # use entry point to specified the extension I need
-    my_articles_extensions = [
+    extensions = [
         "fenced_code",
         "footnotes",
         "tables",
@@ -33,6 +43,7 @@ def render_markdown_to_html(
         "pymdownx.arithmatex",
         Gfm_Admonition_Extension(),
         Image_Processor_Extension(base_url=url_base_path),
+        Note_Link_Extension(note_dir=note_dir),
     ]
 
     my_extension_configs = {
@@ -54,7 +65,7 @@ def render_markdown_to_html(
 
     # Configure markdown converter with extensions
     md = markdown.Markdown(
-        extensions=my_articles_extensions, extension_configs=my_extension_configs
+        extensions=extensions, extension_configs=my_extension_configs
     )
 
     # Convert markdown to HTML
