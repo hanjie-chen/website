@@ -221,6 +221,9 @@ Nginx's WAF exception and compensating controls are documented in
   and `unknown`. `model` is the actual last model identifier, or `null` if not
   recorded. Reasons are allowlisted public codes; raw errors, prompts and
   provider responses remain in the generator's private audit.
+- The public reason `archive_unavailable` means archive recovery found no usable
+  capture. Failed Wayback retrieval shows "未找到可用存档" / "No usable archive
+  found"; historical `unknown` reasons continue to show that no reason was recorded.
 - Optional `generation.reasoning_effort` records the requested configuration for
   that summary call: `none`, `minimal`, `low`, `medium`, `high` or `xhigh`.
   Missing or `null` means unrecorded and is not displayed; historical payloads

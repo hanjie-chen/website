@@ -117,6 +117,27 @@ def test_recovery_reason_is_not_reported_as_final_fetch_failure(client, monkeypa
     assert "最后尝试" not in webpage
 
 
+@pytest.mark.parametrize(
+    ("lang", "reason", "expected"),
+    [
+        ("zh", "archive_unavailable", "未找到可用存档"),
+        ("en", "archive_unavailable", "No usable archive found"),
+        ("zh", "unknown", "原因未记录"),
+        ("en", "unknown", "Reason not recorded"),
+    ],
+)
+def test_wayback_failure_has_a_localized_reason(
+    client, monkeypatch, lang, reason, expected
+):
+    info = generation_info()
+    info["materials"]["webpage"].update(method="wayback", reason=reason)
+    soup = render_info(client, monkeypatch, info, lang)
+    webpage = soup.select_one(".brief-material-list li").get_text(" ", strip=True)
+    assert "Wayback Machine" in webpage
+    assert expected in webpage
+    assert "briefs.generation." not in webpage
+
+
 @pytest.mark.parametrize("lang", ["zh", "en"])
 @pytest.mark.parametrize("effort", ["omitted", None, "medium", "none"])
 def test_reasoning_effort_only_shown_when_recorded(client, monkeypatch, lang, effort):

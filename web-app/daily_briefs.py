@@ -94,6 +94,7 @@ GENERATION_STATUSES = {"success", "insufficient", "failed", "not_attempted", "un
 REASONING_EFFORTS = {"none", "minimal", "low", "medium", "high", "xhigh"}
 SUMMARY_SOURCES = {"web_metadata", "web_body", "hn_post", "hn_comments"}
 GENERATION_REASONS = FALLBACK_REASONS | {
+    "archive_unavailable",
     "network_error",
     "http_error",
     "extraction_failed",
