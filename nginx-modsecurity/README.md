@@ -41,8 +41,22 @@ changing proxy rules; container IPs can change after recreation.
 
 ## Security Notes
 
-WAF protection is enabled by the image's default configuration, with two explicit
-exceptions in the site template:
+WAF protection is enabled by the image's default configuration, with one rule
+exclusion and two explicit exceptions in the site template.
+
+[REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf](REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf)
+is mounted over the image's empty exclusion file, so CRS loads it before its own
+rules:
+
+- **Note paths:** `/<lang>/notes/category/` and `/rendered-articles/` paths come
+  from knowledge base folder and file names. Names such as `docker-learn`,
+  `ansible` or `dockerfile` match CRS path rules for Unix commands (932260) and
+  restricted files (930130), so these two prefixes skip only the RCE and LFI
+  checks on the decoded path. Arguments, headers, bodies and the raw-URI path
+  traversal checks still apply. Flask looks categories up among imported notes
+  and Nginx serves assets from a read-only folder.
+
+The site template's exceptions:
 
 - **Daily Brief publishing:** only the exact `/internal/briefs` location bypasses
   generic SQLi/XSS signatures, which can reject technical prose stored as text.
