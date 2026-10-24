@@ -320,23 +320,36 @@
 /*
  * Notes: folders on the left, the open folder on the right, like the folder
  * list of Apple Notes. Only the open path expands, so the tree stays short.
+ *
+ * The page is a workspace: it lines up with the top bar and the sidebar runs
+ * to the bottom of the window, so a short folder reads as short, not unfinished.
+ * Machine facts (folder names, paths, counts, dates) keep the monospace face;
+ * what the owner wrote (note titles, folder READMEs) reads in proportional type.
  */
+.main-content:has(> .notes-shell) {
+  padding-bottom: 0;
+}
+
 .notes-shell {
-  width: min(100%, 1200px);
+  --notes-prose-font: 'PingFangSC', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
+  width: min(100%, 1760px);
+  min-height: calc(100vh - 64px);
   display: grid;
-  grid-template-columns: 15rem minmax(0, 1fr);
-  align-items: start;
-  gap: 3rem;
-  padding-top: 1.5rem;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  padding-inline: 1rem;
 }
 
 .notes-sidebar {
-  position: sticky;
-  top: 84px;
-  max-height: calc(100vh - 108px);
-  overflow-y: auto;
-  padding: 0.25rem 1rem 1rem 0;
   border-right: 1px solid var(--border-subtle);
+}
+
+.notes-sidebar-nav {
+  position: sticky;
+  top: 64px;
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  padding: 1.75rem 1rem 2rem 0;
   font-size: 0.92rem;
 }
 
@@ -390,9 +403,10 @@
   outline-offset: 2px;
 }
 
+/* The listing runs to the top bar's right edge, so both share one grid. */
 .notes-pane {
-  max-width: 46rem;
   min-width: 0;
+  padding: 1.75rem 0 4rem 3rem;
 }
 
 .notes-trail {
@@ -424,11 +438,16 @@
   overflow-wrap: anywhere;
 }
 
-/* The owner's own words about the folder come before its contents. */
-.notes-readme {
+/* The owner's own words about the folder come before its contents. Scoped
+   to the pane so it outweighs the centering that .article-body sets for notes. */
+.notes-pane .notes-readme {
+  justify-self: start;
+  max-width: 46rem;
   margin-top: 1.25rem;
+  font-family: var(--notes-prose-font);
 }
 
+/* Rows line up like a listing: name, then fixed columns of facts. */
 .notes-rows {
   margin: 2rem 0 0;
   padding: 0;
@@ -437,18 +456,24 @@
 }
 
 .notes-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem;
   align-items: baseline;
-  gap: 1rem;
-  padding: 0.7rem 0.25rem;
+  column-gap: 2rem;
+  padding: 0.75rem 0.25rem;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text);
   text-decoration: none;
 }
 
+.notes-rows-recent .notes-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20rem) 7rem;
+}
+
 .notes-row-name {
-  flex: 1;
   min-width: 0;
+  font-family: var(--notes-prose-font);
+  font-size: 1.02rem;
   overflow-wrap: anywhere;
   transition: color 0.2s ease;
 }
@@ -457,26 +482,28 @@
   color: var(--accent-hover);
 }
 
-/* Folders lead further into the tree: the name weighs more and a chevron follows. */
+/* Folder names are paths, so they keep the monospace face and lead with weight. */
 .notes-row-folder .notes-row-name {
+  font-family: inherit;
+  font-size: 1rem;
   font-weight: 600;
 }
 
-.notes-row-folder::after {
-  content: "›";
-  color: var(--text-faint);
-}
-
 .notes-row-meta {
-  flex-shrink: 0;
   color: var(--text-subtle);
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Folders lead further into the tree: a chevron follows the count. */
+.notes-row-folder .notes-row-meta::after {
+  content: " ›";
+  color: var(--text-faint);
 }
 
 /* Recent notes come from anywhere, so each names its folder. */
 .notes-row-folder-path {
-  max-width: 45%;
   overflow: hidden;
   color: var(--text-subtle);
   font-size: 0.82rem;
@@ -488,14 +515,29 @@
 @media (max-width: 899.98px) {
   .notes-shell {
     grid-template-columns: minmax(0, 1fr);
-    gap: 1.5rem;
+    min-height: 0;
   }
 
   .notes-sidebar {
-    position: static;
-    max-height: none;
-    padding: 0 0 1rem;
     border-right: 0;
     border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .notes-sidebar-nav {
+    position: static;
+    max-height: none;
+    padding: 1rem 0;
+  }
+
+  .notes-pane {
+    padding: 1.5rem 0 3rem;
+  }
+
+  .notes-rows-recent .notes-row {
+    grid-template-columns: minmax(0, 1fr) 7rem;
+  }
+
+  .notes-row-folder-path {
+    display: none;
   }
 }
