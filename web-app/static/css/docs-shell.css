@@ -323,16 +323,12 @@
  *
  * The page is a workspace: it lines up with the top bar and the sidebar runs
  * to the bottom of the window, so a short folder reads as short, not unfinished.
- * Machine facts (folder names, paths, counts, dates) keep the monospace face;
- * what the owner wrote (note titles, folder READMEs) reads in proportional type.
  */
 .main-content:has(> .notes-shell) {
   padding-bottom: 0;
 }
 
 .notes-shell {
-  --notes-prose-font: 'PingFangSC', 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
   width: min(100%, 1760px);
   min-height: calc(100vh - 64px);
   display: grid;
@@ -444,7 +440,6 @@
   justify-self: start;
   max-width: 46rem;
   margin-top: 1.25rem;
-  font-family: var(--notes-prose-font);
 }
 
 /* Rows line up like a listing: name, then fixed columns of facts. */
@@ -472,8 +467,6 @@
 
 .notes-row-name {
   min-width: 0;
-  font-family: var(--notes-prose-font);
-  font-size: 1.02rem;
   overflow-wrap: anywhere;
   transition: color 0.2s ease;
 }
@@ -482,10 +475,8 @@
   color: var(--accent-hover);
 }
 
-/* Folder names are paths, so they keep the monospace face and lead with weight. */
+/* Folders lead further into the tree, so their names carry more weight. */
 .notes-row-folder .notes-row-name {
-  font-family: inherit;
-  font-size: 1rem;
   font-weight: 600;
 }
 
