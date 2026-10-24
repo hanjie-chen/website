@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 import app as app_module
 from models import Note, db
+from note_views import folder_readme_path
 
 TEST_DATE = date(2026, 1, 1)
 
@@ -42,14 +43,40 @@ def test_notes_index_returns_200(client):
     assert response.status_code == 200
 
 
-def test_notes_index_uses_chinese_shell_labels(client):
+def test_notes_root_lists_recently_edited_notes_with_their_folders(client, app):
+    with app.app_context():
+        _insert_note(title="Older", file_path="tests/category/older.md")
+        _insert_note(
+            title="Newer",
+            category="tests/infra",
+            file_path="tests/infra/newer.md",
+            updated_date=date(2026, 2, 1),
+        )
+
     response = client.get("/zh/notes")
-    body = response.get_data(as_text=True)
+    soup = BeautifulSoup(response.get_data(as_text=True), "html.parser")
 
     assert response.status_code == 200
-    assert "浏览" in body
-    assert "主要分类" in body
-    assert "最近更新" in body
+    assert soup.select_one("h1.notes-pane-title").get_text(strip=True) == "最近修改"
+    rows = soup.select(".notes-rows-recent .notes-row")
+    assert [row.select_one(".notes-row-name").get_text(strip=True) for row in rows] == [
+        "Newer",
+        "Older",
+    ]
+    assert rows[0].select_one(".notes-row-folder-path").get_text() == "tests/infra"
+    # The root opens no folder: the sidebar shows only the top level.
+    sidebar = soup.select_one(".notes-sidebar")
+    assert sidebar.select_one('a[aria-current="page"]')["href"] == "/zh/notes"
+    assert [link.get_text() for link in sidebar.select(".notes-tree a")] == ["tests"]
+
+
+def test_notes_root_uses_english_labels(client):
+    soup = BeautifulSoup(client.get("/en/notes").get_data(as_text=True), "html.parser")
+
+    assert (
+        soup.select_one("h1.notes-pane-title").get_text(strip=True) == "Recently Edited"
+    )
+    assert soup.select_one(".notes-tree-recent").get_text(strip=True) == "Recent"
 
 
 def test_notes_index_uses_shared_english_topbar_and_marks_notes_active(client):
@@ -124,21 +151,86 @@ def test_unprefixed_note_category_route_returns_404(client, app):
     assert response.status_code == 404
 
 
-def test_parent_category_hides_empty_notes_section(client, app):
+def test_folder_page_expands_its_path_and_lists_subfolders_then_notes(client, app):
     with app.app_context():
         _insert_note(
             title="Terraform Intro",
             category="tests/infra",
-            file_path="tests/infra/terraform-intro.md",
+            file_path="tests/infra/terraform.md",
+        )
+        _insert_note(title="Loose Note", category="tests", file_path="tests/loose.md")
+        _insert_note(
+            title="Elsewhere",
+            category="other/deep",
+            file_path="other/deep/elsewhere.md",
         )
 
     response = client.get("/zh/notes/category/tests")
-    body = response.get_data(as_text=True)
+    soup = BeautifulSoup(response.get_data(as_text=True), "html.parser")
 
     assert response.status_code == 200
-    assert "子分类" in body
-    assert "Infra" in body
-    assert "本节笔记" not in body
+    assert soup.select_one("h1.notes-pane-title").get_text(strip=True) == "tests"
+    current = soup.select_one('.notes-sidebar a[aria-current="page"]')
+    assert current["href"] == "/zh/notes/category/tests"
+    # Only the open folder expands; other folders keep their children hidden.
+    tree_links = [link.get_text() for link in soup.select(".notes-tree a")]
+    assert tree_links == ["other", "tests", "infra"]
+    rows = soup.select(".notes-rows .notes-row")
+    assert [row.select_one(".notes-row-name").get_text(strip=True) for row in rows] == [
+        "infra",
+        "Loose Note",
+    ]
+    assert "notes-row-folder" in rows[0]["class"]
+    assert rows[0]["href"] == "/zh/notes/category/tests/infra"
+    assert rows[0].select_one(".notes-row-meta").get_text(strip=True) == "1"
+
+
+def test_nested_folder_page_links_its_ancestors(client, app):
+    with app.app_context():
+        _insert_note(
+            title="Deep", category="tests/infra/deep", file_path="tests/infra/deep/a.md"
+        )
+
+    soup = BeautifulSoup(
+        client.get("/zh/notes/category/tests/infra/deep").get_data(as_text=True),
+        "html.parser",
+    )
+
+    assert [(a.get_text(), a["href"]) for a in soup.select(".notes-trail a")] == [
+        ("tests", "/zh/notes/category/tests"),
+        ("infra", "/zh/notes/category/tests/infra"),
+    ]
+
+
+def test_unknown_folder_returns_404(client, app):
+    with app.app_context():
+        _insert_note()
+
+    assert client.get("/zh/notes/category/tests/missing").status_code == 404
+
+
+def test_folder_page_opens_with_its_readme(client, app):
+    with app.app_context():
+        target_id = _insert_note(
+            title="Target", file_path="tests/category/target.md"
+        ).id
+        readme = Path(
+            folder_readme_path(app_module.Rendered_Articles, "tests/category")
+        )
+        readme.parent.mkdir(parents=True, exist_ok=True)
+        readme.write_text(
+            '<p>Why this folder exists. <a href="/notes/path/tests/category/target.md">Target</a></p>',
+            encoding="utf-8",
+        )
+
+    soup = BeautifulSoup(
+        client.get("/zh/notes/category/tests/category").get_data(as_text=True),
+        "html.parser",
+    )
+
+    intro = soup.select_one(".notes-readme")
+    assert "Why this folder exists." in intro.get_text()
+    assert intro.a["href"] == f"/zh/notes/{target_id}"
 
 
 def test_view_note_returns_404_for_missing_note(client):
@@ -298,7 +390,7 @@ def test_view_note_leaves_category_browsing_to_breadcrumbs(client, app):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "docs-tree" not in body
+    assert "notes-tree" not in body
     assert "Sibling Note" not in body
     trail = BeautifulSoup(body, "html.parser").select_one("nav.docs-breadcrumb")
     assert [link["href"] for link in trail.select("a")][-1] == (

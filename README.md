@@ -69,4 +69,8 @@ Workflow 职责、触发条件与维护说明见 [.github/workflows/README.md](.
     - daily brief page ui improve
     - 用代码为文章绘制封面（统一风格与比例，跟随深浅色），替换网上找的封面图
 
-2. 盘点 Cloudflare 配置并集中记录，评估将适合的配置纳入 Terraform 管理。
+2. 登录（只有站长一人）。登录后：
+    - 在网站上直接编辑笔记（边写边渲染、自动保存并提交回知识库），新建、移动、改名、删除笔记
+    - 首页展示私人信息，例如 web app 与 GCP 虚拟机的日志
+
+3. 盘点 Cloudflare 配置并集中记录，评估将适合的配置纳入 Terraform 管理。

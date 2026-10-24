@@ -3,87 +3,64 @@ from types import SimpleNamespace
 
 import pytest
 
-from navigation import build_breadcrumbs, build_docs_context
+from navigation import build_breadcrumbs, build_category_tree, recent_notes
 
 TEST_DATE = date(2026, 1, 1)
 
 
-def _note(category, title, updated_date=TEST_DATE):
+def _note(category, title, updated_date=TEST_DATE, file_name=None):
     return SimpleNamespace(
         id=1,
         title=title,
         rollout_date=None,
         updated_date=updated_date,
         category=category,
+        file_path=f"{category}/{file_name or title}.md",
     )
 
 
 def test_recent_notes_put_the_latest_update_first_and_undated_notes_last():
-    docs_context = build_docs_context(
+    notes = [
+        _note("tools/git", "Older", updated_date=date(2026, 1, 1)),
+        _note("tools/git", "Undated", updated_date=None),
+        _note("cloud-infra/terraform", "Newer", updated_date=date(2026, 2, 1)),
+    ]
+
+    assert [note.title for note in recent_notes(notes, limit=2)] == ["Newer", "Older"]
+
+
+def test_category_tree_keeps_folders_and_notes_in_their_order_on_disk():
+    nav_root, lookup = build_category_tree(
         [
-            _note("tools/git", "Older", updated_date=date(2026, 1, 1)),
-            _note("tools/git", "Undated", updated_date=None),
-            _note("cloud-infra/terraform", "Newer", updated_date=date(2026, 2, 1)),
-        ],
-        lang="en",
+            _note("devops/docker-learn/02-containers", "Docker command"),
+            _note("devops/docker-learn/01-fundamentals", "Docker Basic"),
+            _note("devops/k8s", "Zeta", file_name="a-first"),
+            _note("devops/k8s", "Alpha", file_name="b-second"),
+            _note("Ai", "Agents"),
+        ]
     )
 
-    assert [note.title for note in docs_context["recent_notes"]] == [
-        "Newer",
-        "Older",
-        "Undated",
+    assert [node.segment for node in nav_root.children] == ["Ai", "devops"]
+    assert [node.segment for node in lookup["devops/docker-learn"].children] == [
+        "01-fundamentals",
+        "02-containers",
     ]
-    assert [node.path for node in docs_context["category_children"]] == [
-        "cloud-infra",
-        "tools",
-    ]
+    # Notes follow their file names, not their titles.
+    assert [note.title for note in lookup["devops/k8s"].notes] == ["Zeta", "Alpha"]
+    assert lookup["devops"].note_count == 4
+    assert lookup[""] is nav_root
 
 
-def test_category_breadcrumbs_link_the_ancestors_with_language_prefixes():
-    docs_context = build_docs_context(
-        [
-            _note("cloud-infra/terraform", "Terraform Intro"),
-        ],
-        current_category="cloud-infra/terraform",
-        lang="en",
-    )
-
-    # The page title names the current category, so the trail stops above it.
-    assert docs_context["breadcrumbs"] == [
-        {"label": "Cloud Infra", "url": "/en/notes/category/cloud-infra"},
-    ]
-
-
-def test_top_level_category_has_no_breadcrumbs():
-    docs_context = build_docs_context(
-        [_note("cloud-infra/terraform", "Terraform Intro")],
-        current_category="cloud-infra",
-        lang="en",
-    )
-
-    assert docs_context["breadcrumbs"] == []
-
-
-def test_note_breadcrumbs_link_every_category_above_the_note():
+def test_note_breadcrumbs_link_every_folder_above_the_note_by_its_name():
     note = _note("cloud-infra/terraform", "Terraform Intro")
 
-    breadcrumbs = build_breadcrumbs(note.category, lang="en")
-
-    assert breadcrumbs == [
-        {"label": "Cloud Infra", "url": "/en/notes/category/cloud-infra"},
-        {
-            "label": "Terraform",
-            "url": "/en/notes/category/cloud-infra/terraform",
-        },
+    assert build_breadcrumbs(note.category, lang="en") == [
+        {"label": "cloud-infra", "url": "/en/notes/category/cloud-infra"},
+        {"label": "terraform", "url": "/en/notes/category/cloud-infra/terraform"},
     ]
 
 
 @pytest.mark.parametrize("lang", ["", "en-US", "fr", " zh "])
-def test_navigation_helpers_reject_non_canonical_languages(lang):
-    note = _note("cloud-infra/terraform", "Terraform Intro")
-
+def test_breadcrumbs_reject_non_canonical_languages(lang):
     with pytest.raises(ValueError):
         build_breadcrumbs("cloud-infra", lang=lang)
-
-    with pytest.raises(ValueError):
-        build_docs_context([note], current_category="cloud-infra", lang=lang)

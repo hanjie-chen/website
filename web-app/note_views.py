@@ -86,9 +86,19 @@ def resolve_note_links(note_content: str, note_url_for_path) -> str:
     return str(soup)
 
 
-def note_render_dir(rendered_dir: str, note) -> str:
-    return os.path.join(rendered_dir, note.category.replace(os.sep, "-"))
+# A folder's README renders next to its notes' HTML and opens the folder's page.
+FOLDER_README_HTML = "readme.html"
+
+
+def category_render_dir(rendered_dir: str, category: str) -> str:
+    return os.path.join(rendered_dir, category.replace(os.sep, "-"))
 
 
 def note_html_path(rendered_dir: str, note) -> str:
-    return os.path.join(note_render_dir(rendered_dir, note), f"{note.id}.html")
+    return os.path.join(
+        category_render_dir(rendered_dir, note.category), f"{note.id}.html"
+    )
+
+
+def folder_readme_path(rendered_dir: str, category: str) -> str:
+    return os.path.join(category_render_dir(rendered_dir, category), FOLDER_README_HTML)

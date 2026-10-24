@@ -15,7 +15,7 @@ publishing endpoint.
 | [models.py](models.py), [db_health.py](db_health.py) | Note metadata and deployment-time database assessment |
 | [import_notes.py](import_notes.py) | Note discovery, titles and dates, incremental import and deletion cleanup |
 | [markdown_render_scripts.py](markdown_render_scripts.py), [custom_md_extensions/](custom_md_extensions/) | Markdown rendering, image paths, links between notes and admonitions |
-| [note_views.py](note_views.py), [navigation.py](navigation.py) | Localized note views, TOC, note links, category tree and breadcrumbs |
+| [note_views.py](note_views.py), [navigation.py](navigation.py) | Localized note views, TOC, note links, the folder tree and breadcrumbs |
 | [daily_briefs.py](daily_briefs.py) | Brief validation, JSON storage, current pointer and archive index |
 | [daily_brief_cleanup.py](daily_brief_cleanup.py) | Optional one-off retention cleanup |
 | [i18n.py](i18n.py) | Supported languages, UI translations and language-aware URLs |
@@ -72,7 +72,9 @@ Markdown.
 
 Every `.md` file is a note except:
 
-- `README.md`, `AGENTS.md` and `CLAUDE.md`, which guide people and agents;
+- `README.md`, `AGENTS.md` and `CLAUDE.md`, which guide people and agents (a
+  folder's `README.md` below the root is rendered too and opens that folder in
+  the [notes browser](#notes));
 - files under hidden folders, `__template__`-style folders, and the `resources/`
   and `images/` folders that hold a note's images.
 
@@ -126,6 +128,8 @@ This credential is separate from the Daily Brief publishing token. The
   from [markdown_render_scripts.py](markdown_render_scripts.py): bump it whenever a
   renderer change alters HTML for unchanged Markdown, and the next reindex
   re-renders every note.
+- Folder READMEs are rendered on every import, as `readme.html` in the folder's
+  rendered directory; ones whose source disappeared are deleted.
 - Development imports clear the rendered tree before rebuilding it.
 - Source files no longer discovered are removed from the note database and
   their generated HTML is deleted. Verify the source tree before reindexing;
@@ -286,6 +290,34 @@ it is.
 For direction only, not as planned work: the owner might later leave ideas
 here, let agents claim the ones they can do, and be reminded of the ones only
 the owner can do, such as writing down their own experience.
+
+## Notes
+
+Notes are where the owner works on the knowledge base, not a catalog for
+visitors. Today the owner reads them here; once sign-in exists, they will edit a
+note in place (rendered while typing, saved and committed back to the knowledge
+base automatically), and create, move, rename and delete notes. Visitors can
+read every note; signing in only adds the owner's actions. The layout is
+designed for a desktop display first; phones and tablets come later.
+
+`/<lang>/notes` and `/<lang>/notes/category/<path>` render one browser, laid out
+like the folder list of Apple Notes:
+
+- The sidebar holds the folder tree. Only the open folder and its ancestors
+  expand, so the tree stays as short as the path and any folder is one click
+  away. It runs to the bottom of the window, so a short folder reads as short
+  rather than unfinished.
+- The pane shows the open folder: its README first when it has one (whatever the
+  owner wants to say about the folder), then subfolders and notes with their
+  updated dates.
+- The root shows recently edited notes: without a particular note in mind, the
+  owner starts from what they touched last.
+- The path is the classification, so folder and file names show as they are on
+  disk and keep their order on disk. Note page breadcrumbs use the same names.
+- The listing lines up with the top bar, and facts sit in fixed columns so rows
+  scan like a listing. Everything stays in the site's monospace face.
+- Once sign-in exists, creating a note or folder belongs in the pane header;
+  moving, renaming and deleting a note belong on the note page.
 
 ## Frontend Maintenance
 

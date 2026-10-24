@@ -42,10 +42,15 @@ from i18n import (
     switch_language_path,
     translate,
 )
-from import_notes import folder_readme_path, import_notes
+from import_notes import import_notes
 from models import Note, db
 from navigation import build_breadcrumbs, build_category_tree, recent_notes
-from note_views import build_note_toc, note_html_path, resolve_note_links
+from note_views import (
+    build_note_toc,
+    folder_readme_path,
+    note_html_path,
+    resolve_note_links,
+)
 
 # Flask route layer for the public site and the internal reindex endpoint.
 app = Flask(__name__)
@@ -438,7 +443,9 @@ def _note_url_resolver(lang):
 
 def _folder_readme_html(category: str, lang: str):
     try:
-        with open(folder_readme_path(category), "r", encoding="utf-8") as f:
+        with open(
+            folder_readme_path(Rendered_Articles, category), "r", encoding="utf-8"
+        ) as f:
             return resolve_note_links(f.read(), _note_url_resolver(lang))
     except FileNotFoundError:
         return None

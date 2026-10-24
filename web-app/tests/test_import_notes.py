@@ -200,3 +200,31 @@ def test_import_notes_dates_notes_by_their_last_commit(app, tmp_path, rendered_r
     assert notes["tools/git/commands.md"].updated_date == date(2026, 2, 3)
     assert notes["personal/关于自律.md"].updated_date == date(2026, 1, 1)
     assert notes["tools/git/untracked.md"].updated_date is None
+
+
+def test_import_notes_renders_folder_readmes_without_their_titles(
+    app, tmp_path, rendered_root
+):
+    root = tmp_path / "kb"
+    _write(root / "README.md", "# Knowledge base guide\n")
+    _write(root / "ai/README.md", "# AI\n\nAI is your hands, not your brain.\n")
+    _write(root / "ai/agents/claude.md", "# Claude\n")
+    _write(root / "tools/README.md", "# Tools\n\nOnly a guide.\n")
+    _write(root / "tools/git.md", "# Git\n")
+
+    with app.app_context():
+        import_notes(str(root), db)
+        assert set(_notes()) == {"ai/agents/claude.md", "tools/git.md"}
+
+        ai_readme = rendered_root / "ai" / "readme.html"
+        html = ai_readme.read_text("utf-8")
+        assert "AI is your hands, not your brain." in html
+        assert "<h1" not in html
+        # The root README is the repository guide, not a folder's words.
+        assert not (rendered_root / "readme.html").exists()
+
+        (root / "tools/README.md").unlink()
+        import_notes(str(root), db)
+
+    assert ai_readme.exists()
+    assert not (rendered_root / "tools" / "readme.html").exists()

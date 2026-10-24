@@ -6,6 +6,7 @@ Notes import pipeline: every Markdown note in the knowledge base becomes a page.
 3) Read the title, `RolloutDate` and body; render HTML when the source changed.
 4) Take each note's updated date from git history.
 5) Remove records and HTML for notes that disappeared upstream.
+6) Render each folder's README, which opens the folder in the notes browser.
 """
 
 import hashlib
@@ -23,6 +24,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from config import IS_DEV, Rendered_Articles
 from markdown_render_scripts import RENDERER_VERSION, render_markdown_to_html
 from models import Note
+from note_views import FOLDER_README_HTML, folder_readme_path
 
 # Folders that hold a note's images rather than notes, as the knowledge base
 # README lays them out: `images/` for drafts, `resources/images/` otherwise.
@@ -34,7 +36,6 @@ AUXILIARY_FILES = {"README.md", "AGENTS.md", "CLAUDE.md"}
 # A folder's README is what its owner says about the folder; it opens the folder
 # in the notes browser. The root README is the repository guide and stays out.
 FOLDER_README = "README.md"
-FOLDER_README_HTML = "readme.html"
 
 TITLE_MAX_LENGTH = 255
 
@@ -291,10 +292,6 @@ def _cleanup_rendered_dir():
                 os.rmdir(os.path.join(root, dir))
 
 
-def folder_readme_path(category: str) -> str:
-    return os.path.join(get_dst_path(category), FOLDER_README_HTML)
-
-
 def _render_folder_readmes(root_dir: str):
     """Render every folder README below the root and drop ones that disappeared."""
     rendered = set()
@@ -319,7 +316,7 @@ def _render_folder_readmes(root_dir: str):
             _rendered_url_base(category),
             category,
         ):
-            rendered.add(folder_readme_path(category))
+            rendered.add(folder_readme_path(Rendered_Articles, category))
 
     for current, _dirs, files in os.walk(Rendered_Articles):
         if FOLDER_README_HTML in files:
