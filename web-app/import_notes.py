@@ -31,6 +31,10 @@ NON_NOTE_FOLDERS = {"resources", "images"}
 ASSET_FOLDERS = ("images", os.path.join("resources", "images"))
 # Repository and folder guides for people and agents, not notes.
 AUXILIARY_FILES = {"README.md", "AGENTS.md", "CLAUDE.md"}
+# A folder's README is what its owner says about the folder; it opens the folder
+# in the notes browser. The root README is the repository guide and stays out.
+FOLDER_README = "README.md"
+FOLDER_README_HTML = "readme.html"
 
 TITLE_MAX_LENGTH = 255
 
@@ -287,6 +291,43 @@ def _cleanup_rendered_dir():
                 os.rmdir(os.path.join(root, dir))
 
 
+def folder_readme_path(category: str) -> str:
+    return os.path.join(get_dst_path(category), FOLDER_README_HTML)
+
+
+def _render_folder_readmes(root_dir: str):
+    """Render every folder README below the root and drop ones that disappeared."""
+    rendered = set()
+    for current_dir, _note_files in iter_note_folders(root_dir):
+        readme = os.path.join(current_dir, FOLDER_README)
+        if current_dir == root_dir or not os.path.isfile(readme):
+            continue
+        try:
+            with open(readme, "r", encoding="utf-8") as f:
+                content = f.read()
+        except (OSError, UnicodeError) as e:
+            print(f"Error reading folder README {readme}: {e}. Skipped.")
+            continue
+        category = os.path.relpath(current_dir, root_dir)
+        _copy_assets(current_dir, category)
+        # The folder's name heads its page, so the README's own title leaves.
+        _title, body = split_title(content)
+        if render_markdown_to_html(
+            body,
+            os.path.splitext(FOLDER_README_HTML)[0],
+            get_dst_path(category),
+            _rendered_url_base(category),
+            category,
+        ):
+            rendered.add(folder_readme_path(category))
+
+    for current, _dirs, files in os.walk(Rendered_Articles):
+        if FOLDER_README_HTML in files:
+            path = os.path.join(current, FOLDER_README_HTML)
+            if path not in rendered:
+                os.remove(path)
+
+
 def _sync_deleted_notes(db: SQLAlchemy, seen_file_paths: set):
     # The database mirrors what this run saw: anything missing was deleted
     # upstream, or moved, which reads as a deletion plus a new note.
@@ -328,5 +369,6 @@ def import_notes(root_dir: str, db: SQLAlchemy):
             process_note(file, current_dir, root_dir, db, updated_dates)
 
     _sync_deleted_notes(db, seen_file_paths)
+    _render_folder_readmes(root_dir)
     db.session.commit()
     print("All notes have been imported.")

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{# Only the open folder's ancestors expand, so the tree stays as short as the path. #}
+{% macro folder_tree(node) %}
+<ul class="notes-tree">
+    {% for child in node.children %}
+    <li>
+        <a class="notes-tree-link{% if child.path == folder.path %} is-current{% elif child.path in open_folders %} is-open{% endif %}"
+           href="{{ url_for('note_category', lang=current_lang, category_path=child.path) }}"
+           {%- if child.path == folder.path %} aria-current="page"{% endif %}>{{ child.segment }}</a>
+        {% if child.path in open_folders and child.children %}{{ folder_tree(child) }}{% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endmacro %}
+
+{% block title %}
+<title>Notes</title>
+{% endblock%}
+
+{% block navbar%}
+{% set active_page = "notes" %}
+{% include "_site_topbar.html" %}
+{% endblock %}
+
+{% block main_content%}
+<div class="main-content">
+    {# Folders on the left, the open folder on the right; see "Notes" in README.md. #}
+    <div class="content-wrapper notes-shell">
+        <nav class="notes-sidebar" aria-label="{{ t('notes.sidebar.label') }}">
+            <a class="notes-tree-link notes-tree-recent{% if not folder.path %} is-current{% endif %}"
+               href="{{ url_for('note_index', lang=current_lang) }}"
+               {%- if not folder.path %} aria-current="page"{% endif %}>{{ t("notes.recent") }}</a>
+            {{ folder_tree(nav_root) }}
+        </nav>
+
+        <section class="notes-pane">
+            <header class="notes-pane-header">
+                {% if folder_trail %}
+                <p class="notes-trail">
+                    {% for crumb in folder_trail %}
+                    <a href="{{ url_for('note_category', lang=current_lang, category_path=crumb.path) }}">{{ crumb.label }}</a>
+                    <span aria-hidden="true">/</span>
+                    {% endfor %}
+                </p>
+                {% endif %}
+                <h1 class="notes-pane-title">{{ folder.segment if folder.path else t("notes.recent.title") }}</h1>
+            </header>
+
+            {% if folder.path %}
+            {% if readme_html %}
+            <div class="article-body notes-readme">{{ readme_html|safe }}</div>
+            {% endif %}
+
+            <ul class="notes-rows">
+                {% for child in folder.children %}
+                <li>
+                    <a class="notes-row notes-row-folder" href="{{ url_for('note_category', lang=current_lang, category_path=child.path) }}">
+                        <span class="notes-row-name">{{ child.segment }}</span>
+                        <span class="notes-row-meta">{{ child.note_count }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+                {% for note in folder.notes %}
+                <li>
+                    <a class="notes-row" href="{{ url_for('view_note', lang=current_lang, note_id=note.id) }}">
+                        <span class="notes-row-name">{{ note.title }}</span>
+                        {% if note.updated_date %}<time class="notes-row-meta" datetime="{{ note.updated_date }}">{{ note.updated_date }}</time>{% endif %}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <ol class="notes-rows">
+                {% for note in recent_notes %}
+                <li>
+                    <a class="notes-row" href="{{ url_for('view_note', lang=current_lang, note_id=note.id) }}">
+                        <span class="notes-row-name">{{ note.title }}</span>
+                        <span class="notes-row-folder-path">{{ note.category }}</span>
+                        {% if note.updated_date %}<time class="notes-row-meta" datetime="{{ note.updated_date }}">{{ note.updated_date }}</time>{% endif %}
+                    </a>
+                </li>
+                {% endfor %}
+            </ol>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

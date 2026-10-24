@@ -316,3 +316,186 @@
     font-size: 1.85rem;
   }
 }
+
+/*
+ * Notes: folders on the left, the open folder on the right, like the folder
+ * list of Apple Notes. Only the open path expands, so the tree stays short.
+ */
+.notes-shell {
+  width: min(100%, 1200px);
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  align-items: start;
+  gap: 3rem;
+  padding-top: 1.5rem;
+}
+
+.notes-sidebar {
+  position: sticky;
+  top: 84px;
+  max-height: calc(100vh - 108px);
+  overflow-y: auto;
+  padding: 0.25rem 1rem 1rem 0;
+  border-right: 1px solid var(--border-subtle);
+  font-size: 0.92rem;
+}
+
+.notes-tree {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notes-tree .notes-tree {
+  margin-left: 0.85rem;
+}
+
+.notes-tree-link {
+  display: block;
+  margin-bottom: 1px;
+  padding: 0.32rem 0.6rem;
+  border-radius: 8px;
+  color: var(--text-soft);
+  line-height: 1.4;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.notes-tree-link:hover {
+  background: var(--current-tint);
+  color: var(--text-strong);
+}
+
+/* Ancestors of the open folder read as the path; the folder itself is selected. */
+.notes-tree-link.is-open {
+  color: var(--text-strong);
+  font-weight: 500;
+}
+
+.notes-tree-link.is-current {
+  background: var(--current-tint-strong);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.notes-tree-recent {
+  margin-bottom: 0.75rem;
+}
+
+.notes-tree-link:focus-visible,
+.notes-trail a:focus-visible,
+.notes-row:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+.notes-pane {
+  max-width: 46rem;
+  min-width: 0;
+}
+
+.notes-trail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.45rem;
+  margin: 0 0 0.35rem;
+  color: var(--text-faint);
+  font-size: 0.875rem;
+}
+
+.notes-trail a {
+  color: var(--text-subtle);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.notes-trail a:hover {
+  color: var(--text-strong);
+}
+
+.notes-pane-title {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+/* The owner's own words about the folder come before its contents. */
+.notes-readme {
+  margin-top: 1.25rem;
+}
+
+.notes-rows {
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.notes-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.7rem 0.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.notes-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  transition: color 0.2s ease;
+}
+
+.notes-row:hover .notes-row-name {
+  color: var(--accent-hover);
+}
+
+/* Folders lead further into the tree: the name weighs more and a chevron follows. */
+.notes-row-folder .notes-row-name {
+  font-weight: 600;
+}
+
+.notes-row-folder::after {
+  content: "›";
+  color: var(--text-faint);
+}
+
+.notes-row-meta {
+  flex-shrink: 0;
+  color: var(--text-subtle);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Recent notes come from anywhere, so each names its folder. */
+.notes-row-folder-path {
+  max-width: 45%;
+  overflow: hidden;
+  color: var(--text-subtle);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Small screens stack the folders above the open folder until they get their own design. */
+@media (max-width: 899.98px) {
+  .notes-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .notes-sidebar {
+    position: static;
+    max-height: none;
+    padding: 0 0 1rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+}

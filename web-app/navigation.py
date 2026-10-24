@@ -105,7 +105,16 @@ def _note_sort_key(note):
 
 
 def _category_sort_key(node: CategoryNode):
-    return (node.label.casefold(), node.path)
+    # Folders keep their order on disk, so numbered folders stay in sequence.
+    return node.segment.casefold()
+
+
+def _note_path_key(note):
+    return note.file_path.casefold()
+
+
+def recent_notes(notes: Iterable, limit: int = 10):
+    return sorted(notes, key=_note_sort_key)[:limit]
 
 
 def build_category_tree(notes: Iterable, current_category: str = ""):
@@ -147,7 +156,7 @@ def build_category_tree(notes: Iterable, current_category: str = ""):
             segment=raw_node["segment"],
             label=raw_node["label"],
             depth=raw_node["depth"],
-            notes=sorted(raw_node["notes"], key=_note_sort_key),
+            notes=sorted(raw_node["notes"], key=_note_path_key),
         )
 
         is_current = node.path == current_category

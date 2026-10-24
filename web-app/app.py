@@ -42,9 +42,9 @@ from i18n import (
     switch_language_path,
     translate,
 )
-from import_notes import import_notes
+from import_notes import folder_readme_path, import_notes
 from models import Note, db
-from navigation import build_breadcrumbs, build_docs_context
+from navigation import build_breadcrumbs, build_category_tree, recent_notes
 from note_views import build_note_toc, note_html_path, resolve_note_links
 
 # Flask route layer for the public site and the internal reindex endpoint.
@@ -424,26 +424,58 @@ def set_language(lang):
     return response
 
 
-@app.route("/<lang>/notes")
-def note_index(lang):
+def _note_url_resolver(lang):
+    def note_url_for_path(file_path: str):
+        target = db.session.execute(
+            db.select(Note.id).where(Note.file_path == file_path)
+        ).scalar()
+        if target is None:
+            return None
+        return url_for("view_note", lang=lang, note_id=target)
+
+    return note_url_for_path
+
+
+def _folder_readme_html(category: str, lang: str):
+    try:
+        with open(folder_readme_path(category), "r", encoding="utf-8") as f:
+            return resolve_note_links(f.read(), _note_url_resolver(lang))
+    except FileNotFoundError:
+        return None
+
+
+def _note_browser(lang, open_path):
     current_lang = _require_supported_language(lang)
     notes = _all_notes()
-    docs_context = build_docs_context(notes, current_category="", lang=current_lang)
-    return render_template("note_index.html", **docs_context)
+    nav_root, lookup = build_category_tree(notes)
+    if open_path not in lookup:
+        abort(404)
+
+    parts = open_path.split("/") if open_path else []
+    return render_template(
+        "note_browser.html",
+        current_lang=current_lang,
+        nav_root=nav_root,
+        folder=lookup[open_path],
+        # The open folder and its ancestors expand in the sidebar.
+        open_folders={"/".join(parts[:depth]) for depth in range(1, len(parts) + 1)},
+        folder_trail=[
+            {"label": part, "path": "/".join(parts[: depth + 1])}
+            for depth, part in enumerate(parts[:-1])
+        ],
+        readme_html=_folder_readme_html(open_path, current_lang) if open_path else None,
+        recent_notes=recent_notes(notes, limit=15) if not open_path else [],
+    )
+
+
+@app.route("/<lang>/notes")
+def note_index(lang):
+    return _note_browser(lang, "")
 
 
 @app.route("/<lang>/notes/category/<path:category_path>")
 def note_category(lang, category_path):
-    current_lang = _require_supported_language(lang)
-    notes = _all_notes()
-    docs_context = build_docs_context(
-        notes, current_category=category_path, lang=current_lang
-    )
-
-    if category_path and docs_context["current_node"].path != category_path:
-        abort(404)
-
-    return render_template("note_index.html", **docs_context)
+    return _note_browser(lang, category_path)
 
 
 @app.route("/<lang>/about")
@@ -558,15 +590,7 @@ def view_note(lang, note_id):
     except FileNotFoundError:
         abort(404)
 
-    def note_url_for_path(file_path: str):
-        target = db.session.execute(
-            db.select(Note.id).where(Note.file_path == file_path)
-        ).scalar()
-        if target is None:
-            return None
-        return url_for("view_note", lang=current_lang, note_id=target)
-
-    note_content = resolve_note_links(note_content, note_url_for_path)
+    note_content = resolve_note_links(note_content, _note_url_resolver(current_lang))
     note_content, toc_items = build_note_toc(note_content)
     return render_template(
         "note_details.html",
