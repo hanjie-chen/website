@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import date
 
 import pytest
-from test_daily_briefs import brief_payload, brief_provenance
+from test_daily_briefs import brief_payload
 
 import app as app_module
 import daily_briefs
@@ -79,15 +79,10 @@ def test_generation_info_survives_storage_and_public_api(
     assert store_brief(app_module.Daily_Briefs_Directory, payload)[0] == "unchanged"
 
 
-@pytest.mark.parametrize("with_provenance", [False, True])
 @pytest.mark.parametrize("with_generation_info", [False, True])
-def test_legacy_and_additive_item_fields_remain_compatible(
-    with_provenance, with_generation_info
-):
+def test_generation_info_is_optional(with_generation_info):
     payload = brief_payload()
     item = payload["sections"]["ai"]["items"][0]
-    if with_provenance:
-        item["provenance"] = brief_provenance()
     if with_generation_info:
         item["generation_info"] = generation_info()
     normalized = validate_brief_payload(payload)

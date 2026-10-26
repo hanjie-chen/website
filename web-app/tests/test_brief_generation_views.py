@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 from bs4 import BeautifulSoup
-from test_daily_briefs import brief_payload, brief_provenance
+from test_daily_briefs import brief_payload
 
 import app as app_module
 import daily_briefs
@@ -33,8 +33,6 @@ def render_info(client, monkeypatch, info, lang="zh"):
     monkeypatch.setattr(daily_briefs, "_brief_today", lambda: date(2026, 7, 27))
     payload = brief_payload()
     item = payload["sections"]["ai"]["items"][0]
-    # Conflicting legacy information must not override the richer record.
-    item["provenance"] = brief_provenance()
     item["generation_info"] = info
     daily_briefs.store_brief(app_module.Daily_Briefs_Directory, payload)
     response = client.get(f"/{lang}/briefs/2026-07-25")

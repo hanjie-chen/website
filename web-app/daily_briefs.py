@@ -33,23 +33,7 @@ ITEM_KEYS = {
     "points",
     "comments",
 }
-OPTIONAL_ITEM_KEYS = {"provenance", "generation_info"}
-PROVENANCE_KEYS = {
-    "summary_basis",
-    "retrieval_method",
-    "retrieval_status",
-    "material_origin",
-    "fallback_reason",
-}
-SUMMARY_BASES = {
-    "article",
-    "source_and_comments",
-    "hn_comments",
-    "hn_post",
-    "video_captions",
-    "none",
-    "unknown",
-}
+OPTIONAL_ITEM_KEYS = {"generation_info"}
 RETRIEVAL_METHODS = {
     "direct",
     "jina",
@@ -61,8 +45,9 @@ RETRIEVAL_METHODS = {
     "none",
     "unknown",
 }
-RETRIEVAL_STATUSES = {
+MATERIAL_STATUSES = {
     "success",
+    "empty",
     "failed",
     "not_attempted",
     "not_needed",
@@ -76,7 +61,11 @@ MATERIAL_ORIGINS = {
     "alternate_reporting",
     "unknown",
 }
-FALLBACK_REASONS = {
+CONTENT_STATUSES = {"ok", "fetch_failed", "summary_failed", "title_only"}
+GENERATION_STATUSES = {"success", "insufficient", "failed", "not_attempted", "unknown"}
+REASONING_EFFORTS = {"none", "minimal", "low", "medium", "high", "xhigh"}
+SUMMARY_SOURCES = {"web_metadata", "web_body", "hn_post", "hn_comments"}
+GENERATION_REASONS = {
     "none",
     "challenge_page",
     "cloudflare_challenge",
@@ -87,13 +76,6 @@ FALLBACK_REASONS = {
     "tls_issuer_unavailable",
     "source_material_insufficient",
     "unknown",
-}
-CONTENT_STATUSES = {"ok", "fetch_failed", "summary_failed", "title_only"}
-MATERIAL_STATUSES = RETRIEVAL_STATUSES | {"empty"}
-GENERATION_STATUSES = {"success", "insufficient", "failed", "not_attempted", "unknown"}
-REASONING_EFFORTS = {"none", "minimal", "low", "medium", "high", "xhigh"}
-SUMMARY_SOURCES = {"web_metadata", "web_body", "hn_post", "hn_comments"}
-GENERATION_REASONS = FALLBACK_REASONS | {
     "archive_unavailable",
     "network_error",
     "http_error",
@@ -458,32 +440,10 @@ def _validate_item(item) -> dict:
         "points": _validate_count(item["points"], "points"),
         "comments": _validate_count(item["comments"], "comments"),
     }
-    if "provenance" in item:
-        normalized["provenance"] = _validate_provenance(item["provenance"])
     if "generation_info" in item:
         normalized["generation_info"] = _validate_generation_info(
             item["generation_info"]
         )
-    return normalized
-
-
-def _validate_provenance(provenance) -> dict:
-    if not isinstance(provenance, dict) or set(provenance) != PROVENANCE_KEYS:
-        raise BriefValidationError("provenance must contain the exact fields")
-
-    fields = {
-        "summary_basis": SUMMARY_BASES,
-        "retrieval_method": RETRIEVAL_METHODS,
-        "retrieval_status": RETRIEVAL_STATUSES,
-        "material_origin": MATERIAL_ORIGINS,
-        "fallback_reason": FALLBACK_REASONS,
-    }
-    normalized = {}
-    for field, allowed_values in fields.items():
-        value = provenance[field]
-        if not isinstance(value, str) or value not in allowed_values:
-            raise BriefValidationError(f"unsupported provenance {field}")
-        normalized[field] = value
     return normalized
 
 

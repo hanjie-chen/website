@@ -87,7 +87,7 @@
                     {% else %}
                     <p class="brief-summary">{{ item.summary }}</p>
                     {% endif %}
-                    {% set provenance_view = provenance_views[section_name][loop.index0] %}
+                    {% set generation_view = generation_views[section_name][loop.index0] %}
                     <div class="brief-item-footer">
                         <p class="brief-item-meta">
                             {% set source_name = source_display_name(item.source_url) %}
@@ -103,7 +103,7 @@
                         <details class="brief-details">
                             <summary>{{ t("briefs.details") }}<span class="brief-details-chevron" aria-hidden="true"></span></summary>
                             <dl>
-                                {% for detail in provenance_view %}
+                                {% for detail in generation_view %}
                                 <div{% if detail.entries is defined %} class="brief-materials"{% endif %}>
                                     <dt>{{ detail.label }}</dt>
                                     <dd>

@@ -184,7 +184,7 @@ Only strict schema v2 is accepted: `date`, timezone-aware `generated_at`,
 `timezone: "Asia/Singapore"`, and `ai` / `non_ai_hot` sections. Items contain
 summary, source/discussion links, counts, selection basis and content status.
 Optional `generation_info` records per-source acquisition, model-declared summary
-sources and the generation outcome; legacy `provenance` remains supported.
+sources and the generation outcome. The retired `provenance` field is rejected.
 Unknown fields are rejected. Exact fields, limits and allowed values are defined in
 [daily_briefs.py](daily_briefs.py), with examples in
 [test_daily_briefs.py](tests/test_daily_briefs.py).
@@ -240,13 +240,13 @@ Nginx's WAF exception and compensating controls are documented in
 
 The "About this summary" disclosure shows acquisition, model-reported summary
 sources, generation (including recorded reasoning effort) and the existing
-selection basis, using `generation_info` when present. Historical items fall back
-to their recorded `provenance` or just selection basis; missing diagnostics are
-never reconstructed from `content_status` or other legacy fields.
+selection basis, using `generation_info` when present. Items without it show only
+selection basis; missing diagnostics are never reconstructed from
+`content_status` or other item fields.
 
-Deploy this accepting website version **before** enabling the corresponding
-Daily Brief generator output: older website validators reject the new field.
-Readers and publishers continue to accept historical schema v2 items without it.
+Readers and publishers accept schema v2 items with or without `generation_info`.
+Stored payloads containing the retired `provenance` key must be cleaned before
+deploying this strict schema; normal reads and publishes do not migrate them.
 
 ### Public Daily Brief API
 

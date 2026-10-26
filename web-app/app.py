@@ -216,61 +216,11 @@ def _source_display_name(source_url: str) -> str:
     return OFFICIAL_SOURCE_LABELS.get(hostname, hostname)
 
 
-def _brief_provenance_view(provenance: dict | None, language: str) -> list[dict]:
-    """Return only provenance facts that can be stated without guessing."""
-    if provenance is None:
-        return []
-
-    label = lambda key: translate(language, f"briefs.provenance.{key}")
-    details = []
-    summary_basis = provenance["summary_basis"]
-    material_origin = provenance["material_origin"]
-    if summary_basis == "article" and material_origin != "unknown":
-        details.append(
-            {
-                "label": label("summary_basis"),
-                "value": label(f"summary.article.{material_origin}"),
-            }
-        )
-    elif summary_basis not in {"article", "none", "unknown"}:
-        details.append(
-            {
-                "label": label("summary_basis"),
-                "value": label(f"summary.{summary_basis}"),
-            }
-        )
-
-    retrieval_method = provenance["retrieval_method"]
-    retrieval_status = provenance["retrieval_status"]
-    if retrieval_method not in {"none", "unknown"} and retrieval_status in {
-        "success",
-        "failed",
-    }:
-        details.append(
-            {
-                "label": label("retrieval"),
-                "value": label(f"retrieval.{retrieval_status}").format(
-                    method=label(f"method.{retrieval_method}")
-                ),
-            }
-        )
-
-    fallback_reason = provenance["fallback_reason"]
-    if fallback_reason not in {"none", "unknown"}:
-        details.append(
-            {
-                "label": label("fallback_reason"),
-                "value": label(f"fallback.{fallback_reason}"),
-            }
-        )
-    return details
-
-
 def _brief_generation_view(item: dict, language: str) -> list[dict]:
     """Keep material acquisition separate from declared use and summary outcome."""
     info = item.get("generation_info")
     if info is None:
-        return _brief_provenance_view(item.get("provenance"), language)
+        return []
 
     def label(key):
         return translate(language, f"briefs.generation.{key}")
@@ -283,7 +233,7 @@ def _brief_generation_view(item: dict, language: str) -> list[dict]:
         if source == "webpage":
             method = material["method"]
             if method not in {"none", "unknown"}:
-                method_label = translate(language, f"briefs.provenance.method.{method}")
+                method_label = label(f"method.{method}")
                 notes.append(
                     method_label
                     if status == "success"
@@ -291,9 +241,7 @@ def _brief_generation_view(item: dict, language: str) -> list[dict]:
                 )
             origin = material["origin"]
             if origin not in {"original", "unknown"}:
-                notes.append(
-                    translate(language, f"briefs.provenance.summary.article.{origin}")
-                )
+                notes.append(label(f"origin.{origin}"))
         reason = material["reason"]
         if reason != "none" and not (status == "unknown" and reason == "unknown"):
             reason_label = label(f"reason.{reason}")
@@ -495,7 +443,7 @@ def brief_detail(lang, brief_date):
         ]
         for section_name, section in brief["sections"].items()
     }
-    provenance_views = {
+    generation_views = {
         section_name: [
             _brief_generation_view(item, current_lang) for item in section["items"]
         ]
@@ -507,7 +455,7 @@ def brief_detail(lang, brief_date):
         current_lang=current_lang,
         brief=brief,
         summary_views=summary_views,
-        provenance_views=provenance_views,
+        generation_views=generation_views,
         older_date=older_date,
         newer_date=newer_date,
     )
