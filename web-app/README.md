@@ -233,6 +233,10 @@ Nginx's WAF exception and compensating controls are documented in
 - The public reason `archive_unavailable` means archive recovery found no usable
   capture. Failed Wayback retrieval shows "未找到可用存档" / "No usable archive
   found"; historical `unknown` reasons continue to show that no reason was recorded.
+- The public reason `response_too_large` means the downloaded response exceeded
+  the retrieval size limit. It displays "原文超过获取大小上限" / "Source exceeds
+  retrieval size limit". It does not indicate summary failure; HN material may
+  still support a summary. Historical `unknown` reasons are not inferred.
 - Optional `generation.reasoning_effort` records the requested configuration for
   that summary call: `none`, `minimal`, `low`, `medium`, `high` or `xhigh`.
   Missing or `null` means unrecorded and is not displayed; historical payloads

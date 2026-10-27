@@ -116,22 +116,25 @@ def test_recovery_reason_is_not_reported_as_final_fetch_failure(client, monkeypa
 
 
 @pytest.mark.parametrize(
-    ("lang", "reason", "expected"),
+    ("lang", "method", "reason", "expected"),
     [
-        ("zh", "archive_unavailable", "未找到可用存档"),
-        ("en", "archive_unavailable", "No usable archive found"),
-        ("zh", "unknown", "原因未记录"),
-        ("en", "unknown", "Reason not recorded"),
+        ("zh", "wayback", "archive_unavailable", "未找到可用存档"),
+        ("en", "wayback", "archive_unavailable", "No usable archive found"),
+        ("zh", "wayback", "unknown", "原因未记录"),
+        ("en", "wayback", "unknown", "Reason not recorded"),
+        ("zh", "direct", "response_too_large", "原文超过获取大小上限"),
+        ("en", "direct", "response_too_large", "Source exceeds retrieval size limit"),
     ],
 )
-def test_wayback_failure_has_a_localized_reason(
-    client, monkeypatch, lang, reason, expected
+def test_retrieval_failure_has_a_localized_reason(
+    client, monkeypatch, lang, method, reason, expected
 ):
     info = generation_info()
-    info["materials"]["webpage"].update(method="wayback", reason=reason)
+    info["materials"]["webpage"].update(method=method, reason=reason)
     soup = render_info(client, monkeypatch, info, lang)
     webpage = soup.select_one(".brief-material-list li").get_text(" ", strip=True)
-    assert "Wayback Machine" in webpage
+    if method == "wayback":
+        assert "Wayback Machine" in webpage
     assert expected in webpage
     assert "briefs.generation." not in webpage
 

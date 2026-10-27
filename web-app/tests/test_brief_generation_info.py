@@ -235,14 +235,21 @@ def test_compatible_recovery_and_failure_codes_are_preserved():
     assert info == original
 
 
-@pytest.mark.parametrize("reason", ["archive_unavailable", "unknown"])
-def test_wayback_failure_reason_survives_publishing_and_public_api(
-    client, monkeypatch, reason
+@pytest.mark.parametrize(
+    ("method", "reason"),
+    [
+        ("wayback", "archive_unavailable"),
+        ("wayback", "unknown"),
+        ("direct", "response_too_large"),
+    ],
+)
+def test_retrieval_failure_reason_survives_publishing_and_public_api(
+    client, monkeypatch, method, reason
 ):
     monkeypatch.setattr(app_module, "DAILY_BRIEF_PUBLISH_TOKEN", "secret-token")
     info = generation_info()
     info["materials"]["webpage"].update(
-        status="failed", method="wayback", origin="unknown", reason=reason
+        status="failed", method=method, origin="unknown", reason=reason
     )
     info["summary_sources"] = ["hn_comments"]
     payload = payload_with_info(info)

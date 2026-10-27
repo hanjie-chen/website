@@ -77,6 +77,7 @@ GENERATION_REASONS = {
     "source_material_insufficient",
     "unknown",
     "archive_unavailable",
+    "response_too_large",
     "network_error",
     "http_error",
     "extraction_failed",
