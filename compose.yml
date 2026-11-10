@@ -71,7 +71,7 @@ services:
   nginx-modsecurity:
     # Production third-party images use a human-readable stable tag plus an
     # immutable multi-platform digest. Updates enter through reviewed PRs.
-    image: owasp/modsecurity-crs:4-nginx-alpine-202610051210@sha256:f12da37e72e29d1f06e7e829780f1016606d0799eac2966e58ef3819a3d30a50
+    image: owasp/modsecurity-crs:4-nginx-alpine-202611090911@sha256:b8d5bbf88c643800e31b248993858c335e4907ba0ee473d0c81c5726fb2c1bdc
     container_name: nginx-modsecurity
     ports:
       - "80:80"
