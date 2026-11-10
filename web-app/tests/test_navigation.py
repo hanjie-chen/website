@@ -49,8 +49,9 @@ def test_category_breadcrumbs_link_the_ancestors_with_language_prefixes():
     )
 
     # The page title names the current category, so the trail stops above it.
+    # Folders keep the names they have in the knowledge base.
     assert docs_context["breadcrumbs"] == [
-        {"label": "Cloud Infra", "url": "/en/notes/category/cloud-infra"},
+        {"label": "cloud-infra", "url": "/en/notes/category/cloud-infra"},
     ]
 
 
@@ -70,9 +71,9 @@ def test_note_breadcrumbs_link_every_category_above_the_note():
     breadcrumbs = build_breadcrumbs(note.category, lang="en")
 
     assert breadcrumbs == [
-        {"label": "Cloud Infra", "url": "/en/notes/category/cloud-infra"},
+        {"label": "cloud-infra", "url": "/en/notes/category/cloud-infra"},
         {
-            "label": "Terraform",
+            "label": "terraform",
             "url": "/en/notes/category/cloud-infra/terraform",
         },
     ]

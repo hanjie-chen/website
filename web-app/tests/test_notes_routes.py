@@ -47,9 +47,48 @@ def test_notes_index_uses_chinese_shell_labels(client):
     body = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "浏览" in body
-    assert "主要分类" in body
+    assert "目录" in body
     assert "最近更新" in body
+    assert "还没有笔记。" in body
+
+
+def test_notes_index_shows_folders_beside_recent_notes(client, app):
+    with app.app_context():
+        _insert_note(
+            title="Older Note",
+            category="tools/git",
+            file_path="tools/git/older.md",
+            rollout_date=None,
+            updated_date=date(2026, 1, 1),
+        )
+        _insert_note(
+            title="Newer Note",
+            category="cloud-infra/terraform",
+            file_path="cloud-infra/terraform/newer.md",
+            rollout_date=None,
+            updated_date=date(2026, 2, 1),
+        )
+
+    soup = BeautifulSoup(client.get("/zh/notes").get_data(as_text=True), "html.parser")
+
+    # The sidebar lists top-level folders by their own names, and no notes.
+    tree = soup.select_one("nav.docs-sidebar")
+    assert [link.get_text(strip=True) for link in tree.select("a")] == [
+        "cloud-infra",
+        "tools",
+    ]
+    # The narrow-screen disclosure folds the same tree.
+    disclosure = soup.select_one("details.notes-directory-disclosure")
+    assert disclosure.summary.get_text(strip=True) == "目录"
+    assert len(disclosure.select("a.docs-tree-link")) == 2
+
+    rows = soup.select(".notes-list a.notes-row")
+    assert [row.select_one(".notes-row-title").get_text() for row in rows] == [
+        "Newer Note",
+        "Older Note",
+    ]
+    assert rows[0].select_one(".notes-row-path").get_text() == "cloud-infra/terraform"
+    assert rows[0].select_one("time")["datetime"] == "2026-02-01"
 
 
 def test_notes_index_uses_shared_english_topbar_and_marks_notes_active(client):
@@ -124,7 +163,45 @@ def test_unprefixed_note_category_route_returns_404(client, app):
     assert response.status_code == 404
 
 
-def test_parent_category_hides_empty_notes_section(client, app):
+def test_category_lists_subfolders_then_its_own_notes(client, app):
+    with app.app_context():
+        _insert_note(
+            title="Terraform Intro",
+            category="tests/infra",
+            file_path="tests/infra/terraform-intro.md",
+        )
+        _insert_note(
+            title="Second Infra Note",
+            category="tests/infra",
+            file_path="tests/infra/second.md",
+        )
+        _insert_note(
+            title="Top Note",
+            category="tests",
+            file_path="tests/top.md",
+        )
+
+    response = client.get("/zh/notes/category/tests")
+    soup = BeautifulSoup(response.get_data(as_text=True), "html.parser")
+
+    assert response.status_code == 200
+    assert soup.select_one("h1.docs-page-title").get_text(strip=True) == "tests"
+    rows = soup.select(".notes-list a.notes-row")
+    assert [row.select_one(".notes-row-title").get_text() for row in rows] == [
+        "infra/",
+        "Top Note",
+    ]
+    assert rows[0]["href"] == "/zh/notes/category/tests/infra"
+    assert rows[0].select_one(".notes-row-aside").get_text(strip=True) == "2 篇笔记"
+    # The folder's notes stay out of the tree, which lists folders only.
+    tree = soup.select_one("nav.docs-sidebar")
+    assert "Top Note" not in tree.get_text()
+    active = tree.select_one("a.docs-tree-link.is-active")
+    assert active.get_text(strip=True) == "tests"
+    assert active["aria-current"] == "page"
+
+
+def test_english_folder_count_uses_singular_for_one_note(client, app):
     with app.app_context():
         _insert_note(
             title="Terraform Intro",
@@ -132,13 +209,13 @@ def test_parent_category_hides_empty_notes_section(client, app):
             file_path="tests/infra/terraform-intro.md",
         )
 
-    response = client.get("/zh/notes/category/tests")
-    body = response.get_data(as_text=True)
+    soup = BeautifulSoup(
+        client.get("/en/notes/category/tests").get_data(as_text=True), "html.parser"
+    )
 
-    assert response.status_code == 200
-    assert "子分类" in body
-    assert "Infra" in body
-    assert "本节笔记" not in body
+    assert soup.select_one(".notes-folder-row .notes-row-aside").get_text(
+        strip=True
+    ) == ("1 note")
 
 
 def test_view_note_returns_404_for_missing_note(client):

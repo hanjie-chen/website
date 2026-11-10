@@ -4,9 +4,7 @@
 }
 
 .docs-layout {
-  /* Side columns span 2 of 12 columns, measured across the gaps. */
-  --docs-gap: 2rem;
-  --docs-side: calc((100% + var(--docs-gap)) / 6 - var(--docs-gap));
+  --docs-gap: 2.5rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--docs-gap);
@@ -16,56 +14,64 @@
   display: none;
 }
 
-/* The category sidebar sits on the page itself, set off by a hairline. */
+/* The folder sidebar sits on the page itself, set off by a hairline. */
 .docs-sidebar {
   position: sticky;
   top: 84px;
   max-height: calc(100vh - 108px);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0.25rem 1rem 1rem 0;
+  padding: 0 1rem 1rem 0;
+}
+
+/* The two column labels share a line, so both lists start level. */
+.docs-sidebar-title,
+.notes-list-title {
+  margin: 0 0 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
 }
 
 .docs-sidebar-title {
-  margin: 0 0 0.6rem;
   padding-inline: 0.56rem;
-  font-size: 0.8rem;
-  color: var(--text-subtle);
 }
 
-.docs-tree-list,
-.docs-tree-article-list {
+.docs-tree-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.docs-tree-list-nested,
-.docs-tree-article-list {
+.docs-tree-list-nested {
   margin-left: 0.85rem;
   padding-left: 0.7rem;
   border-left: 1px solid var(--border-subtle);
 }
 
-.docs-tree-item + .docs-tree-item,
-.docs-tree-article-item + .docs-tree-article-item {
-  margin-top: 0.22rem;
+.docs-tree-item + .docs-tree-item {
+  margin-top: 0.15rem;
 }
 
-.docs-tree-link,
-.docs-tree-article-link {
+.docs-tree-list-nested {
+  margin-top: 0.15rem;
+}
+
+.docs-tree-link {
   display: block;
-  border-radius: 10px;
-  padding: 0.38rem 0.56rem;
+  border-radius: 8px;
+  padding: 0.32rem 0.56rem;
   color: var(--text-soft);
+  font-size: 0.9rem;
+  line-height: 1.4;
   text-decoration: none;
-  line-height: 1.35;
   overflow-wrap: anywhere;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.docs-tree-link:hover,
-.docs-tree-article-link:hover {
+.docs-tree-link:hover {
   background: var(--current-tint);
   color: var(--text-strong);
 }
@@ -75,14 +81,9 @@
   color: var(--text-strong);
 }
 
-.docs-tree-link {
-  font-size: 0.92rem;
-  font-weight: 500;
-}
-
-.docs-tree-article-link {
-  font-size: 0.88rem;
-  color: var(--text-subtle);
+.docs-tree-link:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 1px;
 }
 
 /* The trail is navigation, so it stays neutral like the top bar; long trails wrap. */
@@ -112,14 +113,6 @@
   color: var(--text-faint);
 }
 
-.docs-overline {
-  margin: 0 0 0.5rem;
-  color: var(--accent-soft);
-  letter-spacing: 0.14em;
-  font-size: 0.76rem;
-  text-transform: uppercase;
-}
-
 /* Page titles lead the type scale: without panels, size and weight carry the hierarchy. */
 .docs-page-title,
 .article-header .article-page-title {
@@ -145,141 +138,125 @@
   margin-bottom: 0.75rem;
 }
 
-.docs-page-subtitle {
-  margin: 0.8rem 0 0;
-  max-width: 58rem;
-  color: var(--text-subtle);
-  font-size: 1.02rem;
-  line-height: 1.7;
+/*
+ * Notes index and folders: plain rows, like the brief archive. A row is the
+ * title with its date (or a folder's note count) at the end of the line; the
+ * recent list adds the folder underneath.
+ */
+.notes-content {
+  max-width: 50rem;
 }
 
-.docs-section-header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 2rem 0 1rem;
+.notes-content .docs-page-title {
+  margin-bottom: 1.25rem;
+  font-size: 1.75rem;
 }
 
-.docs-section-title {
+.notes-list {
   margin: 0;
-  font-size: 1.02rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-subtle);
-}
-
-.docs-section-caption {
-  color: var(--accent-soft);
-  font-size: 0.88rem;
-}
-
-.docs-section-title,
-.docs-category-name,
-.docs-article-title {
-  display: block;
   padding: 0;
+  list-style: none;
 }
 
-.docs-section-title::before,
-.docs-section-title::after,
-.docs-category-name::before,
-.docs-category-name::after,
-.docs-article-title::before,
-.docs-article-title::after {
-  content: none;
-}
-
-.docs-category-grid {
+.notes-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.docs-category-card {
-  display: block;
-  height: 100%;
-  padding: 1.15rem 1.15rem 1rem;
-  border-radius: 16px;
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-card);
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 1.5rem;
+  row-gap: 0.15rem;
+  align-items: baseline;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text);
   text-decoration: none;
-  transition: transform 0.2s ease, border-color 0.2s ease,
-    box-shadow 0.2s ease;
 }
 
-.docs-category-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--current-border-faint);
-  box-shadow: 0 12px 24px var(--shadow-color);
+.notes-row-title {
+  grid-column: 1;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+  transition: color 0.2s ease;
 }
 
-.docs-category-name {
+.notes-row-path {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.notes-row-aside {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.notes-row:hover .notes-row-title {
+  color: var(--accent-hover);
+}
+
+.notes-row:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+.notes-folder-mark {
+  color: var(--text-faint);
+}
+
+/* Folders come first; a little air separates them from the notes. */
+.notes-list li:has(> .notes-folder-row) + li:not(:has(> .notes-folder-row)) {
+  margin-top: 0.75rem;
+}
+
+.notes-empty {
   margin: 0;
-  color: var(--text-heading);
-  font-size: 1.05rem;
-  font-weight: 600;
+  color: var(--text-muted);
 }
 
-.docs-category-meta,
-.docs-article-meta {
+/* The folded directory for narrow screens, styled like a note's folded contents. */
+.notes-directory-disclosure {
+  margin-bottom: 1.25rem;
+}
+
+.notes-directory-disclosure summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--text-subtle);
-  font-size: 0.84rem;
+  font-size: 0.875rem;
+  list-style: none;
+  cursor: pointer;
 }
 
-.docs-category-meta {
-  display: block;
-  margin-top: 0.55rem;
+.notes-directory-disclosure summary::-webkit-details-marker {
+  display: none;
 }
 
-.docs-category-path {
-  display: block;
-  margin-top: 0.8rem;
-  color: var(--accent-soft);
-  font-size: 0.86rem;
+.notes-directory-disclosure summary::after {
+  content: "▾";
+  transition: transform 0.2s ease;
 }
 
-.docs-article-list {
-  display: grid;
-  gap: 0.8rem;
+.notes-directory-disclosure[open] summary::after {
+  transform: rotate(180deg);
 }
 
-.docs-article-row {
-  display: block;
-  padding: 1rem 1.05rem;
-  border-radius: 16px;
-  text-decoration: none;
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
-  transition: transform 0.2s ease, border-color 0.2s ease,
-    box-shadow 0.2s ease;
+.notes-directory-disclosure summary:hover {
+  color: var(--text-strong);
 }
 
-.docs-article-row:hover {
-  transform: translateY(-1px);
-  border-color: var(--current-border-faint);
-  box-shadow: 0 12px 24px var(--shadow-color);
+.notes-directory-disclosure summary:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
 }
 
-.docs-article-title {
-  margin: 0;
-  color: var(--text-heading);
-  font-size: 1.02rem;
-  font-weight: 600;
-}
-
-.docs-article-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-top: 0.7rem;
-}
-
-.docs-empty-state {
-  padding: 1.2rem 1.1rem;
-  border-radius: 14px;
-  background: var(--surface-card);
-  color: var(--text-subtle);
+.notes-directory-disclosure nav {
+  margin-top: 0.6rem;
+  margin-left: -0.56rem;
 }
 
 /* Articles center on the page; the table of contents sits in the margin to the
@@ -294,15 +271,20 @@
   }
 }
 
-@media (min-width: 1200px) {
+/* From tablet width up, the folders stay beside the list. */
+@media (min-width: 768px) {
   .docs-layout:not(.article-layout) {
-    grid-template-columns: var(--docs-side) minmax(0, 1fr);
+    grid-template-columns: 15rem minmax(0, 1fr);
   }
 
   .docs-sidebar-column {
     display: block;
     align-self: stretch;
     border-right: 1px solid var(--border-subtle);
+  }
+
+  .notes-directory-disclosure {
+    display: none;
   }
 }
 
@@ -314,5 +296,9 @@
   .docs-page-title,
   .article-header .article-page-title {
     font-size: 1.85rem;
+  }
+
+  .notes-content .docs-page-title {
+    font-size: 1.6rem;
   }
 }
