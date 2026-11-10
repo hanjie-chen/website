@@ -329,6 +329,12 @@ the owner can do, such as writing down their own experience.
   characters from templates and Chinese translations into a `.txt` file; it
   does not generate the `.woff2` font. A reproducible font-build command is not
   currently documented in this repository.
+- Notes pages put the knowledge base's folders in a sidebar and what they hold
+  beside it: `/notes` lists the most recently updated notes with their folders,
+  and a folder page lists its subfolders (with note counts), then its own notes.
+  The tree lists folders only, and folders and breadcrumbs use the knowledge
+  base's own folder names. Below 768px the sidebar is replaced by a folded
+  copy of the tree (native `details`) above the list.
 - The brief archive uses a centered 560px directory with localized dates and
   weekdays. The header shows the archive year (a range across New Year); rows
   include their year when the archive spans two years. Counts stay in the public
