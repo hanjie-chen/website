@@ -334,9 +334,10 @@ the owner can do, such as writing down their own experience.
   and a folder page lists its subfolders (with note counts), then its own notes.
   The tree lists folders only, and folders and breadcrumbs use the knowledge
   base's own folder names. The two column labels sit level in bold; a top line
-  closes each list under its label. A thin pine chevron marks the current
-  folder and slides in beside a hovered or focused row, hanging outside the
-  text so nothing shifts. Below 768px the sidebar is replaced by a folded copy
+  closes each list under its label. A pine chevron marks the current folder,
+  shows at 70% on a hovered one, and slides in beside a hovered or focused row,
+  hanging outside the text so nothing shifts. It is a 2px SVG mask rather than
+  borders, which browsers round down to whole pixels. Below 768px the sidebar is replaced by a folded copy
   of the tree (native `details`), whose summary is set like the labels, and
   rows keep only their hover fill.
 - The brief archive uses a centered 560px directory with localized dates and
