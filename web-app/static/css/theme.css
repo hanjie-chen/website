@@ -70,6 +70,7 @@
     --accent-soft: light-dark(rgba(154, 95, 14, 0.9), rgba(227, 165, 72, 0.9));
     --accent-line: light-dark(rgba(154, 95, 14, 0.35), rgba(227, 165, 72, 0.3));
     --accent-line-strong: light-dark(rgba(154, 95, 14, 0.55), rgba(227, 165, 72, 0.5));
+    --accent-wash: light-dark(rgba(154, 95, 14, 0.05), rgba(227, 165, 72, 0.06));
 
     --current: light-dark(#2e6b5e, #72b8a6);
     --current-wash: light-dark(rgba(46, 107, 94, 0.06), rgba(114, 184, 166, 0.06));
