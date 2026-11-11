@@ -84,37 +84,45 @@
 }
 
 /*
- * A thin pine chevron marks where you are and what responds to you: always on
- * the current folder, faintly on a hovered one, and sliding in beside a
+ * A pine chevron marks where you are and what responds to you: always on the
+ * current folder, a little lighter on a hovered one, and sliding in beside a
  * hovered or focused row. It hangs outside the text so nothing shifts.
+ *
+ * It is drawn as an SVG mask, not borders: browsers round border widths down
+ * to whole pixels, which left a 1.6px stroke at 1px and too faint on 100%
+ * scaled screens. The mask keeps a 2px stroke at the 0.7rem default size.
  */
 .docs-tree-link::before,
 .notes-row::before {
   content: "";
   position: absolute;
-  box-sizing: border-box;
-  width: 0.38rem;
-  height: 0.38rem;
-  border-top: 1.6px solid var(--current);
-  border-right: 1.6px solid var(--current);
+  width: 0.45rem;
+  height: 0.7rem;
+  top: calc(50% - 0.35rem);
+  background: var(--current);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 14'%3E%3Cpath d='M1.5 1.5 6.5 7 1.5 12.5' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 14'%3E%3Cpath d='M1.5 1.5 6.5 7 1.5 12.5' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   opacity: 0;
-  transform: translateX(-3px) rotate(45deg);
+  transform: translateX(-3px);
   transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 .docs-tree-link::before {
-  left: 0.18rem;
-  top: calc(50% - 0.19rem);
+  left: 0.22rem;
 }
 
 .docs-tree-link:hover::before {
-  opacity: 0.45;
-  transform: rotate(45deg);
+  opacity: 0.7;
+  transform: none;
 }
 
 .docs-tree-link.is-active::before {
   opacity: 1;
-  transform: rotate(45deg);
+  transform: none;
 }
 
 .docs-tree-link:focus-visible {
@@ -254,14 +262,13 @@
 }
 
 .notes-row::before {
-  left: -0.85rem;
-  top: calc(50% - 0.19rem);
+  left: -0.95rem;
 }
 
 .notes-row:hover::before,
 .notes-row:focus-visible::before {
   opacity: 1;
-  transform: rotate(45deg);
+  transform: none;
 }
 
 .notes-row:focus-visible {
