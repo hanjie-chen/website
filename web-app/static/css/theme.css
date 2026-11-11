@@ -61,7 +61,7 @@
     --text-faint: light-dark(#a8a398, #6b675f);
 
     /*
-     * Two accents, after the Genshin 6.1 event screens: amber marks content
+     * Two accents, after the Genshin 7.1 event screens: amber marks content
      * worth noticing (brand mark, links, highlights); pine marks where you
      * are and what responds to you (current page, selection, hover, focus).
      */
@@ -78,7 +78,7 @@
     --current-border-faint: light-dark(rgba(46, 107, 94, 0.2), rgba(114, 184, 166, 0.2));
 
     /*
-     * Brand mark: the full moon of the 6.1 event art. At night it glows; on
+     * Brand mark: the full moon of the 7.1 event art. At night it glows; on
      * paper it is gilded, with a thin halo ring in place of the glow.
      */
     --moon: light-dark(#b8781c, #e3a548);

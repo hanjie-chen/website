@@ -24,19 +24,22 @@
   padding: 0 1rem 1rem 0;
 }
 
-/* The two column labels share a line, so both lists start level. */
+/*
+ * The two column labels share a line, so both lists start level. The site
+ * ships regular weights only, so bold here is the browser's, like the brand.
+ */
 .docs-sidebar-title,
 .notes-list-title {
   margin: 0 0 0.6rem;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  font-weight: 400;
+  color: var(--text-soft);
+  font-size: 1rem;
+  font-weight: 700;
   line-height: 1.5;
   letter-spacing: 0;
 }
 
 .docs-sidebar-title {
-  padding-inline: 0.56rem;
+  padding-inline: 1rem;
 }
 
 .docs-tree-list {
@@ -60,25 +63,58 @@
 }
 
 .docs-tree-link {
+  position: relative;
   display: block;
   border-radius: 8px;
-  padding: 0.32rem 0.56rem;
+  padding: 0.32rem 0.56rem 0.32rem 1rem;
   color: var(--text-soft);
   font-size: 0.95rem;
   line-height: 1.4;
   text-decoration: none;
   overflow-wrap: anywhere;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .docs-tree-link:hover {
-  background: var(--current-tint);
   color: var(--text-strong);
 }
 
 .docs-tree-link.is-active {
-  background: var(--current-tint-strong);
-  color: var(--text-strong);
+  color: var(--current);
+}
+
+/*
+ * A thin pine chevron marks where you are and what responds to you: always on
+ * the current folder, faintly on a hovered one, and sliding in beside a
+ * hovered or focused row. It hangs outside the text so nothing shifts.
+ */
+.docs-tree-link::before,
+.notes-row::before {
+  content: "";
+  position: absolute;
+  box-sizing: border-box;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-top: 1.6px solid var(--current);
+  border-right: 1.6px solid var(--current);
+  opacity: 0;
+  transform: translateX(-3px) rotate(45deg);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.docs-tree-link::before {
+  left: 0.18rem;
+  top: calc(50% - 0.19rem);
+}
+
+.docs-tree-link:hover::before {
+  opacity: 0.45;
+  transform: rotate(45deg);
+}
+
+.docs-tree-link.is-active::before {
+  opacity: 1;
+  transform: rotate(45deg);
 }
 
 .docs-tree-link:focus-visible {
@@ -152,22 +188,32 @@
   font-size: 1.75rem;
 }
 
+/* A top line closes the list, so its label sits on the list rather than above it. */
 .notes-list {
   margin: 0;
   padding: 0;
   list-style: none;
+  border-top: 1px solid var(--border);
 }
 
+.notes-list > li {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Rows reach a little past the text, so the hover fill frames it without moving it. */
 .notes-row {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   column-gap: 1.5rem;
   row-gap: 0.15rem;
   align-items: baseline;
-  padding: 0.7rem 0;
-  border-bottom: 1px solid var(--border-subtle);
+  margin-inline: -0.75rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 10px;
   color: var(--text);
   text-decoration: none;
+  transition: background-color 0.2s ease;
 }
 
 .notes-row-title {
@@ -198,6 +244,22 @@
   color: var(--accent-hover);
 }
 
+.notes-row:hover,
+.notes-row:focus-visible {
+  background: var(--current-wash);
+}
+
+.notes-row::before {
+  left: -0.85rem;
+  top: calc(50% - 0.19rem);
+}
+
+.notes-row:hover::before,
+.notes-row:focus-visible::before {
+  opacity: 1;
+  transform: rotate(45deg);
+}
+
 .notes-row:focus-visible {
   outline: 2px solid var(--current);
   outline-offset: 2px;
@@ -222,12 +284,15 @@
   margin-bottom: 1.25rem;
 }
 
+/* The summary stands in for the sidebar's label, so it takes the label's type. */
 .notes-directory-disclosure summary {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: var(--text-subtle);
-  font-size: 0.875rem;
+  color: var(--text-soft);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
   list-style: none;
   cursor: pointer;
 }
@@ -256,7 +321,7 @@
 
 .notes-directory-disclosure nav {
   margin-top: 0.6rem;
-  margin-left: -0.56rem;
+  margin-left: -1rem;
 }
 
 /* Articles center on the page; the table of contents sits in the margin to the
@@ -305,5 +370,25 @@
 
   .notes-content .docs-page-title {
     font-size: 1.6rem;
+  }
+
+  /* No hover on touch screens: rows keep only the fill, inside the gutter. */
+  .notes-row {
+    margin-inline: -0.5rem;
+    padding-inline: 0.5rem;
+  }
+
+  .notes-row::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .docs-tree-link,
+  .docs-tree-link::before,
+  .notes-row,
+  .notes-row::before,
+  .notes-row-title {
+    transition: none;
   }
 }

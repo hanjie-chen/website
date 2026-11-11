@@ -333,8 +333,12 @@ the owner can do, such as writing down their own experience.
   beside it: `/notes` lists the most recently updated notes with their folders,
   and a folder page lists its subfolders (with note counts), then its own notes.
   The tree lists folders only, and folders and breadcrumbs use the knowledge
-  base's own folder names. Below 768px the sidebar is replaced by a folded
-  copy of the tree (native `details`) above the list.
+  base's own folder names. The two column labels sit level in bold; a top line
+  closes each list under its label. A thin pine chevron marks the current
+  folder and slides in beside a hovered or focused row, hanging outside the
+  text so nothing shifts. Below 768px the sidebar is replaced by a folded copy
+  of the tree (native `details`), whose summary is set like the labels, and
+  rows keep only their hover fill.
 - The brief archive uses a centered 560px directory with localized dates and
   weekdays. The header shows the archive year (a range across New Year); rows
   include their year when the archive spans two years. Counts stay in the public
@@ -369,7 +373,7 @@ Syntax comments and `--text-faint` separators are the deliberate exceptions.
 
 ### Accents
 
-The two accents come from the Genshin Impact 6.1 event screens: the amber
+The two accents come from the Genshin Impact 7.1 event screens: the amber
 challenge-record bar and the pine-green night scenes, adjusted to stay legible
 on both backgrounds.
 
@@ -377,8 +381,9 @@ on both backgrounds.
   the brand mark, links and their underlines, the rails and labels of quotes and
   supplementary admonitions (note, tip, important), and highlighted labels.
 - **Pine** (`--current-*`, `#2e6b5e` / `#72b8a6`) marks where you are and what
-  responds to you within a page: the table-of-contents track, selected sidebar
-  items, hover feedback on cards, and focus rings.
+  responds to you within a page: the table-of-contents track, the chevron on
+  the current folder and on hovered rows, hover feedback on cards and rows, and
+  focus rings.
 
 The top bar keeps a single color, the moon. Its current page shows in bold with
 a neutral rule, and its controls hover with a neutral fill.
