@@ -271,10 +271,15 @@
   }
 }
 
-/* From tablet width up, the folders stay beside the list. */
+/*
+ * From tablet width up, the folders stay beside the list. The pair is capped
+ * at the list's reading width and centered as one block, like the other pages.
+ */
 @media (min-width: 768px) {
   .docs-layout:not(.article-layout) {
     grid-template-columns: 15rem minmax(0, 1fr);
+    max-width: calc(15rem + var(--docs-gap) + 50rem);
+    margin-inline: auto;
   }
 
   .docs-sidebar-column {
