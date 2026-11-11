@@ -45,18 +45,20 @@
                     </nav>
                 </details>
 
+                {# Every view opens with one large title on the same line, so moving between
+                   the index and any folder changes only what is below it. #}
                 {% if current_category %}
-                {% if breadcrumbs %}
-                <nav class="docs-breadcrumb" aria-label="Breadcrumb">
-                    {% for crumb in breadcrumbs %}
-                    {% if not loop.first %}
-                    <span class="docs-breadcrumb-separator" aria-hidden="true">/</span>
+                <div class="notes-heading">
+                    {% if breadcrumbs %}
+                    <nav class="notes-trail" aria-label="Breadcrumb">
+                        {% for crumb in breadcrumbs %}
+                        <a href="{{ crumb.url }}" class="notes-trail-link">{{ crumb.label }}</a>
+                        <span class="notes-trail-separator" aria-hidden="true">/</span>
+                        {% endfor %}
+                    </nav>
                     {% endif %}
-                    <a href="{{ crumb.url }}" class="docs-breadcrumb-link">{{ crumb.label }}</a>
-                    {% endfor %}
-                </nav>
-                {% endif %}
-                <h1 class="docs-page-title">{{ current_node.segment }}</h1>
+                    <h1 class="docs-page-title notes-title">{{ current_node.segment }}</h1>
+                </div>
 
                 <ul class="notes-list">
                     {% for category in category_children %}
@@ -79,7 +81,9 @@
                 </ul>
                 {% else %}
                 <h1 class="visually-hidden">{{ t("docs.page.title.notes") }}</h1>
-                <h2 class="notes-list-title">{{ t("docs.section.recent") }}</h2>
+                <div class="notes-heading">
+                    <h2 class="docs-page-title notes-title">{{ t("docs.section.recent") }}</h2>
+                </div>
                 {% if recent_notes %}
                 <ul class="notes-list">
                     {% for note in recent_notes %}

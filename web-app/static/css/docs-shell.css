@@ -25,11 +25,10 @@
 }
 
 /*
- * The two column labels share a line, so both lists start level. The site
- * ships regular weights only, so bold here is the browser's, like the brand.
+ * The folder label. The site ships regular weights only, so bold here is the
+ * browser's, like the brand.
  */
-.docs-sidebar-title,
-.notes-list-title {
+.docs-sidebar-title {
   margin: 0 0 0.6rem;
   color: var(--text-soft);
   font-size: 1rem;
@@ -191,9 +190,50 @@
   max-width: 50rem;
 }
 
-.notes-content .docs-page-title {
+/*
+ * One heading line for every view: the index's "recently updated" and a
+ * folder's name take the same size and place, with a folder's ancestors set
+ * small before its name rather than on a line of their own.
+ */
+.notes-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.55rem;
+  row-gap: 0.2rem;
   margin-bottom: 1.25rem;
+}
+
+.notes-content .notes-title {
   font-size: 1.75rem;
+}
+
+.notes-trail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.45rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.notes-trail-link {
+  color: var(--text-subtle);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.notes-trail-link:hover {
+  color: var(--text-strong);
+}
+
+.notes-trail-link:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+.notes-trail-separator {
+  color: var(--text-faint);
 }
 
 /* A top line closes the list, so its label sits on the list rather than above it. */
@@ -379,7 +419,7 @@
     font-size: 1.85rem;
   }
 
-  .notes-content .docs-page-title {
+  .notes-content .notes-title {
     font-size: 1.6rem;
   }
 
