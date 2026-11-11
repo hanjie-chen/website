@@ -333,8 +333,10 @@ the owner can do, such as writing down their own experience.
   beside it: `/notes` lists the most recently updated notes with their folders,
   and a folder page lists its subfolders (with note counts), then its own notes.
   The tree lists folders only, and folders and breadcrumbs use the knowledge
-  base's own folder names. The two column labels sit level in bold; a top line
-  closes each list under its label. A pine chevron marks the current folder,
+  base's own folder names. The right column always opens with one large title
+  in the same place (the index's "recently updated" or the folder's name, with
+  its ancestors set small before it on the same line), so moving between the
+  index and any folder changes only the list. A top line closes each list. A pine chevron marks the current folder,
   shows at 70% on a hovered one, and slides in beside a hovered or focused row,
   hanging outside the text so nothing shifts. It is a 2px SVG mask rather than
   borders, which browsers round down to whole pixels. Below 768px the sidebar is replaced by a folded copy

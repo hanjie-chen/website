@@ -201,6 +201,33 @@ def test_category_lists_subfolders_then_its_own_notes(client, app):
     assert active["aria-current"] == "page"
 
 
+def test_index_and_folders_share_one_heading_line(client, app):
+    with app.app_context():
+        _insert_note(
+            title="Deep Note",
+            category="tests/infra/terraform",
+            file_path="tests/infra/terraform/deep.md",
+        )
+
+    index = BeautifulSoup(client.get("/zh/notes").get_data(as_text=True), "html.parser")
+    heading = index.select_one(".notes-content .notes-heading .notes-title")
+    assert heading.name == "h2"
+    assert heading.get_text(strip=True) == "最近更新"
+
+    folder = BeautifulSoup(
+        client.get("/zh/notes/category/tests/infra/terraform").get_data(as_text=True),
+        "html.parser",
+    )
+    line = folder.select_one(".notes-content .notes-heading")
+    # Ancestors sit small before the folder's name, on the title's own line.
+    assert [a["href"] for a in line.select("nav.notes-trail a")] == [
+        "/zh/notes/category/tests",
+        "/zh/notes/category/tests/infra",
+    ]
+    assert line.select_one("h1.notes-title").get_text(strip=True) == "terraform"
+    assert folder.select("nav.docs-breadcrumb") == []
+
+
 def test_english_folder_count_uses_singular_for_one_note(client, app):
     with app.app_context():
         _insert_note(
