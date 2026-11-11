@@ -379,11 +379,12 @@ on both backgrounds.
 
 - **Amber** (`--accent-*`, `#9a5f0e` / `#e3a548`) marks content worth noticing:
   the brand mark, links and their underlines, the rails and labels of quotes and
-  supplementary admonitions (note, tip, important), and highlighted labels.
+  supplementary admonitions (note, tip, important), highlighted labels, and the
+  hover fill of note rows, which are links.
 - **Pine** (`--current-*`, `#2e6b5e` / `#72b8a6`) marks where you are and what
   responds to you within a page: the table-of-contents track, the chevron on
-  the current folder and on hovered rows, hover feedback on cards and rows, and
-  focus rings.
+  the current folder and on hovered rows, hover feedback on cards, and focus
+  rings.
 
 The top bar keeps a single color, the moon. Its current page shows in bold with
 a neutral rule, and its controls hover with a neutral fill.

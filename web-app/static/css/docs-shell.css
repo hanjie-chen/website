@@ -244,9 +244,13 @@
   color: var(--accent-hover);
 }
 
+/*
+ * A row is a link, so its hover fill is amber like its title; the warm fill
+ * also sets off the pine chevron beside it.
+ */
 .notes-row:hover,
 .notes-row:focus-visible {
-  background: var(--current-wash);
+  background: var(--accent-wash);
 }
 
 .notes-row::before {
