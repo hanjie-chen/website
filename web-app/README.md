@@ -399,7 +399,9 @@ on light paper it is gilded (`#b8781c`) with a thin halo ring instead, the way
 the event screens use glows at night and gold outlines on paper (`--moon-*`
 tokens). The browser icon [moon.svg](static/icon/moon.svg) follows the
 browser's own light or dark mode, with [moon.ico](static/icon/moon.ico) as the
-fallback for browsers without SVG icons.
+fallback for browsers without SVG icons. The ICO link declares `sizes="32x32"`
+only: listing 16x16 gives Chromium an exact match for its tab icon, so Chrome and
+Edge would show the light-only ICO in dark mode too.
 
 ### Theme Switching
 

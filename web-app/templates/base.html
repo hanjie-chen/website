@@ -24,7 +24,9 @@
     {% endblock%}
 
     <!-- 网站图标 -->
-    <link rel="icon" href="{{ asset_url('icon/moon.ico') }}" sizes="16x16 32x32 48x48">
+    {# Declare the ICO at 32x32 only: an exact 16x16 match makes Chromium pick it over
+       the SVG, and only the SVG follows the browser's dark mode. #}
+    <link rel="icon" href="{{ asset_url('icon/moon.ico') }}" sizes="32x32">
     <link rel="icon" href="{{ asset_url('icon/moon.svg') }}" type="image/svg+xml">
 
 

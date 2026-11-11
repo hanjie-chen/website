@@ -1,4 +1,5 @@
 import pytest
+from bs4 import BeautifulSoup
 
 
 def test_root_redirects_to_canonical_language_homepage(client):
@@ -29,6 +30,19 @@ def test_homepage_static_assets_are_versioned(client):
     assert "/static/css/base.css?v=" in html
     assert "/static/site-nav.js?v=" in html
     assert "bootstrap" not in html.lower()
+
+
+def test_favicon_links_let_browsers_prefer_the_theme_aware_svg(client):
+    # Chromium picks an ICO that lists an exact 16x16 match over the SVG, and
+    # only the SVG follows dark mode, so the ICO declares 32x32 alone.
+    soup = BeautifulSoup(client.get("/zh/").get_data(as_text=True), "html.parser")
+    icons = {
+        link["href"].split("?")[0]: link for link in soup.select('link[rel="icon"]')
+    }
+
+    assert icons["/static/icon/moon.ico"]["sizes"] == "32x32"
+    assert icons["/static/icon/moon.svg"]["type"] == "image/svg+xml"
+    assert not icons["/static/icon/moon.svg"].has_attr("sizes")
 
 
 def test_about_page_renders_english_hiring_profile_content(client):
