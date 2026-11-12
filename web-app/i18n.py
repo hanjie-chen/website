@@ -33,7 +33,6 @@ TRANSLATIONS = {
         "home.brief.older": "今天的简报还没送达，这是{date}的。",
         "home.brief.read_today": "阅读今天的简报 →",
         "home.brief.read": "阅读这份简报 →",
-        "home.brief.archive": "查看简报归档 →",
         "docs.directory": "目录",
         "docs.page.title.notes": "笔记",
         "docs.section.recent": "最近更新",
@@ -46,15 +45,7 @@ TRANSLATIONS = {
         "note.image_preview.label": "图片预览",
         "note.image_preview.close": "关闭图片预览",
         "briefs.page.title": "Daily Brief",
-        "briefs.page.heading": "每日简报",
-        "briefs.page.description": "每天从计算与软件领域及少量圈外探索中筛选值得阅读的内容，减少信息噪声。",
         "briefs.language_note": "Daily Brief 正文目前仅提供中文。",
-        "briefs.retention_note": "仅保留最近 14 天的简报。",
-        "briefs.archive.title": "历史归档",
-        "briefs.archive.window": "最近 14 天",
-        "briefs.archive.ai": "技术精选",
-        "briefs.archive.non_ai": "圈外",
-        "briefs.items": "条内容",
         "briefs.empty.title": "最近 14 天暂无简报",
         "briefs.empty.description": "新的 Daily Brief 发布后会出现在这里。",
         "briefs.section.ai": "技术精选",
@@ -109,6 +100,10 @@ TRANSLATIONS = {
         "briefs.previous": "上一期",
         "briefs.next": "下一期",
         "briefs.back_to_top": "回到顶部",
+        "briefs.days.label": "最近 14 天的简报",
+        "briefs.days.missing": "{date}没有简报",
+        "briefs.count.one": "1 条",
+        "briefs.count": "{count} 条",
         "briefs.selection_basis": "入选依据：",
         "briefs.generation.origin.archived_copy": "原文存档",
         "briefs.generation.origin.same_article": "同一篇文章",
@@ -213,7 +208,6 @@ TRANSLATIONS = {
         "home.brief.older": "Today's brief isn't in yet; here is the one from {date}.",
         "home.brief.read_today": "Read today's brief →",
         "home.brief.read": "Read this brief →",
-        "home.brief.archive": "Open the archive →",
         "docs.directory": "Folders",
         "docs.page.title.notes": "Notes",
         "docs.section.recent": "Recently updated",
@@ -226,15 +220,7 @@ TRANSLATIONS = {
         "note.image_preview.label": "Image preview",
         "note.image_preview.close": "Close image preview",
         "briefs.page.title": "Daily Brief",
-        "briefs.page.heading": "Daily Brief",
-        "briefs.page.description": "A small daily selection from computing and software, plus a few beyond-the-bubble discoveries, curated to reduce information noise.",
         "briefs.language_note": "Daily Brief entries are currently published in Chinese only.",
-        "briefs.retention_note": "Only briefs from the last 14 days are retained.",
-        "briefs.archive.title": "Archive",
-        "briefs.archive.window": "Last 14 days",
-        "briefs.archive.ai": "Tech picks",
-        "briefs.archive.non_ai": "Beyond",
-        "briefs.items": "items",
         "briefs.empty.title": "No briefs in the last 14 days",
         "briefs.empty.description": "New Daily Brief editions will appear here when published.",
         "briefs.section.ai": "Tech picks",
@@ -289,6 +275,10 @@ TRANSLATIONS = {
         "briefs.previous": "Previous brief",
         "briefs.next": "Next brief",
         "briefs.back_to_top": "Back to top",
+        "briefs.days.label": "Briefs from the last 14 days",
+        "briefs.days.missing": "No brief on {date}",
+        "briefs.count.one": "1 item",
+        "briefs.count": "{count} items",
         "briefs.selection_basis": "Selection basis:",
         "briefs.generation.origin.archived_copy": "archived copy of the article",
         "briefs.generation.origin.same_article": "the same article",
@@ -507,10 +497,3 @@ def format_day(day: date, lang: str | None, *, weekday: bool = True) -> str:
         return f"{EN_WEEKDAYS[day.weekday()]}, {label}" if weekday else label
     label = f"{day.month}月{day.day}日"
     return f"{label} 星期{ZH_WEEKDAYS[day.weekday()]}" if weekday else label
-
-
-def format_weekday(day: date, lang: str | None) -> str:
-    """Return a compact weekday label for a date directory."""
-    if normalize_language(lang) == "en":
-        return EN_WEEKDAYS[day.weekday()]
-    return f"周{ZH_WEEKDAYS[day.weekday()]}"

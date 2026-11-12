@@ -24,8 +24,8 @@
         // Storage may be disabled; ordinary navigation must still work.
       }
     }
-    document.querySelectorAll("[data-brief-archive-date]").forEach((row) => {
-      row.classList.toggle("is-opened", opened.has(row.dataset.briefArchiveDate));
+    document.querySelectorAll("[data-brief-day]").forEach((day) => {
+      day.classList.toggle("is-opened", opened.has(day.dataset.briefDay));
     });
   };
 

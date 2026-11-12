@@ -106,7 +106,7 @@ from this limited image rollback.
 | Command | Scope |
 | --- | --- |
 | `./scripts/deploy/wait_services_healthy.sh [services...]` | Wait for Docker health; defaults to `web-app nginx-modsecurity` |
-| `./scripts/deploy/smoke_check.sh` | Request `/`, `/zh/notes` and `/zh/briefs` through local Nginx |
+| `./scripts/deploy/smoke_check.sh` | Request `/`, `/zh/notes` and `/zh/briefs` through local Nginx, following redirects to the page they open |
 | `./scripts/deploy/verify_image_refs.sh [services...]` | Compare running container image references with resolved Compose configuration; defaults to `nginx-modsecurity dozzle` |
 | `./scripts/deploy/ensure_db_ready.sh [deploy_sha]` | Check and potentially rebuild the note DB as described above |
 

@@ -12,7 +12,8 @@
 <a class="brief-date-step brief-date-step--{{ direction }}"
     href="{{ url_for('brief_detail', lang=current_lang, brief_date=date_label) }}"
     rel="{{ 'prev' if direction == 'older' else 'next' }}"
-    aria-label="{{ t('briefs.previous' if direction == 'older' else 'briefs.next') }}: {{ date_label }}">
+    aria-label="{{ t('briefs.previous' if direction == 'older' else 'briefs.next') }}: {{ date_label }}"
+    title="{{ t('briefs.previous' if direction == 'older' else 'briefs.next') }}: {{ date_label }}">
     <span class="brief-date-step-body" aria-hidden="true">
         {%- if direction == "older" %}<span class="brief-date-step-icon">‹</span>{% endif -%}
         <span class="brief-date-step-label">{{ date_label[5:] }}</span>
@@ -30,11 +31,8 @@
 <div class="brief-dock">
     {{ date_step(older_date, "older") }}
     <a class="brief-dock-date" href="#brief-top" data-brief-back-to-top
-        aria-label="{{ brief.date }} · {{ t('briefs.back_to_top') }}">
-        <time datetime="{{ brief.date }}">
-            <span class="brief-dock-date-full">{{ brief.date }}</span>
-            <span class="brief-dock-date-short">{{ brief.date[5:] }}</span>
-        </time>
+        aria-label="{{ brief_day_label }} · {{ t('briefs.back_to_top') }}">
+        <time datetime="{{ brief.date }}">{{ brief_day_label }}</time>
         <span class="brief-dock-date-arrow" aria-hidden="true">↑</span>
     </a>
     {{ date_step(newer_date, "newer") }}
@@ -45,11 +43,37 @@
 
 {% block main_content %}
 <div class="main-content">
-    <article class="content-wrapper briefs-page-shell brief-detail-shell" data-brief-opened-date="{{ brief.date }}">
-        <header class="briefs-hero" id="brief-top">
-            <div class="brief-date-row" data-brief-hero-date>
+    <article class="content-wrapper brief-shell" data-brief-opened-date="{{ brief.date }}">
+        {# The date sits where the top bar will dock it. Jumping to another day is rare,
+           so the kept days wait folded behind the date itself. #}
+        <header class="brief-header" id="brief-top" data-brief-hero-date>
+            <div class="brief-date-row">
                 {{ date_step(older_date, "older") }}
-                <h1 tabindex="-1"><time datetime="{{ brief.date }}">{{ brief.date }}</time></h1>
+                <details class="brief-days">
+                    <summary aria-label="{{ brief_day_label }} · {{ t('briefs.days.label') }}">
+                        <h1 class="brief-title">
+                            <time datetime="{{ brief.date }}">{{ brief_day_label }}</time>
+                        </h1>
+                        <span class="brief-details-chevron" aria-hidden="true"></span>
+                    </summary>
+                    <nav aria-label="{{ t('briefs.days.label') }}">
+                        <ol>
+                            {% for day in brief_days %}
+                            <li>
+                                {% if day.current %}
+                                <span class="brief-day" aria-current="date" aria-label="{{ day.label }}">{{ day.number }}</span>
+                                {% elif day.published %}
+                                <a class="brief-day" data-brief-day="{{ day.date }}" aria-label="{{ day.label }}" title="{{ day.label }}"
+                                    href="{{ url_for('brief_detail', lang=current_lang, brief_date=day.date) }}">{{ day.number }}</a>
+                                {% else %}
+                                <span class="brief-day is-missing" aria-label="{{ t('briefs.days.missing').format(date=day.label) }}"
+                                    title="{{ t('briefs.days.missing').format(date=day.label) }}">{{ day.number }}</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ol>
+                    </nav>
+                </details>
                 {{ date_step(newer_date, "newer") }}
             </div>
             {% if current_lang == "en" %}
@@ -62,7 +86,8 @@
         <section class="brief-section" aria-labelledby="brief-section-{{ section_name }}">
             <div class="briefs-section-heading">
                 <h2 id="brief-section-{{ section_name }}">{{ t("briefs.section." ~ section_name) }}</h2>
-                <span class="brief-count">{{ section["items"]|length }} {{ t("briefs.items") }}</span>
+                {% set count = section["items"]|length %}
+                <span class="brief-count">{{ t("briefs.count.one") if count == 1 else t("briefs.count").format(count=count) }}</span>
             </div>
             {% if section.note %}
             <p class="brief-section-note">{{ section.note }}</p>
@@ -70,7 +95,7 @@
             {% if section["items"] %}
             <div class="brief-item-list">
                 {% for item in section["items"] %}
-                <article class="brief-item-card">
+                <article class="brief-item">
                     <h3 class="brief-story-heading">
                         <a class="brief-story-title" href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.title }}</a>
                     </h3>

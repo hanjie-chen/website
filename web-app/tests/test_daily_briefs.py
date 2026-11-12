@@ -413,7 +413,7 @@ def test_publish_endpoint_rejects_oversized_body(client, monkeypatch):
     assert response.status_code == 413
 
 
-def test_brief_routes_render_archive_and_historical_details(client, app):
+def test_brief_routes_open_the_latest_brief_and_render_details(client, app):
     current_payload = brief_payload()
     current_payload["sections"]["ai"]["items"][0]["source_url"] = (
         "https://claude.com/blog/article"
@@ -425,51 +425,22 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
         )
         store_brief(app_module.Daily_Briefs_Directory, current_payload)
 
-    archive = client.get("/zh/briefs")
-    english_archive = client.get("/en/briefs")
+    # The section link has no page of its own: it opens the latest brief.
+    for lang in ("zh", "en"):
+        latest = client.get(f"/{lang}/briefs")
+        assert latest.status_code == 302
+        assert latest.headers["Location"] == f"/{lang}/briefs/2026-07-25"
+
     detail = client.get("/zh/briefs/2026-07-25")
     english = client.get("/en/briefs/2026-07-25")
     historical = client.get("/zh/briefs/2026-07-24")
 
-    assert archive.status_code == 200
-    archive_soup = BeautifulSoup(archive.get_data(as_text=True), "html.parser")
-    assert archive_soup.select_one(".brief-archive-caption").get_text(strip=True) == (
-        "2026 · 最近 14 天"
-    )
-    assert [
-        node.get_text(strip=True) for node in archive_soup.select(".brief-date")
-    ] == ["7月25日", "7月24日"]
-    assert [node["datetime"] for node in archive_soup.select(".brief-date")] == [
-        "2026-07-25",
-        "2026-07-24",
-    ]
-    assert [
-        node.get_text(strip=True)
-        for node in archive_soup.select(".brief-archive-weekday")
-    ] == ["周六", "周五"]
-    assert [node["href"] for node in archive_soup.select(".brief-archive-row")] == [
-        "/zh/briefs/2026-07-25",
-        "/zh/briefs/2026-07-24",
-    ]
-    assert not archive_soup.select(".briefs-lead, .brief-archive-meta")
-    assert english_archive.status_code == 200
-    english_archive_soup = BeautifulSoup(
-        english_archive.get_data(as_text=True), "html.parser"
-    )
-    assert english_archive_soup.select_one(".brief-archive-caption").get_text(
-        strip=True
-    ) == ("2026 · Last 14 days")
-    assert [
-        node.get_text(strip=True) for node in english_archive_soup.select(".brief-date")
-    ] == ["Jul 25", "Jul 24"]
-    assert [
-        node.get_text(strip=True)
-        for node in english_archive_soup.select(".brief-archive-weekday")
-    ] == ["Sat", "Fri"]
     detail_html = detail.get_data(as_text=True)
     detail_soup = BeautifulSoup(detail_html, "html.parser")
     assert detail.status_code == 200
-    assert detail_soup.select_one("h1 time").get_text(strip=True) == "2026-07-25"
+    assert detail_soup.select_one("h1 time").get_text(strip=True) == "7月25日"
+    assert detail_soup.select_one("h1 time")["datetime"] == "2026-07-25"
+    assert detail_soup.select_one(".brief-count").get_text(strip=True) == "1 条"
     assert (
         detail_soup.select_one("#brief-section-ai").get_text(strip=True) == "技术精选"
     )
@@ -503,6 +474,9 @@ def test_brief_routes_render_archive_and_historical_details(client, app):
     english_html = english.get_data(as_text=True)
     assert "currently published in Chinese only" in english_html
     assert "Tech picks" in english_html
+    english_soup = BeautifulSoup(english_html, "html.parser")
+    assert english_soup.select_one("h1 time").get_text(strip=True) == "Jul 25"
+    assert english_soup.select_one(".brief-count").get_text(strip=True) == "1 item"
     assert historical.status_code == 200
     assert "2026-07-24" in historical.get_data(as_text=True)
 
@@ -535,10 +509,11 @@ def test_brief_detail_links_adjacent_archived_briefs_in_hero_and_topbar_dock(
 
     back_to_top = middle.select_one(".navbar-custom .brief-dock-date")
     assert back_to_top["href"] == "#brief-top"
-    assert back_to_top["aria-label"] == "2026-07-24 · 回到顶部"
+    assert back_to_top["aria-label"] == "7月24日 · 回到顶部"
     assert middle.select_one("#brief-top").select_one(".brief-date-row")
-    assert back_to_top.select_one(".brief-dock-date-full").get_text() == "2026-07-24"
-    assert back_to_top.select_one(".brief-dock-date-short").get_text() == "07-24"
+    # The dock repeats the page date as written, so one seems to rise into the other.
+    assert back_to_top.select_one("time").get_text() == "7月24日"
+    assert back_to_top.select_one("time")["datetime"] == "2026-07-24"
     assert back_to_top.select_one(".brief-dock-date-arrow")["aria-hidden"] == "true"
 
     newest = BeautifulSoup(
@@ -560,6 +535,66 @@ def test_brief_detail_links_adjacent_archived_briefs_in_hero_and_topbar_dock(
     ]
 
 
+def test_brief_detail_folds_every_retained_day_behind_its_date(client, app):
+    # The clock is 2026-07-27, so the retained days run from 07-14 to 07-27.
+    with app.app_context():
+        for date_label in ("2026-07-22", "2026-07-24", "2026-07-25"):
+            store_brief(app_module.Daily_Briefs_Directory, brief_payload(date_label))
+
+    soup = BeautifulSoup(
+        client.get("/zh/briefs/2026-07-24").get_data(as_text=True), "html.parser"
+    )
+    days = soup.select_one("#brief-top details.brief-days")
+    # Folded until asked for, and usable without scripts.
+    assert not days.has_attr("open")
+    assert days.select_one("summary h1 time")["datetime"] == "2026-07-24"
+
+    cells = days.select("nav ol > li > .brief-day")
+    assert [cell.get_text(strip=True) for cell in cells] == [
+        str(day) for day in range(14, 28)
+    ]
+    assert [(link["href"], link["data-brief-day"]) for link in days.select("a")] == [
+        ("/zh/briefs/2026-07-22", "2026-07-22"),
+        ("/zh/briefs/2026-07-25", "2026-07-25"),
+    ]
+    current = days.select_one("[aria-current]")
+    assert current.name == "span"
+    assert current["aria-current"] == "date"
+    assert current.get_text(strip=True) == "24"
+    # A day without a brief keeps its place but leads nowhere.
+    missing = days.select(".brief-day.is-missing")
+    assert len(missing) == 11
+    assert all(cell.name == "span" for cell in missing)
+    assert missing[0]["aria-label"] == "7月14日 星期二没有简报"
+
+    english = BeautifulSoup(
+        client.get("/en/briefs/2026-07-24").get_data(as_text=True), "html.parser"
+    )
+    assert english.select_one(".brief-day.is-missing")["aria-label"] == (
+        "No brief on Tue, Jul 14"
+    )
+    assert english.select_one("a.brief-day")["aria-label"] == "Wed, Jul 22"
+
+
+def test_brief_day_strip_crosses_the_new_year(client, brief_clock):
+    brief_clock[0] = date(2027, 1, 2)
+    for day in ("2026-12-31", "2027-01-01"):
+        store_brief(app_module.Daily_Briefs_Directory, brief_payload(day))
+
+    soup = BeautifulSoup(
+        client.get("/zh/briefs/2027-01-01").get_data(as_text=True), "html.parser"
+    )
+    cells = soup.select(".brief-days .brief-day")
+    assert [cell.get_text(strip=True) for cell in cells] == [
+        *(str(day) for day in range(20, 32)),
+        "1",
+        "2",
+    ]
+    assert [link["href"] for link in soup.select(".brief-days a")] == [
+        "/zh/briefs/2026-12-31"
+    ]
+
+
 def test_topbar_date_dock_only_renders_on_brief_detail_pages(client, app):
     with app.app_context():
         store_brief(app_module.Daily_Briefs_Directory, brief_payload())
@@ -568,7 +603,7 @@ def test_topbar_date_dock_only_renders_on_brief_detail_pages(client, app):
     assert 'class="site-nav-center"' in detail
     assert "brief-date-dock.js" in detail
 
-    for path in ("/zh/", "/zh/briefs", "/zh/notes", "/zh/about"):
+    for path in ("/zh/", "/zh/notes", "/zh/about"):
         html = client.get(path).get_data(as_text=True)
         assert 'class="site-nav-center"' not in html, path
         assert "brief-date-dock.js" not in html, path
@@ -752,21 +787,26 @@ def test_homepage_previews_first_two_items_in_display_order(client, app):
     assert soup.select_one(".home-report-link").get_text(strip=True) == "阅读这份简报 →"
 
 
-def test_empty_archive_still_returns_200(client):
-    response = client.get("/zh/briefs")
+@pytest.mark.parametrize(
+    ("lang", "title"),
+    [("zh", "最近 14 天暂无简报"), ("en", "No briefs in the last 14 days")],
+)
+def test_briefs_without_a_brief_show_the_empty_state(client, lang, title):
+    response = client.get(f"/{lang}/briefs")
 
     assert response.status_code == 200
-    assert "最近 14 天暂无简报" in response.get_data(as_text=True)
+    soup = BeautifulSoup(response.get_data(as_text=True), "html.parser")
+    assert soup.select_one(".briefs-empty-state h1").get_text(strip=True) == title
+    assert not soup.select(".brief-days, .site-nav-center")
 
 
-def test_homepage_without_brief_points_to_archive(client):
+def test_homepage_without_brief_says_so_once(client):
     chinese = BeautifulSoup(client.get("/zh/").get_data(as_text=True), "html.parser")
-    english = BeautifulSoup(client.get("/en/").get_data(as_text=True), "html.parser")
 
     assert chinese.select(".home-brief-item") == []
     assert chinese.select_one(".home-report-line").get_text() == "最近 14 天暂无简报"
-    assert chinese.select_one(".home-report-link")["href"] == "/zh/briefs"
-    assert english.select_one(".home-report-link")["href"] == "/en/briefs"
+    # The brief page would only repeat the sentence, so nothing links to it here.
+    assert chinese.select(".home-report-link") == []
 
 
 @pytest.mark.parametrize(
@@ -876,7 +916,7 @@ def test_publish_cleans_expired_files_and_index(tmp_path, brief_clock):
     assert json.loads((tmp_path / "current.json").read_text()) == {"date": "2026-07-25"}
 
 
-def test_date_navigation_and_archive_drop_expired_briefs(client, brief_clock):
+def test_date_navigation_and_latest_brief_drop_expired_briefs(client, brief_clock):
     for date_label in ("2026-07-14", "2026-07-15"):
         store_brief(app_module.Daily_Briefs_Directory, brief_payload(date_label))
     brief_clock[0] = date(2026, 7, 28)
@@ -884,9 +924,8 @@ def test_date_navigation_and_archive_drop_expired_briefs(client, brief_clock):
         detail = client.get(f"/{lang}/briefs/2026-07-15")
         assert detail.status_code == 200
         assert "/briefs/2026-07-14" not in detail.get_data(as_text=True)
-        index = client.get(f"/{lang}/briefs").get_data(as_text=True)
-        assert "2026-07-15" in index
-        assert "2026-07-14" not in index
+        latest = client.get(f"/{lang}/briefs")
+        assert latest.headers["Location"] == f"/{lang}/briefs/2026-07-15"
     assert [
         entry["date"] for entry in client.get("/api/briefs").get_json()["items"]
     ] == ["2026-07-15"]
@@ -965,31 +1004,3 @@ def test_brief_today_uses_singapore_midnight(monkeypatch, instant, expected):
 
     monkeypatch.setattr(daily_briefs, "datetime", FixedDatetime)
     assert real_brief_today() == expected
-
-
-@pytest.mark.parametrize(
-    ("lang", "labels", "caption"),
-    [
-        ("zh", ["2027年1月1日", "2026年12月31日"], "2026–2027 · 最近 14 天"),
-        ("en", ["Jan 1, 2027", "Dec 31, 2026"], "2026–2027 · Last 14 days"),
-    ],
-)
-def test_brief_archive_distinguishes_years(client, brief_clock, lang, labels, caption):
-    brief_clock[0] = date(2027, 1, 2)
-    for day in ["2026-12-31", "2027-01-01"]:
-        store_brief(app_module.Daily_Briefs_Directory, brief_payload(day))
-    response = client.get(f"/{lang}/briefs")
-    assert response.status_code == 200
-    soup = BeautifulSoup(response.get_data(as_text=True), "html.parser")
-    assert [node.get_text(strip=True) for node in soup.select(".brief-date")] == labels
-    assert soup.select_one(".brief-archive-caption").get_text(strip=True) == caption
-
-
-@pytest.mark.parametrize("lang", ["zh", "en"])
-def test_empty_brief_archive_has_no_spurious_year(client, lang):
-    response = client.get(f"/{lang}/briefs")
-    assert response.status_code == 200
-    soup = BeautifulSoup(response.get_data(as_text=True), "html.parser")
-    assert soup.select_one(".briefs-empty-state")
-    assert not soup.select(".brief-archive-row")
-    assert "·" not in soup.select_one(".brief-archive-caption").get_text()
