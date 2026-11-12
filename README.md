@@ -65,8 +65,12 @@ Workflow 职责、触发条件与维护说明见 [.github/workflows/README.md](.
 
 ## TODO
 
-1. website ui refactor
-    - daily brief page ui improve
-    - 用代码为文章绘制封面（统一风格与比例，跟随深浅色），替换网上找的封面图
+1. Website UI 改版：各页共用一套标题层级和阅读栏宽，逐页进行
+    - Daily Brief 页：进行中
+    - About 页：按 personal dashboard 的定位重做，先确定内容，再套用统一的层级
+    - 404 页：套用站点外壳和主题；风格偏 Genshin，具体待讨论
+    - 手机端阅读体验：统一各页左右边距
 
-2. 盘点 Cloudflare 配置并集中记录，评估将适合的配置纳入 Terraform 管理。
+2. 为 [knowledge-base](https://github.com/hanjie-chen/knowledge-base) 仓库的文章用代码绘制封面（统一风格与比例，跟随深浅色），替换网上找的封面图。这是 knowledge-base 的工作，本站没有封面功能。
+
+3. 盘点 Cloudflare 配置并集中记录，评估将适合的配置纳入 Terraform 管理。
