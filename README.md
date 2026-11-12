@@ -66,7 +66,7 @@ Workflow 职责、触发条件与维护说明见 [.github/workflows/README.md](.
 ## TODO
 
 1. Website UI 改版：各页共用一套标题层级和阅读栏宽，逐页进行
-    - Daily Brief 页：进行中
+    - Daily Brief 页：进行中；日期旁的展开箭头样式留到后面微调
     - About 页：按 personal dashboard 的定位重做，先确定内容，再套用统一的层级
     - 404 页：套用站点外壳和主题；风格偏 Genshin，具体待讨论
     - 手机端阅读体验：统一各页左右边距
