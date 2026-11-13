@@ -28,6 +28,7 @@ from daily_briefs import (
     load_brief,
     load_brief_archive,
     load_current_brief,
+    retention_window,
     store_brief,
 )
 from i18n import (
@@ -35,7 +36,6 @@ from i18n import (
     LANG_COOKIE_NAME,
     alternate_language,
     format_day,
-    format_weekday,
     get_language_from_path,
     html_lang_code,
     resolve_preferred_language,
@@ -136,6 +136,25 @@ def _adjacent_brief_dates(date_label: str) -> tuple[str | None, str | None]:
     older = max((date for date in dates if date < date_label), default=None)
     newer = min((date for date in dates if date > date_label), default=None)
     return older, newer
+
+
+def _brief_days(current_date: str, lang: str) -> list[dict]:
+    """Return every retained calendar day, oldest first, for the day strip.
+
+    Days without a brief stay in the list so the strip keeps its rhythm and
+    shows the gap.
+    """
+    published = {entry["date"] for entry in load_brief_archive(Daily_Briefs_Directory)}
+    return [
+        {
+            "date": day.isoformat(),
+            "number": day.day,
+            "label": format_day(day, lang),
+            "published": day.isoformat() in published,
+            "current": day.isoformat() == current_date,
+        }
+        for day in retention_window()
+    ]
 
 
 def _console_now() -> datetime:
@@ -401,32 +420,14 @@ def about_me(lang):
 
 
 @app.route("/<lang>/briefs")
-def brief_index(lang):
+def brief_latest(lang):
+    """Open the latest brief; other days are reached from its day strip."""
     current_lang = _require_supported_language(lang)
-    archive = load_brief_archive(Daily_Briefs_Directory)
-    years = sorted({entry["date"][:4] for entry in archive})
-    briefs = []
-    for entry in archive:
-        day = date.fromisoformat(entry["date"])
-        label = format_day(day, current_lang, weekday=False)
-        if len(years) > 1:
-            label = (
-                f"{label}, {day.year}"
-                if current_lang == "en"
-                else f"{day.year}年{label}"
-            )
-        briefs.append(
-            {
-                "date": entry["date"],
-                "label": label,
-                "weekday": format_weekday(day, current_lang),
-            }
-        )
-    return render_template(
-        "brief_index.html",
-        current_lang=current_lang,
-        briefs=briefs,
-        archive_year="–".join(years),
+    brief = load_current_brief(Daily_Briefs_Directory)
+    if brief is None:
+        return render_template("brief_empty.html", current_lang=current_lang)
+    return redirect(
+        url_for("brief_detail", lang=current_lang, brief_date=brief["date"])
     )
 
 
@@ -454,6 +455,10 @@ def brief_detail(lang, brief_date):
         "brief_detail.html",
         current_lang=current_lang,
         brief=brief,
+        brief_day_label=format_day(
+            date.fromisoformat(brief["date"]), current_lang, weekday=False
+        ),
+        brief_days=_brief_days(brief["date"], current_lang),
         summary_views=summary_views,
         generation_views=generation_views,
         older_date=older_date,

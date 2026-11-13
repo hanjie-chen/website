@@ -47,9 +47,6 @@
             </a>
             {% else %}
             <h2 class="home-report-line" id="home-brief-heading">{{ t("briefs.empty.title") }}</h2>
-            <a class="home-report-link" href="{{ url_for('brief_index', lang=current_lang) }}">
-                {{ t("home.brief.archive") }}
-            </a>
             {% endif %}
         </section>
     </div>

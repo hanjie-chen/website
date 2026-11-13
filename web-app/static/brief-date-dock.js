@@ -33,7 +33,7 @@
       event.preventDefault();
       window.scrollTo({ top: 0, behavior: reduceMotion.matches ? "auto" : "smooth" });
       // The dock hides at the top, so keep keyboard focus on the page date.
-      hero.querySelector("h1")?.focus({ preventScroll: true });
+      hero.querySelector("summary")?.focus({ preventScroll: true });
     });
   }
 })();

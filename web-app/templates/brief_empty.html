@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}<title>{{ t("briefs.page.title") }}</title>{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ asset_url('css/briefs.css') }}">
+{% endblock %}
+
+{% block navbar %}
+{% set active_page = "briefs" %}
+{% include "_site_topbar.html" %}
+{% endblock %}
+
+{% block main_content %}
+<div class="main-content">
+    <div class="content-wrapper brief-shell">
+        <section class="briefs-empty-state">
+            <h1 class="brief-title">{{ t("briefs.empty.title") }}</h1>
+            <p>{{ t("briefs.empty.description") }}</p>
+        </section>
+    </div>
+</div>
+{% endblock %}

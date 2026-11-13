@@ -150,6 +150,10 @@ based on the payload's `date`, not its upload time or `generated_at`. Publishing
 dates outside this window (including future dates) returns HTTP 400. Republishing
 does not extend a date's retention.
 
+Each brief has a page at `/<lang>/briefs/<date>`. `/<lang>/briefs` has no page of
+its own: it redirects to the latest brief, or shows the empty state when the
+window holds none.
+
 Pages, homepage links and public APIs enforce this window on every read, even
 if no new brief is uploaded or physical cleanup is delayed. Reads use the
 pointer/index or an exact date file, with no fallback directory scan. Expired
@@ -284,7 +288,8 @@ grows, one at a time, never to fill the page.
 The brief appears without a card, in the system's voice: one sentence says
 whether today's brief has arrived and how many items it has, or which day's
 brief it shows instead, followed by the first two items and a link to the full
-brief. How a future module is presented is decided when it arrives, from what
+brief. With no brief in the window it says so in that one sentence and links
+nowhere. How a future module is presented is decided when it arrives, from what
 it is.
 
 For direction only, not as planned work: the owner might later leave ideas
@@ -314,8 +319,8 @@ the owner can do, such as writing down their own experience.
   do not re-import it with an unversioned CSS URL. Cloudflare cache policy is
   managed separately.
 - Note math, code-copy, TOC and image-preview behavior belongs to the scripts
-  loaded by [note_details.html](templates/note_details.html). Brief date
-  navigation enhancement is loaded by [brief_detail.html](templates/brief_detail.html).
+  loaded by [note_details.html](templates/note_details.html). The brief date
+  dock and opened-day hints are loaded by [brief_detail.html](templates/brief_detail.html).
   Brief items place the "About this summary" disclosure beside source and discussion
   metadata, with its contents below that row. Material sources, statuses and
   retrieval notes align in an indented group; notes wrap below the status on
@@ -342,14 +347,22 @@ the owner can do, such as writing down their own experience.
   borders, which browsers round down to whole pixels. Below 768px the sidebar is replaced by a folded copy
   of the tree (native `details`), whose summary is set like the labels, and
   rows keep only their hover fill.
-- The brief archive uses a centered 560px directory with localized dates and
-  weekdays. The header shows the archive year (a range across New Year); rows
-  include their year when the archive spans two years. Counts stay in the public
-  API but are omitted from the directory. [brief-opened.js](static/brief-opened.js)
-  subtly dims dates whose detail page has been opened in this browser, including
-  direct visits from the homepage. This is not reading progress: it uses local
-  storage shared across languages, keeps at most 14 date keys, and does not sync
-  across devices. Navigation remains usable with JavaScript or storage disabled.
+- A brief is a reading page in the same 46rem column as a note, and every line
+  shares that column's edges. Its date uses the page-title size of the homepage
+  and notes (1.75rem, bold) but sits centered between steps to the nearest older
+  and newer brief: a date is a position in a sequence, not the name of a place.
+  Once it scrolls under the top bar, [brief-date-dock.js](static/brief-date-dock.js)
+  shows the same date in the bar's center, so the date seems to rise into the
+  bar; keep the two centered and worded alike. Jumping to another day is rare,
+  so the 14 retained days wait folded behind the date, which is the summary of a
+  native `details`. In that strip pine marks the day being read, a day without a
+  brief keeps its place as a faint number that leads nowhere, and
+  [brief-opened.js](static/brief-opened.js) subtly dims days whose page has been
+  opened in this browser. That is not reading progress: it uses local storage
+  shared across languages, keeps at most 14 date keys, and does not sync across
+  devices. Sections are the only ruled divisions (a small bold label and its
+  item count above one line); items are set apart by space. Everything works
+  with JavaScript or storage disabled.
 
 ## Color and Themes
 

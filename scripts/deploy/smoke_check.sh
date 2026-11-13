@@ -10,8 +10,10 @@ SMOKE_INTERVAL_SECONDS="${SMOKE_INTERVAL_SECONDS:-2}"
 
 request() {
   # Use in-host HTTPS endpoint with Host header so nginx server_name routing is exercised.
+  # Follow the app's relative redirects (/ to a language, /zh/briefs to the latest
+  # brief) so the page behind them is rendered too.
   local path="$1"
-  curl -kfsS "${BASE_URL}${path}" -H "Host: ${HOST_HEADER}"
+  curl -kfsSL --max-redirs 3 "${BASE_URL}${path}" -H "Host: ${HOST_HEADER}"
 }
 
 wait_request_ok() {

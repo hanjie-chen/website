@@ -211,6 +211,14 @@ def load_brief_archive(directory) -> list[dict]:
         return []
 
 
+def retention_window() -> list[date]:
+    """Return the calendar dates currently retained, oldest first."""
+    today = _brief_today()
+    return [
+        today - timedelta(days=offset) for offset in reversed(range(RETENTION_DAYS))
+    ]
+
+
 def _brief_today() -> date:
     return datetime.now(BRIEF_TIMEZONE).date()
 
