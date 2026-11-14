@@ -108,7 +108,7 @@ services:
     logging: *default-logging
   # logs ui
   dozzle:
-    image: amir20/dozzle:v11.4.0@sha256:d23d23ce02c8cc96416dfbad4a7de225d01fdc03ad310203d64d580034dd120d
+    image: amir20/dozzle:v11.4.3@sha256:244f218c876d6ed766277e71a537f34bfb2c01829e1927737e3673a8327deeb8
     container_name: dozzle
     environment:
       - DOZZLE_BASE=/web-log # set url path
