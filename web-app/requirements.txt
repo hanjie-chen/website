@@ -47,7 +47,7 @@ pygments==2.21.0
     # via
     #   -r requirements.in
     #   pytest
-pymdown-extensions==12.3
+pymdown-extensions==13.1
     # via -r requirements.in
 pytest==9.2.0
     # via
