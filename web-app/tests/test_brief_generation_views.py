@@ -55,7 +55,7 @@ def test_acquisition_failure_does_not_hide_successful_comment_summary(
     assert "keywords: Claude" in text  # Selection basis is retained.
     assert "briefs.generation." not in text
     if lang == "zh":
-        assert "网页内容 获取失败" in text
+        assert "网页正文 获取失败" in text
         assert "HN 帖子 无内容" in text
         assert "HN 评论 已获取" in text
         assert "模型自述" in text
@@ -63,6 +63,7 @@ def test_acquisition_failure_does_not_hide_successful_comment_summary(
         assert "摘要依据：" in text
     else:
         assert "About this summary" in text
+        assert "Webpage body Failed" in text
         assert "Generation: Succeeded" in text
         assert "model-reported" in text
 
@@ -109,7 +110,7 @@ def test_recovery_reason_is_not_reported_as_final_fetch_failure(client, monkeypa
     info["summary_sources"] = ["web_body", "hn_comments"]
     soup = render_info(client, monkeypatch, info)
     webpage = soup.select_one(".brief-material-list li").get_text(" ", strip=True)
-    assert "网页内容 已获取" in webpage
+    assert "网页正文 已获取" in webpage
     assert "同一篇文章" in webpage
     assert "替代获取原因：Cloudflare 验证" in webpage
     assert "最后尝试" not in webpage
